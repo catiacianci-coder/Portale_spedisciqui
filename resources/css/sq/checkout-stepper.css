@@ -1,0 +1,127 @@
+/* Stepper orizzontale: flusso acquisto spedizione (preventivi → carrello) */
+
+.sq-checkout-stepper {
+    margin: 0 0 20px;
+    padding: 14px 16px;
+    background: var(--sq-bg-soft);
+    border: 1px solid var(--sq-border);
+    border-radius: 12px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.sq-checkout-stepper-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    gap: 0;
+    min-width: min(920px, 100%);
+}
+
+.sq-checkout-stepper-li {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex: 1 1 0;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+}
+
+.sq-checkout-stepper-li:last-child {
+    flex: 0 0 auto;
+}
+
+.sq-checkout-stepper-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    min-width: 72px;
+    max-width: 120px;
+    color: inherit;
+    cursor: default;
+}
+
+.sq-checkout-stepper-dot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    border: 2px solid transparent;
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease;
+}
+
+.sq-checkout-stepper-label {
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--sq-text-muted);
+    hyphens: auto;
+    word-break: break-word;
+}
+
+/* Completato: cerchio pieno */
+.sq-checkout-stepper-item--done .sq-checkout-stepper-dot {
+    background: var(--sq-brand);
+    border-color: var(--sq-brand);
+    color: var(--sq-bg-white);
+}
+
+.sq-checkout-stepper-item--done .sq-checkout-stepper-label {
+    color: var(--sq-text-heading);
+}
+
+/* Corrente: cerchio pieno evidenziato */
+.sq-checkout-stepper-item--current .sq-checkout-stepper-dot {
+    background: var(--sq-brand);
+    border-color: var(--sq-brand-dark);
+    color: var(--sq-bg-white);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--sq-brand) 35%, transparent);
+}
+
+.sq-checkout-stepper-item--current .sq-checkout-stepper-label {
+    color: var(--sq-text-heading);
+    font-weight: 800;
+}
+
+/* Da fare: cerchio vuoto */
+.sq-checkout-stepper-item--todo .sq-checkout-stepper-dot {
+    background: var(--sq-bg-white);
+    border-color: var(--sq-sep-2);
+    color: var(--sq-text-muted);
+}
+
+.sq-checkout-stepper-item--todo .sq-checkout-stepper-label {
+    color: var(--sq-text-muted);
+}
+
+.sq-checkout-stepper-connector {
+    flex: 1 1 12px;
+    height: 2px;
+    min-width: 8px;
+    margin: 0 4px;
+    margin-top: 13px;
+    align-self: flex-start;
+    border-radius: 1px;
+    background: var(--sq-border);
+}
+
+.sq-checkout-stepper-connector--done {
+    background: color-mix(in srgb, var(--sq-brand) 55%, var(--sq-border));
+}

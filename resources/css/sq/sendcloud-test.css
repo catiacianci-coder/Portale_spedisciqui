@@ -1,0 +1,226 @@
+/* Pagina test Sendcloud — selezione punti mittente / destinatario */
+
+.sq-sc-points-form {
+    margin-bottom: 1rem;
+}
+
+.sq-sc-mitt-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sq-sc-mitt-item {
+    border: 1px solid var(--sq-border, #e5e7eb);
+    border-radius: 10px;
+    background: #fff;
+    overflow: hidden;
+}
+
+.sq-sc-mitt-item summary {
+    cursor: pointer;
+    padding: 12px 14px;
+    font-size: 15px;
+    line-height: 1.35;
+    list-style: none;
+}
+
+.sq-sc-mitt-item summary::-webkit-details-marker {
+    display: none;
+}
+
+.sq-sc-mitt-item summary::before {
+    content: '▸ ';
+    color: var(--sq-brand, #ff6600);
+    font-weight: 800;
+}
+
+.sq-sc-mitt-item[open] summary::before {
+    content: '▾ ';
+}
+
+.sq-sc-mitt-meta {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sq-text-muted, #6b7280);
+    margin-top: 4px;
+}
+
+.sq-sc-mitt-hours {
+    padding: 0 14px 12px;
+    border-top: 1px solid var(--sq-border, #e5e7eb);
+    background: #f9fafb;
+}
+
+.sq-sc-hours-table {
+    width: 100%;
+    font-size: 13px;
+    border-collapse: collapse;
+    margin-top: 8px;
+}
+
+.sq-sc-hours-table td {
+    padding: 4px 8px 4px 0;
+    vertical-align: top;
+}
+
+.sq-sc-hours-table td:first-child {
+    font-weight: 700;
+    white-space: nowrap;
+    width: 7rem;
+}
+
+.sq-sc-mitt-actions {
+    padding: 0 14px 12px;
+}
+
+.sq-sc-dest-layout {
+    display: grid;
+    grid-template-columns: minmax(280px, 42%) 1fr;
+    gap: 14px;
+    align-items: stretch;
+    min-height: 380px;
+}
+
+@media (max-width: 900px) {
+    .sq-sc-dest-layout {
+        grid-template-columns: 1fr;
+        min-height: 0;
+    }
+}
+
+.sq-sc-dest-list-wrap {
+    border: 1px solid var(--sq-border, #e5e7eb);
+    border-radius: 10px;
+    background: #fff;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    max-height: 420px;
+}
+
+.sq-sc-dest-list-head {
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: 800;
+    border-bottom: 1px solid var(--sq-border, #e5e7eb);
+    background: #f3f4f6;
+}
+
+.sq-sc-dest-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: 300px;
+}
+
+.sq-sc-dest-list-footer {
+    flex: 0 0 auto;
+    padding: 12px;
+    border-top: 1px solid var(--sq-border, #e5e7eb);
+    background: #f9fafb;
+}
+
+.sq-sc-dest-list-hint {
+    margin: 0 0 10px;
+    font-size: 12px;
+    line-height: 1.35;
+    color: var(--sq-text-muted, #6b7280);
+}
+
+.sq-sc-dest-select-btn {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.sq-sc-dest-select-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.sq-sc-dest-item {
+    border: none;
+    border-bottom: 1px solid #eee;
+    width: 100%;
+    text-align: left;
+    padding: 10px 12px;
+    cursor: pointer;
+    background: #fff;
+    font: inherit;
+    display: block;
+    box-sizing: border-box;
+}
+
+.sq-sc-dest-item:hover {
+    background: var(--sq-bg-soft-warm);
+}
+
+.sq-sc-dest-item.is-selected {
+    background: #ffedd5;
+    box-shadow: inset 3px 0 0 var(--sq-brand, #ff6600);
+}
+
+.sq-sc-dest-item-name {
+    font-weight: 800;
+    font-size: 14px;
+    color: var(--sq-text-heading, #111827);
+}
+
+.sq-sc-dest-item-addr {
+    font-size: 12px;
+    color: var(--sq-text-muted, #6b7280);
+    margin-top: 3px;
+}
+
+.sq-sc-dest-item-type {
+    font-size: 11px;
+    margin-top: 4px;
+    color: #9ca3af;
+}
+
+.sq-sc-dest-map-frame {
+    border: 1px solid var(--sq-border, #e5e7eb);
+    border-radius: 10px;
+    overflow: hidden;
+    background: #e5e7eb;
+    min-height: 380px;
+    max-height: 420px;
+}
+
+.sq-sc-dest-map {
+    width: 100%;
+    height: 100%;
+    min-height: 380px;
+}
+
+.sq-sc-selected-box {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border: 2px solid var(--sq-brand, #ff6600);
+    border-radius: 10px;
+    background: var(--sq-bg-soft-warm);
+}
+
+.sq-sc-selected-box h4 {
+    margin: 0 0 8px;
+    font-size: 14px;
+}
+
+.sq-sc-selected-json {
+    margin: 0;
+    font-size: 12px;
+    max-height: 160px;
+    overflow: auto;
+}
+
+.sq-sc-debug details {
+    margin-top: 16px;
+    font-size: 13px;
+}

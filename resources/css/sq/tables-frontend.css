@@ -1,0 +1,208 @@
+/*
+ * Tabelle area cliente (non backoffice): tipografia e peso font uniformi.
+ * Scope: .sq-content--frontend (impostato dal layout solo se !route backoffice.*).
+ */
+.sq-content--frontend .sq-table {
+    font-family: var(--sq-font-ui);
+    font-size: 14px;
+    line-height: 1.45;
+}
+
+.sq-content--frontend .sq-table .sq-th {
+    font-weight: 700;
+    font-size: 13px;
+}
+
+.sq-content--frontend .sq-table tbody .sq-td {
+    font-weight: 400;
+    color: var(--sq-text-main);
+}
+
+/* Rimuove grassetto “a macchia” sulle singole celle */
+.sq-content--frontend .sq-table tbody .sq-td.sq-fw-700,
+.sq-content--frontend .sq-table tbody .sq-fw-700 {
+    font-weight: 400;
+}
+
+/* Ordini: tabella lista — tipografia uniforme, senza grassetto a macchia */
+.sq-content--frontend .ordini-index-page .sq-ordini-table tbody .sq-td.sq-fw-700,
+.sq-content--frontend .ordini-index-page .sq-ordini-table tbody .sq-fw-700 {
+    font-weight: 400;
+    color: var(--sq-text-main);
+}
+
+.sq-content--frontend .ordini-index-page .sq-ordini-table .sq-td--muted,
+.sq-content--frontend .ordini-index-page .sq-ordini-table .sq-td--nowrap-muted {
+    color: var(--sq-text-main);
+}
+
+.sq-content--frontend .sq-table .sq-td--muted,
+.sq-content--frontend .sq-table .sq-td--nowrap-muted,
+.sq-content--frontend .sq-table .sq-td--8-muted {
+    color: var(--sq-text-muted);
+    font-weight: 400;
+}
+
+.sq-content--frontend .sq-table .sq-badge {
+    font-weight: 600;
+}
+
+/* Spedizioni: destinatario (span dedicato) allineato al corpo tabella */
+.sq-content--frontend .sq-sped-clienti-table .sq-sped-dest-nome-only {
+    font-weight: 400;
+    color: var(--sq-text-main);
+}
+
+.sq-content--frontend .sq-sped-clienti-table tbody tr.sq-sped-row--annullata .sq-sped-dest-nome-only {
+    color: var(--sq-error-text);
+    font-weight: 400;
+}
+
+/* Wallet movimenti: Credito/Debito sono span dentro il td */
+.sq-content--frontend .sq-table .sq-mov-credito,
+.sq-content--frontend .sq-table .sq-mov-debito {
+    font-weight: 400;
+    font-size: inherit;
+    line-height: inherit;
+}
+
+/* Wallet movimenti: colonna Ordine (e altre celle muted-sm) come il resto della tabella */
+.sq-content--frontend .sq-table .sq-mov-td-muted-sm {
+    font-size: 14px;
+    color: var(--sq-text-main);
+    font-weight: 400;
+}
+
+/* Azioni tabella: icone (ordini, ricariche wallet, …) */
+.sq-ordini-actions-icons {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.sq-ordini-icon-action {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.15s ease;
+    font-size: 16px;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+button.sq-ordini-icon-action {
+    font-family: inherit;
+    margin: 0;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+/* Dettaglio (lente): stile coerente con euro su lista ordini */
+.sq-ordini-icon-action--view {
+    color: var(--sq-text-strong);
+}
+
+.sq-ordini-icon-action.sq-ordini-icon-action--view:hover {
+    color: var(--sq-brand);
+}
+
+.sq-ordini-icon-action--view:focus-visible {
+    outline: 2px solid var(--sq-brand);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* Euro “paga”: stesso aspetto della colonna Azioni in /ordini (glifo scuro, niente riquadro) */
+.sq-ordini-icon-action--pay {
+    color: var(--sq-text-strong);
+}
+
+.sq-ordini-icon-action.sq-ordini-icon-action--pay:hover:not(:disabled) {
+    color: var(--sq-brand);
+}
+
+.sq-ordini-icon-action--pay:focus-visible {
+    outline: 2px solid var(--sq-brand);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+.sq-ordini-actions-icons .sq-ordini-pay-form-inline {
+    display: inline-flex;
+    margin: 0;
+    align-items: center;
+}
+
+.sq-pay-metodo-action-icon {
+    display: block;
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+}
+
+.sq-ordini-icon-action:hover:not(.sq-ordini-icon-action--pay):not(.sq-ordini-icon-action--view):not(.sq-ordini-icon-action--remove) {
+    color: inherit;
+}
+
+/* Carrello / riepilogo: rimuovi riga (cestino) */
+.sq-ordini-icon-action--remove {
+    color: var(--sq-text-muted);
+    font-size: 17px;
+}
+
+.sq-ordini-icon-action.sq-ordini-icon-action--remove:hover:not(:disabled) {
+    color: var(--sq-error-text);
+}
+
+.sq-ordini-icon-action--remove:focus-visible {
+    outline: 2px solid var(--sq-brand);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+.sq-ordini-icon-action:disabled,
+.sq-ordini-icon-action.is-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Etichetta sezione + tabella (come pagina Spedizioni frontend) */
+.sq-sped-tab-section .sq-table-wrap {
+    margin-top: 0;
+    border-top-left-radius: 0;
+}
+
+.sq-sped-tab-title {
+    display: inline-block;
+    margin: 0;
+    padding: 8px 14px;
+    border: 1px solid #cbd5e1;
+    border-bottom: 0;
+    border-radius: 10px 10px 0 0;
+    background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+    color: #334155;
+    font-size: 0.98rem;
+    font-weight: 800;
+    line-height: 1.2;
+    box-shadow: 0 -1px 0 rgba(148, 163, 184, 0.14);
+}
+
+.sq-sped-empty {
+    margin: 0;
+    padding: 12px 14px;
+    border: var(--sq-shell-border-width) solid var(--sq-shell-border);
+    border-radius: 12px;
+    box-shadow: var(--sq-card-shadow);
+    background: var(--sq-bg-white);
+    color: var(--sq-text-muted);
+    font-size: 14px;
+}

@@ -1,0 +1,94 @@
+/* --- Tema applicazione (Spedisciqui) --- */
+:root {
+    --sq-brand: #ff6600;
+    --sq-brand-hover: #e65c00;
+    --sq-brand-dark: #cc5200;
+    --sq-titlebar-bg: #f0f2f5;
+    --sq-titlebar-bg-dark: #e8ebef;
+    --sq-titlebar-text: #374151;
+    --sq-titlebar-icon: #64748b;
+    --sq-titlebar-border: #dde1e6;
+    --sq-titlebar-shadow: none;
+    --sq-text-strong: #111;
+    --sq-text-main: #374151;
+    --sq-text-heading: #1f2937;
+    --sq-text-muted: #6b7280;
+    --sq-text-muted-2: #888;
+    --sq-text-body-666: #666;
+    --sq-text-body-555: #555;
+    --sq-text-wallet: #9a3412;
+    --sq-text-warn-orange: #c2410c;
+    --sq-border: #e5e7eb;
+    --sq-border-light: #f3f4f6;
+    --sq-border-brand: #fed7aa;
+    --sq-bg-page: #ffffff;
+    --sq-bg-sidebar: #f1f3f5;
+    --sq-bg-white: #fff;
+    --sq-bg-soft: #f9fafb;
+    --sq-bg-soft-warm: #fff7ed;
+    --sq-bg-head: #f3f4f6;
+    --sq-bg-warn-soft: #fff8f0;
+    --sq-bg-code: #f3f4f6;
+    --sq-success-bg: #f0fff4;
+    --sq-success-border: #9ae6b4;
+    --sq-success-text: #276749;
+    --sq-error-bg: #fef2f2;
+    --sq-error-border: #fecaca;
+    --sq-error-text: #b42318;
+    --sq-error-btn-bg: #fef2f2;
+    --sq-error-btn-border: #fecaca;
+    --sq-credit: #276749;
+    --sq-debit: #b42318;
+    --sq-sep: #d1d5db;
+    --sq-sep-2: #9ca3af;
+    --sq-sep-3: #cbd5e1;
+    --sq-placeholder: #9ca3af;
+    --sq-header-border: #e0e0e0;
+    /* Bordo shell: 2px, grigio chiaro; ombre più marcate (header sotto, sidebar a destra) */
+    --sq-shell-border: #d1dae3;
+    --sq-shell-border-width: 2px;
+    --sq-shell-shadow-sidebar: 6px 0 18px rgba(15, 23, 42, 0.12), 2px 0 8px rgba(15, 23, 42, 0.06);
+    --sq-shell-shadow-header: 0 6px 18px rgba(15, 23, 42, 0.1), 0 2px 6px rgba(15, 23, 42, 0.06);
+    /* Ombra card / pannelli (stesso linguaggio dell’header) */
+    --sq-card-shadow: var(--sq-shell-shadow-header);
+    --sq-header-link: #333;
+    --sq-sidebar-text: #2c3e50;
+    --sq-sidebar-muted: #95a5a6;
+    --sq-sidebar-link: #34495e;
+    --sq-sidebar-border: #e2e6ea;
+    --sq-font-ui: sans-serif;
+    --sq-shadow-brand: 0 4px 14px rgba(255, 102, 0, 0.35);
+    --sq-shadow-brand-lg: 0 6px 18px rgba(255, 102, 0, 0.42);
+    --sq-brand-glow-12: rgba(255, 102, 0, 0.12);
+    --sq-brand-glow-14: rgba(255, 102, 0, 0.14);
+    --sq-brand-glow-10: rgba(255, 102, 0, 0.1);
+    --sq-shadow-sidebar: 4px 0 10px rgba(0, 0, 0, 0.05);
+
+    /* Tabelle globali (.sq-table): intestazione a gradiente, righe zebra */
+    --sq-table-th-gradient-top: rgb(249, 249, 249);
+    --sq-table-th-gradient-bottom: rgb(205, 205, 205);
+    --sq-table-th-text: #2c5e8c;
+    --sq-table-th-separator: #ffffff;
+    --sq-table-zebra: rgb(223, 223, 223);
+}
+
+/*
+ * Accento secondario (fasce titolo) — arancio resta su bottoni/CTA.
+ * Cambia data-sq-accent su <html> in layouts/app.blade.php:
+ *   teal | blu-notte | (rimuovi attributo = grigio neutro)
+ */
+html[data-sq-accent='teal'] {
+    --sq-titlebar-bg: #ecf7f5;
+    --sq-titlebar-bg-dark: #e2f2ef;
+    --sq-titlebar-text: #115e59;
+    --sq-titlebar-icon: #0d9488;
+    --sq-titlebar-border: #bfe8de;
+}
+
+html[data-sq-accent='blu-notte'] {
+    --sq-titlebar-bg: #eef2f8;
+    --sq-titlebar-bg-dark: #e4eaf3;
+    --sq-titlebar-text: #1e3a5f;
+    --sq-titlebar-icon: #2c5282;
+    --sq-titlebar-border: #c8d4e6;
+}

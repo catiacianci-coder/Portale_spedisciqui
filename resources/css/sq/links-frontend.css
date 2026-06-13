@@ -1,0 +1,49 @@
+/* Utility layout (non stile colore): link allineato a destra in barre flex */
+.sq-nav-inline-end {
+    margin-left: auto;
+}
+
+/*
+ * Link nel contenuto pagine cliente (non header, sidebar, footer).
+ * Base: blu classico, sottolineatura sempre; visitato uguale al non visitato (nessun colore “visited”).
+ * Hover: colore più scuro + sottolineatura più marcata; active brand; transizione 0.3s.
+ */
+.sq-content--frontend a:not(.sq-btn-primary):not(.sq-btn-primary-block):not(.sq-btn-secondary):not(.sq-modal-btn):not(.sq-profilo-azione-btn):not(.sq-ordini-icon-action):not(.sq-sped-act):not(.sq-sped-act--link):not([class*="btn"]) {
+    color: #0000ee !important;
+    text-decoration: underline !important;
+    text-decoration-color: currentcolor;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.12em;
+    text-decoration-skip-ink: auto;
+    font-weight: 400;
+    transition:
+        color 0.3s ease,
+        text-decoration-color 0.3s ease,
+        text-decoration-thickness 0.3s ease,
+        text-underline-offset 0.3s ease;
+}
+
+.sq-content--frontend a:not(.sq-btn-primary):not(.sq-btn-primary-block):not(.sq-btn-secondary):not(.sq-modal-btn):not(.sq-profilo-azione-btn):not(.sq-ordini-icon-action):not(.sq-sped-act):not(.sq-sped-act--link):not([class*="btn"]):visited {
+    color: #0000ee !important;
+}
+
+/* Hover: stesso aspetto per link visitati e non visitati */
+.sq-content--frontend a:not(.sq-btn-primary):not(.sq-btn-primary-block):not(.sq-btn-secondary):not(.sq-modal-btn):not(.sq-profilo-azione-btn):not(.sq-ordini-icon-action):not(.sq-sped-act):not(.sq-sped-act--link):not([class*="btn"]):hover {
+    color: #000099 !important;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.18em;
+}
+
+.sq-content--frontend a:not(.sq-btn-primary):not(.sq-btn-primary-block):not(.sq-btn-secondary):not(.sq-modal-btn):not(.sq-profilo-azione-btn):not(.sq-ordini-icon-action):not(.sq-sped-act):not(.sq-sped-act--link):not([class*="btn"]):active {
+    color: var(--sq-brand) !important;
+    text-decoration-thickness: 2px;
+}
+
+/* Tabella spedizioni cliente — riga annullata: link ordine resta cromaticamente “errore” */
+.sq-content--frontend .sq-sped-clienti-table tbody tr.sq-sped-row--annullata td a:not(.sq-sped-act):not(.sq-sped-act--link) {
+    color: var(--sq-error-text) !important;
+}
+
+.sq-content--frontend .sq-sped-clienti-table tbody tr.sq-sped-row--annullata td a:not(.sq-sped-act):not(.sq-sped-act--link):hover {
+    color: color-mix(in srgb, var(--sq-error-text) 78%, #000 22%) !important;
+}

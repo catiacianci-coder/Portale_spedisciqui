@@ -1,0 +1,125 @@
+/* --- CSS ESISTENTE (Registrazione / Auth) --- */
+body { font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; min-height: 100vh; margin: 0; background-color: #f9f9f9; }
+/* Contenitore specifico per il form di registrazione */
+.register-container { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 500px; margin: auto; }
+h2 { text-align: center; color: #333; margin-bottom: 10px; }
+label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
+label span { color: red; }
+input, select { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+.row { display: flex; gap: 15px; }
+.row div { flex: 1; }
+button { width: 100%; background-color: #FF6600; color: white; padding: 14px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+button:disabled { background-color: #ccc; cursor: not-allowed; }
+.hidden { display: none; }
+#cf_error { color: #d93025; font-weight: bold; margin-bottom: 15px; display: none; background: #ffebee; padding: 10px; border-radius: 4px; }
+.error-validation { color: #d93025; font-size: 12px; display: block; margin-top: -15px; margin-bottom: 15px; font-weight: bold; }
+.cf-row { display: flex; gap: 10px; align-items: flex-start; }
+.cf-row input { margin-bottom: 0; }
+.btn-verify { width: auto; white-space: nowrap; height: 45px; padding: 0 20px; }
+
+/* --- AGGIUNTA FOOTER (layouts.app) --- */
+
+.main-footer {
+    background-color: #FF6600; /* Allineato al colore del tuo bottone */
+    padding: 30px 20px;
+    width: 100%;
+    margin-top: auto; /* Fondamentale: spinge il footer in basso se la pagina è vuota */
+}
+
+.footer-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: center; /* Centra i blocchi verticalmente tra loro */
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.footer-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Social in orizzontale centrati rispetto ai testi */
+.footer-social {
+    flex-direction: row !important;
+    gap: 15px;
+    align-items: center;
+}
+
+.footer-social img {
+    width: 25px;
+    height: 25px;
+    filter: brightness(0) invert(1); /* Rende bianche le icone */
+}
+
+.footer-links a {
+    color: white;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.footer-links a:hover {
+    text-decoration: underline;
+}
+/* Struttura Generale Header */
+.main-header {
+    background-color: white;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 30px;
+    border-bottom: 1px solid #e0e0e0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.header-left, .header-right {
+    display: flex;
+    align-items: center;
+}
+
+.header-left {
+    gap: 40px;
+}
+
+.header-right {
+    gap: 20px;
+}
+
+/* Elementi Specifici */
+.header-logo {
+    height: 40px;
+}
+
+.link-assistenza, .link-login, .btn-logout {
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.btn-logout {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+/* Bottone Registrati (Arancione) */
+.btn-register {
+    text-decoration: none;
+    background-color: #FF6600;
+    color: white !important;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.btn-register:hover {
+    background-color: #e65c00;
+}

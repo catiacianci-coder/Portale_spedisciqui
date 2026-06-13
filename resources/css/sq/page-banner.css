@@ -1,0 +1,260 @@
+/*
+ * Fascia titolo pagina — front office (teal) e back office (grigio).
+ * Riferimento visivo FO: rimborso-etichette (.sq-page-banner--full).
+ */
+
+/* —— Bleed: fascia a filo con l’area contenuto —— */
+.sq-bleed-layout {
+    width: 100%;
+    margin-top: -20px;
+    box-sizing: border-box;
+}
+
+@media (max-width: 991px) {
+    .sq-bleed-layout {
+        width: calc(100% + 24px);
+        margin-left: -12px;
+        margin-right: -12px;
+    }
+
+    .sq-main--backoffice .sq-bo-top-banner .sq-page-banner.sq-page-banner--full {
+        padding: 12px 16px;
+    }
+}
+
+/* —— Front office —— */
+.sq-page-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 20px;
+    flex-wrap: wrap;
+    background: linear-gradient(180deg, var(--sq-titlebar-bg) 0%, var(--sq-titlebar-bg-dark) 100%);
+    color: var(--sq-titlebar-text);
+    border: 1px solid var(--sq-titlebar-border);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 10px 16px;
+    margin: 0 0 20px;
+    font-family: var(--sq-font-ui);
+    box-shadow: var(--sq-titlebar-shadow);
+}
+
+.sq-page-banner.sq-page-banner--full {
+    border-radius: 0;
+    margin-bottom: 20px;
+    box-shadow: none;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+}
+
+.sq-page-banner__lead {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.sq-page-banner__icon {
+    font-size: 1rem;
+    width: 20px;
+    text-align: center;
+    color: var(--sq-titlebar-icon);
+    flex-shrink: 0;
+}
+
+.sq-page-banner__title {
+    margin: 0;
+    font-size: 1.05rem;
+    line-height: 1.25;
+    font-weight: 600;
+    color: var(--sq-titlebar-text);
+}
+
+.sq-page-banner__trailing {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.sq-content--front-text-main .sq-page-banner__title {
+    color: var(--sq-titlebar-text) !important;
+}
+
+/* —— Back office (fascia scura, come EnvieAqui) —— */
+.sq-bo-top-banner {
+    width: 100%;
+    flex-shrink: 0;
+}
+
+.sq-main--backoffice {
+    --sq-bo-page-banner-bg: #6b7280;
+    --sq-bo-page-banner-bg-dark: #4b5563;
+    --sq-bo-page-banner-text: #f9fafb;
+    --sq-bo-page-banner-icon: #f9fafb;
+    --sq-bo-page-banner-border: #374151;
+}
+
+.sq-main--backoffice .sq-bo-top-banner .sq-page-banner.sq-page-banner--full {
+    margin: 0 0 20px;
+    padding: 12px 24px;
+    min-height: 52px;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+}
+
+.sq-page-banner.sq-page-banner--backoffice {
+    background: linear-gradient(
+        180deg,
+        var(--sq-bo-page-banner-bg) 0%,
+        var(--sq-bo-page-banner-bg-dark) 100%
+    );
+    color: var(--sq-bo-page-banner-text);
+    border-color: var(--sq-bo-page-banner-border);
+    box-shadow: none;
+    align-items: center;
+}
+
+.sq-page-banner.sq-page-banner--backoffice.sq-page-banner--full {
+    border-bottom: 1px solid var(--sq-bo-page-banner-border);
+}
+
+.sq-page-banner.sq-page-banner--backoffice .sq-page-banner__title {
+    color: var(--sq-bo-page-banner-text);
+    font-size: 1.02rem;
+    line-height: 1.2;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+.sq-page-banner.sq-page-banner--backoffice .sq-page-banner__icon {
+    color: var(--sq-bo-page-banner-icon);
+}
+
+.sq-page-banner.sq-page-banner--backoffice .sq-page-banner__trailing {
+    margin-left: auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.sq-page-banner__trailing-custom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    max-width: 100%;
+    font-size: 0.92rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.sq-page-banner__bo-actions {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.sq-page-banner__bo-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    font-family: inherit;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+    line-height: 1.2;
+    box-sizing: border-box;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.sq-page-banner__bo-btn:hover {
+    background: rgba(255, 255, 255, 0.26);
+    border-color: rgba(255, 255, 255, 0.55);
+    color: #fff;
+}
+
+.sq-page-banner__bo-btn:focus-visible {
+    outline: 2px solid #e5e7eb;
+    outline-offset: 2px;
+}
+
+.sq-page-banner__bo-shortcuts-menu {
+    position: relative;
+}
+
+.sq-page-banner__bo-shortcuts-trigger {
+    gap: 6px;
+}
+
+.sq-page-banner__bo-shortcuts-chevron {
+    font-size: 0.55rem;
+    opacity: 0.75;
+}
+
+.sq-page-banner__bo-shortcuts-menu::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    height: 8px;
+}
+
+.sq-page-banner__bo-shortcuts-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 2px);
+    right: 0;
+    z-index: 40;
+    min-width: 196px;
+    padding: 6px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.14);
+}
+
+.sq-page-banner__bo-shortcuts-menu:hover .sq-page-banner__bo-shortcuts-dropdown,
+.sq-page-banner__bo-shortcuts-menu:focus-within .sq-page-banner__bo-shortcuts-dropdown,
+.sq-page-banner__bo-shortcuts-menu.is-open .sq-page-banner__bo-shortcuts-dropdown {
+    display: block;
+}
+
+.sq-page-banner__bo-shortcuts-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151 !important;
+    text-decoration: none !important;
+}
+
+.sq-page-banner__bo-shortcuts-link i {
+    width: 18px;
+    text-align: center;
+    color: var(--sq-brand);
+    flex-shrink: 0;
+}
+
+.sq-page-banner__bo-shortcuts-link:hover {
+    background: #eef8f9;
+    color: var(--sq-brand) !important;
+}
