@@ -185,10 +185,10 @@ class BackofficeWalletController extends Controller
                 ->withErrors(['backoffice' => 'Stato ricarica cambiato: operazione non eseguita.']);
         }
 
-        $importoFmt = number_format($importo, 2, ',', '.');
+        $importoFmt = \App\Support\ImportoEuro::format($importo);
 
         return redirect()
             ->route('backoffice.ricariche.index', $filtriRedirect)
-            ->with('ok', 'Ricarica '.$richiesta->numero_ordine_wallet.' confermata: '.$importoFmt.' € accreditati sul wallet del cliente.');
+            ->with('ok', 'Ricarica '.$richiesta->numero_ordine_wallet.' confermata: '.$importoFmt.' accreditati sul wallet del cliente.');
     }
 }

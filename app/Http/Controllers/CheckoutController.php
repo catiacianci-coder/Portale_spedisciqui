@@ -15,7 +15,8 @@ use App\Services\ServiziAggiuntiviPrezzoService;
 use App\Services\Sendcloud\SendcloudClient;
 use App\Services\Sendcloud\SendcloudServicePointsService;
 use App\Services\Stripe\StripeConfig;
-use App\Support\CarrelloPrezziWallet;
+use App\Support\MetodoPagamentoCodice;
+use App\Support\PreventivoColonnePagamento;
 use App\Support\CorriereLogo;
 use App\Support\CorrierePuntoEtichetta;
 use App\Support\DestinatarioConsegnaPunti;
@@ -23,6 +24,8 @@ use App\Support\LiccardiVolumeSconto;
 use App\Support\MetodoPagamentoIcon;
 use App\Support\PreventivoPrezziEsposti;
 use App\Support\PreventivoRigaSelezionabile;
+use App\Support\RitiroCheckoutDomicilio;
+use App\Support\RitiroDateSelezionabili;
 use App\Support\PuntoConsegnaSessione;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -122,10 +125,7 @@ class CheckoutController extends Controller
         $serviziRows = ServiziAggiuntiviPrezzoService::scopeQueryCorriere($corriereId, $idTipoSped)->get();
         $serviziCheckoutGrouped = ServiziAggiuntiviPrezzoService::raggruppaPerCheckout($serviziRows);
 
-        $aliquotaIva = parametri_globali::query()
-            ->where('denominazione', 'Aliquota IVA')
-            ->attivoOggi()
-            ->value('valore_percentuale');
+        $aliquotaIva = parametri_globali::recordAttivo('Aliquota IVA')?->valore_percentuale;
         $aliquotaIva = $aliquotaIva !== null ? (float) $aliquotaIva : 22.0;
 
         $metodi = metodo_pagamento_ordine::query()
@@ -160,6 +160,13 @@ class CheckoutController extends Controller
         $isLiccardiTms = $corriereModel
             && LiccardiVolumeSconto::isCorriereLiccardiTms($corriereModel);
 
+        $ritiroDomicilio = RitiroCheckoutDomicilio::corriereRichiedeDataRitiro($corriereModel);
+        $ritiroEtichetta = RitiroCheckoutDomicilio::etichettaCheckout($corriereModel);
+        $giorniRitiro = RitiroDateSelezionabili::giorniFinestra();
+        $dateRitiroOpzioni = RitiroDateSelezionabili::dateDa(now());
+        $dataRitiroSelezionata = old('data_ritiro', RitiroDateSelezionabili::primoGiornoValido());
+        $ritiroApiRisposta = $request->session()->get('checkout_ritiro_api_risposta');
+
         return view('checkout', [
             'preventivo' => $preventivo,
             'riga' => $riga,
@@ -185,10 +192,16 @@ class CheckoutController extends Controller
             'quoteServizioUrl' => route('checkout.quote-servizio'),
             'isLiccardiTms' => $isLiccardiTms,
             'liccardiVolumeMessaggio' => $isLiccardiTms ? LiccardiVolumeSconto::messaggioPreventivo() : null,
-            'walletCommissionPct' => CarrelloPrezziWallet::commissioniPct(),
+            'walletCommissionPct' => PreventivoColonnePagamento::commissioniPctMetodo(MetodoPagamentoCodice::WALLET),
             'liccardiPrezzoVolume' => $isLiccardiTms
                 ? LiccardiVolumeSconto::trasportoScontato($trasportoIvaEsc)
                 : null,
+            'ritiroDomicilio' => $ritiroDomicilio,
+            'ritiroEtichetta' => $ritiroEtichetta,
+            'giorniRitiro' => $giorniRitiro,
+            'dateRitiroOpzioni' => $dateRitiroOpzioni,
+            'dataRitiroSelezionata' => $dataRitiroSelezionata,
+            'ritiroApiRisposta' => is_array($ritiroApiRisposta) ? $ritiroApiRisposta : null,
         ]);
     }
 

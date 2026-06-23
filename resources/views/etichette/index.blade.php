@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('content')
 <div class="sq-bleed-layout sq-etichette-page">
-    <x-sq-page-banner title="Etichette" icon="fa-tag" class="sq-page-banner--full" />
+    <x-sq-page-banner title="Lettere di Vettura" icon="fa-tag" class="sq-page-banner--full" />
 
     <div class="sq-listing-page sq-etichette-listing">
 
@@ -24,17 +24,33 @@
         @endif
 
         <form method="GET" action="{{ route('etichette.index') }}" class="sq-listing-toolbar" autocomplete="off">
-            <div class="sq-filtros-card sq-etichette-filtri">
-                <div class="filtros-row">
+            <input type="hidden" name="sort" value="{{ $sortColumn }}">
+            <input type="hidden" name="dir" value="{{ $sortDir }}">
+            <div class="sq-filtros-card sq-etichette-filtri @if($filtroPeriod === 'custom') sq-etichette-filtri--periodo-custom @endif">
+                <div class="filtros-row sq-etichette-filtros-row">
                     <div class="campo sq-etichette-filtro-codice">
-                        <label for="codice_etichetta" class="filtro-label">Codice o etichetta</label>
+                        <label for="codice_etichetta" class="filtro-label">LdV o Codice</label>
                         <input id="codice_etichetta" name="codice_etichetta" type="text"
-                               value="{{ $filtroCodiceEtichetta }}" placeholder="Codice o etichetta">
+                               value="{{ $filtroCodiceEtichetta }}" placeholder="LdV o codice">
                     </div>
-                    <div class="campo">
+                    <div class="campo sq-etichette-filtro-ordine">
                         <label for="numero_ordine" class="filtro-label">N. ordine</label>
                         <input id="numero_ordine" name="numero_ordine" type="text"
-                               value="{{ $filtroNumeroOrdine }}" placeholder="Es.: 19 o ORS-19">
+                               value="{{ $filtroNumeroOrdine }}" placeholder="Es.: 27">
+                    </div>
+                    <div class="campo sq-etichette-filtro-corriere">
+                        <label for="corriere_id" class="filtro-label">Corriere</label>
+                        <select id="corriere_id" name="corriere_id">
+                            <option value="" @selected($filtroCorriere === '')>Tutti</option>
+                            @foreach ($corrieriFiltro as $cor)
+                                @php
+                                    $nomeCor = trim((string) ($cor->nome_visualizzato ?: $cor->nome_corriere));
+                                @endphp
+                                <option value="{{ $cor->id }}" @selected($filtroCorriere === (string) $cor->id)>
+                                    {{ $nomeCor }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="campo sq-etichette-filtro-dest">
                         <label for="destinatario" class="filtro-label">Destinatario</label>
@@ -47,19 +63,46 @@
                         </datalist>
                     </div>
                     @include('etichette.partials.filtro-data-pagamento')
-                    <div class="campo sq-etichette-filtro-submit">
-                        <span class="filtro-label sq-sr-only">Filtra</span>
-                        <button type="submit" class="sq-btn-filtrar-icon" title="Applica filtri" aria-label="Applica filtri">
-                            <i class="fa-solid fa-filter" aria-hidden="true"></i>
-                        </button>
-                    </div>
-                    <div class="campo sq-etichette-filtro-per-page">
-                        <label for="per_page_etichette" class="filtro-label">Per pagina</label>
-                        <select id="per_page_etichette" name="per_page" class="sq-etichette-per-page-select" onchange="this.form.submit()">
-                            @foreach ([10, 25, 50, 100] as $n)
-                                <option value="{{ $n }}" @selected($perPage === $n)>{{ $n }}</option>
+                    <div class="campo sq-etichette-filtro-status">
+                        <label for="status_etichette" class="filtro-label">Status</label>
+                        <select id="status_etichette" name="status">
+                            <option value="" @selected($filtroStatus === '')>Tutti gli status</option>
+                            @foreach ($statiEtichette as $stato)
+                                <option value="{{ $stato->id }}" @selected($filtroStatus === (string) $stato->id)>
+                                    {{ ucfirst($stato->denominazione_stato) }}
+                                </option>
                             @endforeach
                         </select>
+                    </div>
+                    <div class="campo sq-etichette-filtro-servizi">
+                        <label for="servizio_aggiuntivo_id" class="filtro-label">Servizi Aggiuntivi</label>
+                        <select id="servizio_aggiuntivo_id" name="servizio_aggiuntivo_id">
+                            <option value="" @selected($filtroServizioAggiuntivo === '')>Tutti</option>
+                            @foreach ($serviziAggiuntiviFiltro as $servizio)
+                                @php
+                                    $etichettaServ = trim((string) ($servizio->abbrev ?: $servizio->denominazione_servizio));
+                                @endphp
+                                <option value="{{ $servizio->id }}" @selected($filtroServizioAggiuntivo === (string) $servizio->id)>
+                                    {{ $etichettaServ }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="sq-etichette-filtri-tail">
+                        <div class="campo sq-etichette-filtro-submit">
+                            <span class="filtro-label sq-etichette-filtro-label-ph" aria-hidden="true">Filtra</span>
+                            <button type="submit" class="sq-btn-filtrar-icon sq-etichette-filtro-btn" title="Applica filtri" aria-label="Applica filtri">
+                                <i class="fa-solid fa-filter" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                        <div class="campo sq-etichette-filtro-per-page">
+                            <label for="per_page_etichette" class="filtro-label">Per pagina</label>
+                            <select id="per_page_etichette" name="per_page" class="sq-etichette-per-page-select" onchange="this.form.submit()">
+                                @foreach ([10, 25, 50, 100] as $n)
+                                    <option value="{{ $n }}" @selected($perPage === $n)>{{ $n }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>

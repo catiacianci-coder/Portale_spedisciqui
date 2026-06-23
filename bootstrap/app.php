@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AppendCsrfTokenHeader;
 use App\Http\Middleware\EnsureBackofficeUser;
 use App\Http\Middleware\IdrataCarrelloSessione;
 use App\Http\Middleware\SharePageHelpContent;
@@ -22,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             IdrataCarrelloSessione::class,
             SharePageHelpContent::class,
+            AppendCsrfTokenHeader::class,
         ]);
         $middleware->validateCsrfTokens(except: [
             'stripe/webhook',

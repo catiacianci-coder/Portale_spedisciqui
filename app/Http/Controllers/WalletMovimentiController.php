@@ -43,7 +43,7 @@ class WalletMovimentiController extends Controller
             ],
             'showUsuarioColumn' => false,
             'formAction' => route('wallet.movimenti'),
-            'walletSaldoFormatado' => number_format((float) ($user->walletSaldo?->saldo ?? 0), 2, ',', '.').' €',
+            'walletSaldoFormatado' => \App\Support\ImportoEuro::format((float) ($user->walletSaldo?->saldo ?? 0)),
         ]);
     }
 }

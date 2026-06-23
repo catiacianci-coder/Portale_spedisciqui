@@ -8,7 +8,7 @@
  * Base: blu classico, sottolineatura sempre; visitato uguale al non visitato (nessun colore “visited”).
  * Hover: colore più scuro + sottolineatura più marcata; active brand; transizione 0.3s.
  */
-.sq-content--frontend a:not(.sq-btn-primary):not(.sq-btn-primary-block):not(.sq-btn-secondary):not(.sq-modal-btn):not(.sq-profilo-azione-btn):not(.sq-ordini-icon-action):not(.sq-sped-act):not(.sq-sped-act--link):not([class*="btn"]) {
+.sq-content--frontend a:not(.sq-btn-primary):not(.sq-btn-primary-block):not(.sq-btn-secondary):not(.sq-modal-btn):not(.sq-profilo-azione-btn):not(.sq-ordini-icon-action):not(.sq-sped-act):not(.sq-sped-act--link):not(.sq-pay-metodo-card):not(.sq-pay-metodo-card--link):not(.sq-listing-tab-card):not(.sq-ordine-pagamento-back-btn):not(.sq-th-sort-link):not([class*="btn"]) {
     color: #0000ee !important;
     text-decoration: underline !important;
     text-decoration-color: currentcolor;
@@ -23,18 +23,18 @@
         text-underline-offset 0.3s ease;
 }
 
-.sq-content--frontend a:not(.sq-btn-primary):not(.sq-btn-primary-block):not(.sq-btn-secondary):not(.sq-modal-btn):not(.sq-profilo-azione-btn):not(.sq-ordini-icon-action):not(.sq-sped-act):not(.sq-sped-act--link):not([class*="btn"]):visited {
+.sq-content--frontend a:not(.sq-btn-primary):not(.sq-btn-primary-block):not(.sq-btn-secondary):not(.sq-modal-btn):not(.sq-profilo-azione-btn):not(.sq-ordini-icon-action):not(.sq-sped-act):not(.sq-sped-act--link):not(.sq-pay-metodo-card):not(.sq-pay-metodo-card--link):not(.sq-listing-tab-card):not(.sq-ordine-pagamento-back-btn):not(.sq-th-sort-link):not([class*="btn"]):visited {
     color: #0000ee !important;
 }
 
 /* Hover: stesso aspetto per link visitati e non visitati */
-.sq-content--frontend a:not(.sq-btn-primary):not(.sq-btn-primary-block):not(.sq-btn-secondary):not(.sq-modal-btn):not(.sq-profilo-azione-btn):not(.sq-ordini-icon-action):not(.sq-sped-act):not(.sq-sped-act--link):not([class*="btn"]):hover {
+.sq-content--frontend a:not(.sq-btn-primary):not(.sq-btn-primary-block):not(.sq-btn-secondary):not(.sq-modal-btn):not(.sq-profilo-azione-btn):not(.sq-ordini-icon-action):not(.sq-sped-act):not(.sq-sped-act--link):not(.sq-pay-metodo-card):not(.sq-pay-metodo-card--link):not(.sq-listing-tab-card):not(.sq-ordine-pagamento-back-btn):not(.sq-th-sort-link):not([class*="btn"]):hover {
     color: #000099 !important;
     text-decoration-thickness: 2px;
     text-underline-offset: 0.18em;
 }
 
-.sq-content--frontend a:not(.sq-btn-primary):not(.sq-btn-primary-block):not(.sq-btn-secondary):not(.sq-modal-btn):not(.sq-profilo-azione-btn):not(.sq-ordini-icon-action):not(.sq-sped-act):not(.sq-sped-act--link):not([class*="btn"]):active {
+.sq-content--frontend a:not(.sq-btn-primary):not(.sq-btn-primary-block):not(.sq-btn-secondary):not(.sq-modal-btn):not(.sq-profilo-azione-btn):not(.sq-ordini-icon-action):not(.sq-sped-act):not(.sq-sped-act--link):not(.sq-pay-metodo-card):not(.sq-pay-metodo-card--link):not(.sq-listing-tab-card):not(.sq-ordine-pagamento-back-btn):not(.sq-th-sort-link):not([class*="btn"]):active {
     color: var(--sq-brand) !important;
     text-decoration-thickness: 2px;
 }

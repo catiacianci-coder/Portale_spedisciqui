@@ -148,6 +148,11 @@ class spedizione extends Model
         return SpedizioneCampiPersistenza::prezzoClienteIvatoDaOrdine($this);
     }
 
+    public function prezzoClienteIvatoWallet(): ?float
+    {
+        return SpedizioneCampiPersistenza::prezzoClienteIvatoWalletDaOrdine($this);
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

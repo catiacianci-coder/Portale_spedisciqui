@@ -247,7 +247,7 @@ class SendcloudShippingOptionsService
             $insurance = $this->extractInsurancePriceForCode($bodyInsurance, $code);
             $rows[$i]['insurance_price'] = $insurance;
             $rows[$i]['insurance_label'] = ($insurance !== null && $insurance > 0)
-                ? number_format($insurance, 2, ',', '.').' €'
+                ? \App\Support\ImportoEuro::format($insurance)
                 : '—';
         }
 

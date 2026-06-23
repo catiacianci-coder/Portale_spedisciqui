@@ -631,6 +631,66 @@ button.sq-liccardi-btn--delete {
 .sq-homepage-avviso__text {
     flex: 0 1 auto;
 }
+.sq-home-premium-banner {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 20px;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 22px 24px;
+    box-sizing: border-box;
+    background: var(--sq-bg-white, #fff);
+    border: 1px solid var(--sq-border, #e5e7eb);
+    border-left: 6px solid var(--sq-brand, #ff6600);
+    border-radius: 14px;
+    box-shadow: var(--sq-card-shadow);
+    color: var(--sq-text-heading, #1f2937);
+}
+.sq-home-premium-banner__icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid #ffe0cc;
+    font-size: 2rem;
+    line-height: 1;
+    color: var(--sq-brand, #ff6600);
+    box-shadow: 0 4px 12px var(--sq-brand-glow-10);
+}
+.sq-home-premium-banner__text {
+    width: 100%;
+}
+.sq-home-premium-banner__line {
+    margin: 0;
+    font-size: clamp(1rem, 1.8vw, 1.1rem);
+    line-height: 1.45;
+    color: var(--sq-text-body, #374151);
+}
+.sq-home-premium-banner__line--title {
+    font-weight: 700;
+    color: var(--sq-text-heading, #1f2937);
+    margin-bottom: 6px;
+}
+.sq-home-premium-banner__link {
+    font-weight: 700;
+    color: var(--sq-brand, #ff6600);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 2px;
+}
+.sq-home-premium-banner__link:hover {
+    color: var(--sq-brand-hover, #e65c00);
+    text-decoration-color: var(--sq-brand-hover, #e65c00);
+}
+.assistenza-bo-card--premium .assistenza-bo-card__title i {
+    color: #d97706;
+}
 .sq-table tbody tr.rimborso-row--evidenziato {
     outline: 2px solid rgba(10, 89, 105, 0.35);
     outline-offset: -2px;
@@ -765,47 +825,27 @@ button.sq-liccardi-btn--delete {
 .home-vantaggi-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 20px 24px;
+    gap: 28px 32px;
     align-items: stretch;
 }
 @media (max-width: 560px) {
     .home-vantaggi-grid {
         grid-template-columns: 1fr;
-        gap: 16px;
+        gap: 24px;
     }
 }
 .home-vantaggio-item {
     display: flex;
     flex-direction: row;
     align-items: flex-start;
-    gap: 16px;
+    gap: 20px;
     min-width: 0;
-    padding: 18px 20px;
-    background: #fff;
-    border: 1px solid #e8e8e8;
-    border-radius: 14px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
-    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
-}
-@media (hover: hover) and (pointer: fine) {
-    .home-vantaggio-item:hover {
-        transform: translateY(-5px) scale(1.02);
-        box-shadow: 0 14px 28px rgba(0, 0, 0, 0.1), 0 4px 12px var(--sq-brand-glow-12);
-        border-color: #ffd4b8;
-    }
-}
-@media (prefers-reduced-motion: reduce) {
-    .home-vantaggio-item {
-        transition: none;
-    }
-    .home-vantaggio-item:hover {
-        transform: none;
-    }
+    padding: 4px 0;
 }
 .home-vantaggio-circle {
     flex-shrink: 0;
-    width: 64px;
-    height: 64px;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
     background: #fff;
     border: 2px solid #ffe0cc;
@@ -821,12 +861,12 @@ button.sq-liccardi-btn--delete {
     object-fit: cover;
 }
 .home-vantaggio-icon {
-    font-size: 1.45rem;
+    font-size: 1.85rem;
     color: var(--sq-brand);
     line-height: 1;
 }
 .home-vantaggio-fallback {
-    font-size: 1.05rem;
+    font-size: 1.25rem;
     font-weight: 800;
     color: var(--sq-brand);
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
@@ -834,19 +874,19 @@ button.sq-liccardi-btn--delete {
 .home-vantaggio-copy {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
     min-width: 0;
-    padding-top: 2px;
+    padding-top: 6px;
 }
 .home-vantaggio-titolo {
-    font-size: clamp(0.95rem, 1.8vw, 1.05rem);
+    font-size: clamp(1.05rem, 2vw, 1.15rem);
     font-weight: 700;
     color: #222;
     line-height: 1.3;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 }
 .home-vantaggio-testo {
-    font-size: clamp(0.85rem, 1.5vw, 0.92rem);
+    font-size: clamp(0.95rem, 1.6vw, 1.02rem);
     color: #555;
     line-height: 1.45;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
@@ -897,12 +937,10 @@ button.sq-liccardi-btn--delete {
 .home-partner-slide {
     flex: 0 0 auto;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 10px;
-    min-width: 150px;
-    max-width: 180px;
-    text-align: center;
+    justify-content: center;
+    min-width: 140px;
+    max-width: 160px;
 }
 .home-partner-logo {
     max-width: 140px;
@@ -923,13 +961,6 @@ button.sq-liccardi-btn--delete {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-}
-.home-partner-name {
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: #444;
-    line-height: 1.25;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 }
 .home-spedizione-debug {
@@ -972,6 +1003,25 @@ button.sq-liccardi-btn--delete {
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     border-top: 5px solid var(--sq-brand);
     font-family: var(--sq-font-ui);
+    overflow: visible;
+}
+
+.register-comune-field {
+    position: relative;
+    margin-bottom: 15px;
+    min-width: 0;
+}
+
+.register-comune-field--prov {
+    flex: 1;
+}
+
+.register-comune-cap-row {
+    align-items: flex-start;
+}
+
+.register-comune-suggest {
+    z-index: 1200;
 }
 
 .register-container h2 {
@@ -1641,8 +1691,8 @@ button.sq-liccardi-btn--delete {
     border-left: 6px solid var(--sq-sep);
     border-radius: 12px;
     padding: 16px 18px;
-    text-decoration: none;
-    color: inherit;
+    text-decoration: none !important;
+    color: inherit !important;
     box-shadow: var(--sq-card-shadow);
     transition: box-shadow 0.2s ease, border-left-color 0.2s ease;
 }
@@ -1650,6 +1700,8 @@ button.sq-liccardi-btn--delete {
 .ordini-index-page .sq-listing-tab-card:hover {
     border-left-color: var(--sq-brand);
     box-shadow: 0 8px 24px var(--sq-brand-glow-12);
+    color: inherit !important;
+    text-decoration: none !important;
 }
 
 .ordini-index-page .sq-listing-tab-card.is-active {
@@ -1716,27 +1768,6 @@ button.sq-liccardi-btn--delete {
     line-height: 1.5;
     border-collapse: collapse;
     background: #fff;
-}
-
-.ordini-index-page .sq-ordini-table .sq-thead-row,
-.ordini-index-page .sq-ordini-table .sq-thead-row--neutral,
-.ordini-index-page .sq-ordini-table .sq-thead-row--warm {
-    background: transparent;
-    background-image: none;
-}
-
-.ordini-index-page .sq-ordini-table .sq-th {
-    padding: 18px 20px 14px;
-    font-weight: 700;
-    font-size: 11px;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: var(--sq-petrol, #0a5969);
-    background: transparent;
-    border: none;
-    border-right: none;
-    border-bottom: 1px solid #e8ecef;
-    vertical-align: bottom;
 }
 
 .ordini-index-page .sq-ordini-table .sq-th--right {
@@ -1854,44 +1885,6 @@ button.sq-liccardi-btn--delete {
     color: var(--sq-text-muted);
 }
 
-.sq-ordine-remessas-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 12px 16px;
-}
-
-.sq-ordine-remessas-check-all {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--sq-text-heading);
-    cursor: pointer;
-    user-select: none;
-}
-
-.sq-btn-elimina-marcate {
-    padding: 8px 14px;
-    border-radius: 8px;
-    border: 1px solid var(--sq-error-border);
-    background: var(--sq-error-btn-bg);
-    color: var(--sq-error-text);
-    font-size: 13px;
-    font-weight: 600;
-    font-family: var(--sq-font-ui);
-    cursor: pointer;
-}
-
-.sq-btn-elimina-marcate:hover:not(:disabled) {
-    background: var(--sq-error-bg);
-}
-
-.sq-btn-elimina-marcate:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-}
 
 .sq-ordine-remessas-table-wrap {
     margin-top: 0;
@@ -1901,35 +1894,41 @@ button.sq-liccardi-btn--delete {
 }
 
 .sq-ordine-remessas-table {
-    min-width: 960px;
-    font-size: 14px;
+    min-width: 1080px;
+    font-size: 12px;
+}
+
+.sq-ordine-remessas-table tbody .sq-td,
+.sq-ordine-remessas-table tbody .sq-ordine-remessa-nome,
+.sq-ordine-remessas-table tbody .sq-ordine-remessa-indirizzo,
+.sq-ordine-remessas-table tbody .sq-ordine-remessa-codice,
+.sq-ordine-remessas-table tbody .sq-fw-700,
+.sq-ordine-remessas-table tbody .sq-text-14,
+.sq-ordine-remessas-table tbody .sq-ordine-etq-tracking {
+    font-size: 12px;
+    font-weight: 400;
+    color: #111111;
+    font-family: var(--sq-font-ui);
 }
 
 .sq-ordine-remessa-codice {
-    font-family: ui-monospace, monospace;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--sq-brand-dark);
     white-space: nowrap;
 }
 
 .sq-ordine-remessa-person {
-    line-height: 1.25;
+    line-height: 1.35;
     min-width: 160px;
 }
 
-.sq-ordine-remessa-nome {
-    display: block;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--sq-text-heading);
-}
-
+.sq-ordine-remessa-nome,
 .sq-ordine-remessa-indirizzo {
     display: block;
-    font-size: 11px;
-    color: var(--sq-text-muted);
+    line-height: 1.35;
     margin-top: 2px;
+}
+
+.sq-ordine-remessa-person > :first-child {
+    margin-top: 0;
 }
 
 .sq-ordine-remessa-badges {
@@ -1950,6 +1949,10 @@ button.sq-liccardi-btn--delete {
     opacity: 0.9;
 }
 
+.sq-ordine-remessas-table tbody .sq-text-muted {
+    color: #111111;
+}
+
 .sq-ordine-remessas-table tfoot td {
     background: var(--sq-bg-soft);
     border-top: 2px solid var(--sq-border);
@@ -1960,13 +1963,7 @@ button.sq-liccardi-btn--delete {
     min-width: 1180px;
 }
 
-.sq-ordine-remessas-table {
-    min-width: 1080px;
-}
-
 .sq-ordine-etq-tracking {
-    font-family: ui-monospace, monospace;
-    font-size: 12px;
     line-height: 1.3;
     word-break: break-all;
     max-width: 11rem;
@@ -2075,6 +2072,18 @@ button.sq-liccardi-btn--delete {
     box-sizing: border-box;
 }
 
+.checkout-page .sq-checkout-pay-metodi {
+    margin-top: 4px;
+}
+
+.checkout-page .sq-checkout-pay-metodi .sq-pay-metodi-grid {
+    justify-content: flex-start;
+}
+
+.checkout-page .sq-checkout-metodo-item {
+    flex: 0 0 auto;
+}
+
 /* Pagamento: riepilogo ordine — fascia titolo e TH bianchi, testo verde petrolio */
 .ordine-pagamento-page .sq-ordine-remessas-card-head {
     background: #fff;
@@ -2084,24 +2093,6 @@ button.sq-liccardi-btn--delete {
 .ordine-pagamento-page .sq-ordine-remessas-card-head strong {
     color: var(--sq-petrol, #0a5969);
     font-weight: 800;
-}
-
-.ordine-pagamento-page .sq-ordine-remessas-table .sq-thead-row,
-.ordine-pagamento-page .sq-ordine-remessas-table .sq-thead-row--neutral,
-.ordine-pagamento-page .sq-ordine-remessas-table .sq-thead-row--warm {
-    background: #fff;
-    background-image: none;
-}
-
-.ordine-pagamento-page .sq-ordine-remessas-table .sq-th {
-    background: #fff;
-    color: var(--sq-petrol, #0a5969);
-    border-right: none;
-    border-bottom: 1px solid #e8ecef;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
 }
 
 .sq-pay-metodo-card-form {
@@ -2120,7 +2111,7 @@ button.sq-liccardi-btn--delete {
     border: 1px solid #e5e7eb;
     border-radius: 10px;
     padding: 10px 16px 10px;
-    box-shadow: 0 1px 6px rgba(15, 23, 42, 0.05);
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.09);
     width: 220px;
     min-width: 220px;
     max-width: 100%;
@@ -2136,8 +2127,8 @@ button.sq-liccardi-btn--delete {
 
 .sq-pay-metodo-card:hover:not(:disabled) {
     border-color: #b8d4cb;
-    box-shadow: 0 4px 14px rgba(10, 89, 105, 0.12);
-    transform: translateY(-1px);
+    box-shadow: 0 8px 22px rgba(10, 89, 105, 0.16);
+    transform: translateY(-2px);
 }
 
 .sq-pay-metodo-card:focus-visible {
@@ -2150,6 +2141,209 @@ button.sq-liccardi-btn--delete {
     opacity: 0.55;
     cursor: not-allowed;
     transform: none;
+    pointer-events: none;
+}
+
+a.sq-pay-metodo-card,
+.sq-pay-metodo-card--link {
+    text-decoration: none !important;
+    color: inherit !important;
+}
+
+a.sq-pay-metodo-card:visited,
+.sq-pay-metodo-card--link:visited {
+    color: inherit !important;
+}
+
+a.sq-pay-metodo-card:hover,
+.sq-pay-metodo-card--link:hover {
+    color: inherit !important;
+    text-decoration: none !important;
+}
+
+.sq-pay-metodo-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.ordine-pagamento-checkout-page {
+    padding: 4px 20px 32px;
+}
+
+.sq-ordine-pagamento-checkout-wrap {
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.sq-ordine-pagamento-back {
+    margin: 0 0 16px;
+    text-align: center;
+}
+
+.sq-ordine-pagamento-back-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 18px;
+    border: 1px solid var(--sq-teal, #0a5969);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--sq-teal, #0a5969);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sq-ordine-pagamento-back-btn:hover {
+    border-color: var(--sq-petrol, #084552);
+    box-shadow: 0 2px 10px rgba(10, 89, 105, 0.12);
+}
+
+.sq-ordine-pagamento-checkout-panel {
+    background: var(--sq-bg-white, #fff);
+    border: 1px solid var(--sq-shell-border, #e5e7eb);
+    border-radius: 12px;
+    box-shadow: 0 8px 22px rgba(20, 16, 42, 0.08);
+    padding: 28px 24px 32px;
+    margin: 0 auto;
+}
+
+.sq-ordine-pagamento-panel-title {
+    margin: 0 0 16px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.3;
+    text-align: center;
+    color: #1f2937;
+}
+
+.sq-ordine-pagamento-panel-text {
+    margin: 0 auto 16px;
+    max-width: 480px;
+    font-size: 15px;
+    line-height: 1.55;
+    color: #475569;
+    text-align: center;
+}
+
+.sq-ordine-pagamento-panel-note {
+    margin: 0 auto 16px;
+    max-width: 520px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #64748b;
+    text-align: center;
+}
+
+.sq-ordine-pagamento-inline-totale {
+    color: var(--sq-teal, #0a5969);
+    font-weight: 800;
+}
+
+.sq-ordine-pagamento-total-label {
+    margin: 0 0 4px;
+    font-size: 14px;
+    line-height: 1.4;
+    color: #64748b;
+    text-align: center;
+}
+
+.sq-ordine-pagamento-total-value {
+    margin: 0 0 20px;
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--sq-teal, #0a5969);
+    text-align: center;
+}
+
+.sq-ordine-pagamento-panel-form {
+    margin-top: 8px;
+}
+
+.sq-ordine-pagamento-submit-btn {
+    width: 100%;
+    max-width: 360px;
+    margin: 16px auto 0;
+    display: block;
+    padding: 16px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.sq-stripe-card-element,
+#sq-stripe-card-element {
+    max-width: 420px;
+    margin: 0 auto 16px;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.sq-ordine-pagamento-errore {
+    max-width: 420px;
+    margin: 0 auto 12px;
+    color: #b71c1c;
+    font-size: 14px;
+    text-align: center;
+}
+
+.sq-bonifico-copy-stack--page {
+    max-width: 480px;
+    margin: 0 auto 8px;
+}
+
+.sq-ordine-pagamento-bonifico-dati {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin: 20px 0 8px;
+    text-align: left;
+}
+
+.sq-ordine-pagamento-bonifico-dati .sq-bonifico-copy-block {
+    text-align: left;
+}
+
+.sq-ordine-pagamento-bonifico-dati .sq-bonifico-copy-label {
+    text-align: left;
+}
+
+.sq-ordine-pagamento-bonifico-dati .sq-bonifico-copy-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    width: 100%;
+}
+
+.sq-ordine-pagamento-bonifico-dati .sq-bonifico-copy-value {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: none;
+}
+
+.sq-ordine-pagamento-bonifico-dati .sq-bonifico-copy-btn {
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+}
+
+.sq-ordine-pagamento-bonifico-dati .sq-bonifico-copy-value {
+    box-shadow: inset 0 0 0 1px #e5e7eb;
+}
+
+.ordine-pagamento-checkout-page .sq-ordine-pagamento-panel-note,
+.ordine-pagamento-checkout-page .sq-ordine-pagamento-panel-text {
+    text-align: left;
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
 }
 
 .sq-pay-metodo-card__icon-wrap {
@@ -2453,9 +2647,22 @@ body.sq-ind-punto-open {
 
 /* —— Assistenza / ticket —— */
 .assistenza-page__inner {
-    max-width: 720px;
+    max-width: 1180px;
     margin: 0 auto;
     padding: 0 16px 40px;
+}
+
+.assistenza-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: 20px;
+    align-items: start;
+}
+
+@media (max-width: 960px) {
+    .assistenza-layout {
+        grid-template-columns: 1fr;
+    }
 }
 
 .assistenza-card {
@@ -2551,16 +2758,6 @@ body.sq-ind-punto-open {
     color: var(--sq-accent, #0a5969);
 }
 
-.assistenza-painel-nova {
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid var(--sq-border);
-}
-
-.assistenza-painel-nova[hidden] {
-    display: none !important;
-}
-
 .assistenza-faq-link {
     color: var(--sq-accent, #0a5969);
     font-weight: 600;
@@ -2637,6 +2834,45 @@ body.sq-ind-punto-open {
     margin-bottom: 0 !important;
     padding: 8px 10px !important;
     font-size: 14px !important;
+}
+
+.assistenza-period-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 8px;
+}
+
+.assistenza-period-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 140px;
+}
+
+.assistenza-period-field select {
+    margin-bottom: 0 !important;
+    padding: 8px 10px !important;
+    font-size: 14px !important;
+}
+
+.assistenza-period-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sq-text-main);
+}
+
+#fluxo-riprenot select#riprenot_corriere {
+    max-width: 320px;
+}
+
+#fluxo-commerciale input[type="text"] {
+    max-width: 420px;
+}
+
+.assistenza-input-piva {
+    max-width: 180px;
+    text-transform: uppercase;
 }
 
 .assistenza-sped-list label {
@@ -2810,7 +3046,7 @@ body.sq-ind-punto-open {
 
 .sq-sidebar-assistenza-badge {
     margin-left: auto;
-    color: #dea90b;
+    color: var(--sq-brand);
     font-size: 14px;
 }
 

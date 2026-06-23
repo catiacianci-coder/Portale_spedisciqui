@@ -7,6 +7,10 @@
     $tipo = $tempData['tipo_utente'] ?? auth()->user()?->tipo_utente ?? 'privato';
     $turnstileEnabled = \App\Services\TurnstileVerifier::isConfigured();
     $turnstileSiteKey = \App\Services\ParametriApiConfig::turnstileSiteKey();
+    $showFase3 = $errors->hasAny([
+        'nome', 'cognome', 'indirizzo', 'civico', 'cap', 'citta', 'provincia', 'telefono',
+        'denominazione_ragione_sociale', 'partita_iva', 'pec', 'codice_sdi',
+    ]) || (old('codice_fiscale') && $step2);
 @endphp
 
 <div class="register-container">
@@ -71,52 +75,61 @@
         </div>
         <p id="cf_hint" class="sq-register-cf-hint">Inserisci il codice fiscale per caricare i dati.</p>
 
-        <div id="fase3_fields" class="hidden">
+        <div id="fase3_fields" class="{{ $showFase3 ? '' : 'hidden' }}">
             
             @if($tipo !== 'privato')
                 <label>Ragione Sociale / Denominazione <span>*</span></label>
-                <input type="text" id="denominazione_ragione_sociale" name="denominazione_ragione_sociale" required>
+                <input type="text" id="denominazione_ragione_sociale" name="denominazione_ragione_sociale" value="{{ old('denominazione_ragione_sociale') }}" required>
+                @error('denominazione_ragione_sociale') <span class="error-validation">{{ $message }}</span> @enderror
 
                 <label>Partita IVA <span>*</span></label>
-                <input type="text" id="partita_iva" name="partita_iva" maxlength="11" required>
+                <input type="text" id="partita_iva" name="partita_iva" value="{{ old('partita_iva') }}" maxlength="11" required>
+                @error('partita_iva') <span class="error-validation">{{ $message }}</span> @enderror
             @endif
 
             <div class="row">
                 <div>
                     <label>Nome <span>*</span></label>
-                    <input type="text" id="nome" name="nome" required>
+                    <input type="text" id="nome" name="nome" value="{{ old('nome') }}" required>
+                    @error('nome') <span class="error-validation">{{ $message }}</span> @enderror
                 </div>
                 <div>
                     <label>Cognome <span>*</span></label>
-                    <input type="text" id="cognome" name="cognome" required>
+                    <input type="text" id="cognome" name="cognome" value="{{ old('cognome') }}" required>
+                    @error('cognome') <span class="error-validation">{{ $message }}</span> @enderror
                 </div>
             </div>
 
             <div class="register-row--addr">
                 <div>
                     <label>Indirizzo <span>*</span></label>
-                    <input type="text" id="indirizzo" name="indirizzo" required>
+                    <input type="text" id="indirizzo" name="indirizzo" value="{{ old('indirizzo') }}" required>
+                    @error('indirizzo') <span class="error-validation">{{ $message }}</span> @enderror
                 </div>
                 <div>
                     <label>Civico <span>*</span></label>
-                    <input type="text" id="civico" name="civico" required>
+                    <input type="text" id="civico" name="civico" value="{{ old('civico') }}" required>
+                    @error('civico') <span class="error-validation">{{ $message }}</span> @enderror
                 </div>
             </div>
             
-            @livewire('comune')
+            @include('registrazione.partials.comune-fields')
 
             <label>Telefono <span>*</span></label>
-            <input type="text" id="telefono" name="telefono" required>
+            <input type="text" id="telefono" name="telefono" value="{{ old('telefono') }}" required>
+            @error('telefono') <span class="error-validation">{{ $message }}</span> @enderror
 
             @if($tipo !== 'privato')
                 <div class="row">
                     <div>
                         <label>PEC</label>
-                        <input type="email" id="pec" name="pec">
+                        <input type="email" id="pec" name="pec" value="{{ old('pec') }}">
+                        @error('pec') <span class="error-validation">{{ $message }}</span> @enderror
                     </div>
                     <div>
                         <label>Codice SDI</label>
-                        <input type="text" id="codice_sdi" name="codice_sdi" maxlength="7">
+                        <input type="text" id="codice_sdi" name="codice_sdi" value="{{ old('codice_sdi') }}" maxlength="7">
+                        @error('codice_sdi') <span class="error-validation">{{ $message }}</span> @enderror
                     </div>
                 </div>
             @endif
@@ -133,11 +146,40 @@
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script>
     const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+
+    function syncRegisterCsrfToken() {
+        if (!csrfMeta) {
+            return;
+        }
+        const token = csrfMeta.getAttribute('content');
+        if (!token) {
+            return;
+        }
+        document.querySelectorAll('#form_step1 input[name="_token"], #form_step2 input[name="_token"]').forEach((input) => {
+            input.value = token;
+        });
+        axios.defaults.headers.common['X-CSRF-TOKEN'] = token;
+    }
+
     if (csrfMeta) {
-        axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfMeta.getAttribute('content');
+        syncRegisterCsrfToken();
         axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
         axios.defaults.headers.common['Accept'] = 'application/json';
+
+        axios.interceptors.response.use((response) => {
+            const newToken = response.headers['x-csrf-token'];
+            if (newToken) {
+                csrfMeta.setAttribute('content', newToken);
+            }
+            syncRegisterCsrfToken();
+            return response;
+        });
     }
+
+    document.getElementById('form_step2')?.addEventListener('submit', () => {
+        syncRegisterCsrfToken();
+    });
+
     function handleCFInput() {
         const cfInput = document.getElementById('cf_input');
         const btnVerify = document.getElementById('btn_verify_cf');
@@ -150,6 +192,7 @@
     }
 
     function verifyCF() {
+        syncRegisterCsrfToken();
         const cf = document.getElementById('cf_input').value;
         const btn = document.getElementById('btn_verify_cf');
         const tipoUtente = "{{ $tipo }}";
@@ -179,10 +222,15 @@
                 document.getElementById('indirizzo').value = d.indirizzo || '';
                 document.getElementById('civico').value = d.civico || '';
                 
-                // IMPORTANTE: Questi ID devono corrispondere a quelli nel componente Livewire
-                if(document.getElementById('cap')) document.getElementById('cap').value = d.cap || '';
-                if(document.getElementById('citta')) document.getElementById('citta').value = d.citta || '';
-                if(document.getElementById('provincia')) document.getElementById('provincia').value = d.provincia || '';
+                if (document.getElementById('cap')) {
+                    document.getElementById('cap').value = d.cap || '';
+                }
+                if (document.getElementById('citta')) {
+                    document.getElementById('citta').value = d.citta || '';
+                }
+                if (document.getElementById('provincia')) {
+                    document.getElementById('provincia').value = d.provincia || '';
+                }
                 
                 document.getElementById('telefono').value = d.telefono || '';
                 
@@ -218,5 +266,11 @@
         document.getElementById('btn_verify_cf').style.display = 'none';
         document.getElementById('cf_hint').innerText = "Verifica completata. Controlla i dati obbligatori prima di salvare.";
     }
+
+    @if ($showFase3)
+    document.addEventListener('DOMContentLoaded', () => {
+        showFase3();
+    });
+    @endif
 </script>
 @endsection

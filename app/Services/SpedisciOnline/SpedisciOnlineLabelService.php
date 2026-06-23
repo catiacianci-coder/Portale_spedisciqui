@@ -6,18 +6,24 @@ use App\Models\spedizione;
 use App\Services\SpedizioneStatoService;
 use App\Support\PiattaformaCorriere;
 use App\Support\SpedisciOnlineIntegrazione;
+use App\Support\UserPostingEnablement;
 use Illuminate\Http\Client\Response;
 
 class SpedisciOnlineLabelService
 {
     public function __construct(
-        private readonly SpedisciOnlineRatesService $rates,
+        private readonly SpedisciOnlineCreateLabelService $createLabel,
         private readonly SpedisciOnlineEtichettaPdfService $etichettaPdf,
     ) {}
 
     public function createFromSpedizione(spedizione $spedizione): SpedisciOnlineLabelResult
     {
-        $spedizione->loadMissing('corriereRecord');
+        $spedizione->loadMissing(['corriereRecord', 'user']);
+
+        if (UserPostingEnablement::tentaSegnaBloccoPostPagamento($spedizione)) {
+            return new SpedisciOnlineLabelResult(false, UserPostingEnablement::messaggioBlocco($spedizione->user));
+        }
+
         $piattaforma = $spedizione->corriereRecord?->piattaforma;
         $client = SpedisciOnlineClient::forPiattaforma($piattaforma);
 
@@ -32,12 +38,20 @@ class SpedisciOnlineLabelService
             return new SpedisciOnlineLabelResult(false, 'Piattaforma corriere non supportata per Spedisci.online.');
         }
 
-        $input = $this->rates->buildInputFromSpedizione($spedizione);
-        $payload = $this->rates->buildPayload($input);
+        $corriere = $spedizione->corriereRecord;
+        if (! $corriere) {
+            return new SpedisciOnlineLabelResult(false, 'Corriere non associato alla spedizione.');
+        }
 
-        $stored = SpedisciOnlineIntegrazione::decode($spedizione);
-        if (isset($stored['rate']) && is_array($stored['rate'])) {
-            $payload['selectedRate'] = $stored['rate'];
+        $payload = $this->createLabel->buildCreatePayloadFromSpedizione($spedizione, $corriere);
+
+        $carrierCode = trim((string) ($payload['carrierCode'] ?? ''));
+        $contractCode = trim((string) ($payload['contractCode'] ?? ''));
+        if ($carrierCode === '' || $contractCode === '') {
+            return new SpedisciOnlineLabelResult(
+                false,
+                'carrier_code o codice_servizio (contractCode) mancante sul corriere della spedizione.',
+            );
         }
 
         $response = $client->post('/shipping/create', $payload);

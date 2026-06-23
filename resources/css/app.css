@@ -19,7 +19,6 @@
 @import './sq/links-frontend.css';
 @import './sq/commerce.css';
 @import './sq/preventivi.css';
-@import './sq/sendcloud-test.css';
 @import './sq/checkout-stepper.css';
 @import './sq/pages.css';
 @import './sq/listing-panels.css';
@@ -30,3 +29,7 @@
 @import './sq/legal-docs.css';
 @import './sq/backoffice-docs.css';
 @import './sq/backoffice-rimborsi.css';
+@import './sq/backoffice-utenti.css';
+@import './sq/backoffice-corrieri.css';
+@import './sq/backoffice-utilities.css';
+@import './sq/responsive-frontend.css';

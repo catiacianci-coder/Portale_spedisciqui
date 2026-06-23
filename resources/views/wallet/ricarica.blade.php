@@ -18,7 +18,7 @@
             <strong>Informazioni sulla ricarica:</strong>
         </p>
         <p>
-            <strong>Importo minimo:</strong> La ricarica deve essere di un importo intero pari o superiore a 150 € (come previsto dalle condizioni commerciali vigenti).
+            <strong>Importo minimo:</strong> La ricarica deve essere di un importo intero pari o superiore a {{ \App\Support\ImportoEuro::format($minEuro, 0) }} (come previsto dalle condizioni commerciali vigenti).
         </p>
         <p>
             <strong>Valuta:</strong> Gli importi sono espressi in Euro (EUR).
@@ -29,7 +29,7 @@
     </div>
 
     <p class="sq-saldo-row sq-text-main">
-        Il tuo saldo attuale è <strong class="sq-saldo-strong">{{ $fmtDec($saldoAttuale) }} €</strong>
+        Il tuo saldo attuale è <strong class="sq-saldo-strong">{{ \App\Support\ImportoEuro::format($saldoAttuale) }}</strong>
     </p>
 
     <hr class="sq-hr-brand">
@@ -51,7 +51,7 @@
     @endif
 
     <h2 class="sq-h2-ricarica wallet-ricarica-subtitle">
-        Inserisci un importo intero di almeno {{ $fmtInt($minEuro) }} €
+        Inserisci un importo intero di almeno {{ \App\Support\ImportoEuro::format($minEuro, 0) }}
     </h2>
 
     <form method="POST" action="{{ route('wallet.ricarica.store') }}" class="sq-form-zero">

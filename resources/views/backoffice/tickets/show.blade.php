@@ -48,7 +48,7 @@
                 <dl>
                     @if ($ticket->ordine)
                         <dt>Ordine</dt>
-                        <dd>{{ $ticket->ordine->codice }}</dd>
+                        <dd>{{ $ticket->ordine->id }}</dd>
                     @endif
                     @if ($ticket->spedizione)
                         <dt>Etichetta / spedizione</dt>
@@ -62,7 +62,11 @@
                 </dl>
             @endif
             @if ($spedizioniRiferimento->isNotEmpty())
-                @if ($ticket->tipoProblema?->codigo === \App\Models\TicketTipoProblema::CODIGO_ETIQUETA_NAO_GERADA)
+                @if (in_array($ticket->tipoProblema?->codigo, [
+                    \App\Models\TicketTipoProblema::CODIGO_ETIQUETA_NAO_GERADA,
+                    \App\Models\TicketTipoProblema::CODIGO_TRACKING,
+                    \App\Models\TicketTipoProblema::CODIGO_RIPRENOTAZIONE_RITIRO,
+                ], true))
                     <h3 class="sq-mt-16">Etichette (richiesta)</h3>
                     <dl>
                         <dt>Codici interni</dt>
@@ -86,10 +90,68 @@
                     @endforeach
                 @endif
             @endif
+            @if ($ticket->tipoProblema?->codigo === \App\Models\TicketTipoProblema::CODIGO_FATTURA_MANCANTE)
+                <h3 class="sq-mt-16">Periodo fattura</h3>
+                <dl>
+                    <dt>Mese / Anno</dt>
+                    <dd>{{ $ticket->campo_1 ?? '—' }} / {{ $ticket->campo_2 ?? '—' }}</dd>
+                </dl>
+            @endif
+            @if ($ticket->tipoProblema?->codigo === \App\Models\TicketTipoProblema::CODIGO_TRACKING && ($ticket->campo_2 || $ticket->campo_3))
+                <h3 class="sq-mt-16">Riferimento tracking</h3>
+                <dl>
+                    @if ($ticket->campo_2)
+                        <dt>Modalità</dt>
+                        <dd>{{ $ticket->campo_2 }}</dd>
+                    @endif
+                    @if ($ticket->campo_3)
+                        <dt>Codice / tracking indicato</dt>
+                        <dd>{{ $ticket->campo_3 }}</dd>
+                    @endif
+                </dl>
+            @endif
+            @if ($ticket->tipoProblema?->codigo === \App\Models\TicketTipoProblema::CODIGO_RIPRENOTAZIONE_RITIRO && $ticket->campo_3)
+                <h3 class="sq-mt-16">Riprenotazione ritiro</h3>
+                <dl>
+                    <dt>Corriere</dt>
+                    <dd>{{ $ticket->campo_3 }}</dd>
+                </dl>
+            @endif
+            @if ($ticket->tipoProblema?->codigo === \App\Models\TicketTipoProblema::CODIGO_RICHIESTE_PREMIUM)
+                <h3 class="sq-mt-16">Richiesta tariffe scontate</h3>
+                <dl>
+                    <dt>Nome impresa</dt>
+                    <dd>{{ $ticket->campo_1 ?? '—' }}</dd>
+                    <dt>Partita IVA</dt>
+                    <dd>{{ $ticket->campo_2 ?? '—' }}</dd>
+                    <dt>Indirizzo di mittente</dt>
+                    <dd>{{ $ticket->campo_3 ?? '—' }}</dd>
+                    <dt>Spedizioni settimanali</dt>
+                    <dd>{{ $ticket->campo_4 ?? '—' }}</dd>
+                </dl>
+            @endif
+            @if ($ticket->tipoProblema?->codigo === \App\Models\TicketTipoProblema::CODIGO_COMMERCIALE)
+                <h3 class="sq-mt-16">Contatto commerciale</h3>
+                <dl>
+                    <dt>Nome e cognome</dt>
+                    <dd>{{ $ticket->campo_1 ?? '—' }}</dd>
+                    <dt>Nome impresa</dt>
+                    <dd>{{ $ticket->campo_2 ?? '—' }}</dd>
+                    <dt>Partita IVA</dt>
+                    <dd>{{ $ticket->campo_3 ?? '—' }}</dd>
+                </dl>
+            @endif
             <h3 class="sq-mt-16">Campi aggiuntivi</h3>
             <dl>
                 @for ($i = 1; $i <= 9; $i++)
-                    @if ($i === 1 && $ticket->tipoProblema?->codigo === \App\Models\TicketTipoProblema::CODIGO_ETIQUETA_NAO_GERADA)
+                    @if (in_array($ticket->tipoProblema?->codigo, [
+                        \App\Models\TicketTipoProblema::CODIGO_ETIQUETA_NAO_GERADA,
+                        \App\Models\TicketTipoProblema::CODIGO_TRACKING,
+                        \App\Models\TicketTipoProblema::CODIGO_RIPRENOTAZIONE_RITIRO,
+                        \App\Models\TicketTipoProblema::CODIGO_FATTURA_MANCANTE,
+                        \App\Models\TicketTipoProblema::CODIGO_COMMERCIALE,
+                        \App\Models\TicketTipoProblema::CODIGO_RICHIESTE_PREMIUM,
+                    ], true) && in_array($i, [1, 2, 3, 4], true))
                         @continue
                     @endif
                     @php

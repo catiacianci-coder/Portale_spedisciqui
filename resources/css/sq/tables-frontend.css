@@ -9,8 +9,11 @@
 }
 
 .sq-content--frontend .sq-table .sq-th {
-    font-weight: 700;
-    font-size: 13px;
+    font-weight: var(--sq-table-head-font-weight);
+    font-size: var(--sq-table-head-font-size);
+    letter-spacing: var(--sq-table-head-letter-spacing);
+    text-transform: uppercase;
+    color: var(--sq-table-head-text);
 }
 
 .sq-content--frontend .sq-table tbody .sq-td {
@@ -45,6 +48,16 @@
 
 .sq-content--frontend .sq-table .sq-badge {
     font-weight: 600;
+}
+
+.sq-content--frontend .sq-ordine-remessas-table tbody .sq-td,
+.sq-content--frontend .sq-ordine-remessas-table tbody .sq-fw-700,
+.sq-content--frontend .sq-ordine-remessas-table tbody .sq-ordine-remessa-nome,
+.sq-content--frontend .sq-ordine-remessas-table tbody .sq-ordine-remessa-indirizzo,
+.sq-content--frontend .sq-ordine-remessas-table tbody .sq-ordine-remessa-codice {
+    font-size: 12px;
+    font-weight: 400;
+    color: #111111;
 }
 
 /* Spedizioni: destinatario (span dedicato) allineato al corpo tabella */

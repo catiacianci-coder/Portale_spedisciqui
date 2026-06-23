@@ -8,16 +8,14 @@ use App\Models\wallet_descrizione;
 use App\Models\wallet_movimento;
 use App\Models\wallet_ricarica_richiesta;
 use App\Services\WalletSaldoService;
+use App\Support\ImportoEuro;
 use Illuminate\Http\Request;
 
 class WalletRicaricaController extends Controller
 {
     private function minimoEuro(): int
     {
-        $v = parametri_globali::query()
-            ->where('denominazione', 'Ricarica wallet minimo (EUR)')
-            ->attivoOggi()
-            ->value('valore_assoluto');
+        $v = parametri_globali::recordAttivo('Ricarica wallet minimo (EUR)')?->valore_assoluto;
 
         if ($v !== null) {
             return max(1, (int) round((float) $v));
@@ -48,7 +46,7 @@ class WalletRicaricaController extends Controller
         ], [
             'importo.required' => 'Inserisci un importo.',
             'importo.integer' => 'L\'importo deve essere un numero intero (senza centesimi).',
-            'importo.min' => 'L\'importo minimo è :min €.',
+            'importo.min' => 'L\'importo minimo è '.ImportoEuro::format($min, 0).'.',
         ]);
 
         $euro = (int) $validated['importo'];
@@ -66,7 +64,7 @@ class WalletRicaricaController extends Controller
 
             return redirect()
                 ->route('wallet.ricarica')
-                ->with('ok', 'Ricarica simulata: sono stati accreditati '.number_format($euro, 0, ',', '.').' € sul wallet (solo modalità sviluppo).');
+                ->with('ok', 'Ricarica simulata: sono stati accreditati '.ImportoEuro::format($euro, 0).' sul wallet (solo modalità sviluppo).');
         }
 
         wallet_ricarica_richiesta::query()->create([
@@ -77,6 +75,6 @@ class WalletRicaricaController extends Controller
 
         return redirect()
             ->route('wallet.ricarica')
-            ->with('info', 'Richiesta di ricarica di '.number_format($euro, 0, ',', '.').' € registrata in attesa di pagamento. L’importo non è ancora accreditato: quando il gateway sarà attivo confermeremo l’incasso; in ambiente di test il back-office può simulare l’accredito.');
+            ->with('info', 'Richiesta di ricarica di '.ImportoEuro::format($euro, 0).' registrata in attesa di pagamento. L’importo non è ancora accreditato: quando il gateway sarà attivo confermeremo l’incasso; in ambiente di test il back-office può simulare l’accredito.');
     }
 }

@@ -7,6 +7,7 @@ use App\Models\spedizione;
 use App\Models\stato_spedizione;
 use App\Services\Liccardi\LiccardiTmsTrackingService;
 use App\Services\Sendcloud\SendcloudTrackingService;
+use App\Services\SpedisciOnline\SpedisciOnlineTrackingService;
 use App\Support\CorriereTrackingUrl;
 use App\Support\LiccardiTmsIntegrazione;
 use App\Support\PiattaformaCorriere;
@@ -19,6 +20,7 @@ final class SpedizioneTrackingService
     public function __construct(
         private readonly SendcloudTrackingService $sendcloudTracking,
         private readonly LiccardiTmsTrackingService $liccardiTracking,
+        private readonly SpedisciOnlineTrackingService $spedisciOnlineTracking,
         private readonly MsgTracciamentoService $msgTracciamento,
     ) {}
 
@@ -87,6 +89,105 @@ final class SpedizioneTrackingService
     }
 
     /**
+     * Prima della richiesta rimborso (cancellazione etichetta sul corriere).
+     *
+     * @throws DomainException
+     */
+    public function assertEtichettaNonSpeditaPerRimborsoRichiesta(spedizione $spedizione): void
+    {
+        $this->assertEtichettaNonSpeditaPerRimborsoInterno(
+            $spedizione,
+            (string) config(
+                'rimborso.messaggio_corriere_non_risponde_cancellazione',
+                'Il sistema del trasportatore non permette in questo momento di effettuare la cancellazione. Riprovare tra qualche minuto.',
+            ),
+            (string) config(
+                'rimborso.messaggio_etichetta_gia_spedita_richiesta',
+                'L’etichetta risulta già affidata al corriere: non è possibile procedere con il rimborso.',
+            ),
+        );
+    }
+
+    /**
+     * Prima dell’accredito wallet (backoffice).
+     *
+     * @throws DomainException
+     */
+    public function assertEtichettaNonSpeditaPerRimborsoPagamento(spedizione $spedizione): void
+    {
+        $this->assertEtichettaNonSpeditaPerRimborsoInterno(
+            $spedizione,
+            (string) config(
+                'rimborso.messaggio_corriere_non_risponde_pagamento',
+                'Il server del corriere non risponde: impossibile verificare lo stato dell’etichetta. Riprovare tra qualche minuto.',
+            ),
+            (string) config(
+                'rimborso.messaggio_etichetta_gia_spedita',
+                'L’etichetta risulta già affidata al corriere: impossibile accreditare il rimborso.',
+            ),
+        );
+    }
+
+    /**
+     * @throws DomainException
+     */
+    private function assertEtichettaNonSpeditaPerRimborsoInterno(
+        spedizione $spedizione,
+        string $messaggioCorriereNonRisponde,
+        string $messaggioGiaSpedita,
+    ): void {
+        $spedizione->loadMissing('corriereRecord');
+        $corriere = $spedizione->corriereRecord;
+
+        if ($corriere === null || ! (bool) ($corriere->trackingsn ?? false)) {
+            return;
+        }
+
+        if (! $this->haIdentificativoTrackingCorriere($spedizione)) {
+            return;
+        }
+
+        try {
+            $risultato = $this->consultaApi($spedizione, $corriere);
+            $this->persistiRisultato($spedizione, $risultato);
+
+            if (! $risultato['ok']) {
+                throw new DomainException($messaggioCorriereNonRisponde);
+            }
+
+            $response = $risultato['response'];
+            if (! is_array($response)) {
+                return;
+            }
+
+            $eventi = PiattaformaCorriere::corriereUsaAcquistoSendcloud($corriere)
+                ? TrackingEventoVerifica::eventiDaResponseSendcloud($response)
+                : (PiattaformaCorriere::corriereUsaAcquistoLiccardiTms($corriere)
+                    ? TrackingEventoVerifica::eventiDaResponseLiccardi($response)
+                    : (PiattaformaCorriere::corriereUsaAcquistoSpedisciOnline($corriere)
+                        ? TrackingEventoVerifica::eventiDaResponseSpedisciOnline($response)
+                        : []));
+
+            if ($eventi === []) {
+                $statoGrezzo = trim((string) ($risultato['stato'] ?? ''));
+                if ($statoGrezzo !== '') {
+                    $eventi = [['status' => $statoGrezzo, 'data' => '']];
+                }
+            }
+
+            TrackingEventoVerifica::assertUltimoEventoNonSpedito(
+                $eventi,
+                TrackingEventoVerifica::fragmentiBloccoCorrecao(),
+                $messaggioGiaSpedita,
+            );
+        } catch (DomainException $e) {
+            throw $e;
+        } catch (\Throwable) {
+            throw new DomainException($messaggioCorriereNonRisponde);
+        }
+    }
+
+    /**
      * Prima della correzione etichetta: consulta il tracking e verifica che non sia già spedita.
      *
      * @throws DomainException
@@ -126,7 +227,9 @@ final class SpedizioneTrackingService
                 ? TrackingEventoVerifica::eventiDaResponseSendcloud($response)
                 : (PiattaformaCorriere::corriereUsaAcquistoLiccardiTms($corriere)
                     ? TrackingEventoVerifica::eventiDaResponseLiccardi($response)
-                    : []);
+                    : (PiattaformaCorriere::corriereUsaAcquistoSpedisciOnline($corriere)
+                        ? TrackingEventoVerifica::eventiDaResponseSpedisciOnline($response)
+                        : []));
 
             if ($eventi === []) {
                 $statoGrezzo = trim((string) ($risultato['stato'] ?? ''));
@@ -205,6 +308,10 @@ final class SpedizioneTrackingService
             return $this->liccardiTracking->consulta($spedizione);
         }
 
+        if (PiattaformaCorriere::corriereUsaAcquistoSpedisciOnline($corriere)) {
+            return $this->spedisciOnlineTracking->consulta($spedizione, $corriere);
+        }
+
         return [
             'ok' => false,
             'stato' => null,
@@ -229,7 +336,7 @@ final class SpedizioneTrackingService
                 : null;
 
             $fill['tracking_errore'] = null;
-            $fill['tracking_status'] = $risultato['stato'];
+            $fill['tracking_status'] = self::limitaTrackingStatus($risultato['stato']);
             $fill['traking_evento_em'] = $risultato['evento_at'] ?? now();
             $fill['tracking_evento'] = $responseJson;
         } else {
@@ -237,5 +344,15 @@ final class SpedizioneTrackingService
         }
 
         $spedizione->forceFill($fill)->save();
+    }
+
+    private static function limitaTrackingStatus(?string $stato): ?string
+    {
+        $stato = trim((string) $stato);
+        if ($stato === '') {
+            return null;
+        }
+
+        return mb_strlen($stato) > 255 ? mb_substr($stato, 0, 252).'…' : $stato;
     }
 }

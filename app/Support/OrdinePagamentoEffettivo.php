@@ -65,7 +65,6 @@ final class OrdinePagamentoEffettivo
         $ordine->loadMissing(['spedizioni.tariffaSpedizione']);
 
         $aliquota = TariffaSpedizioneClienteIvato::aliquotaIva($ordine);
-        $totaleOrdine = self::importoOrdine($ordine, $metodoPagamentoOrdineId);
 
         /** @var array<int, tariffa_spedizione> $tariffe */
         $tariffe = [];
@@ -83,44 +82,9 @@ final class OrdinePagamentoEffettivo
             return;
         }
 
-        $importi = [];
         foreach ($tariffe as $tariffa) {
-            $importi[] = self::importoSpedizioneDaTariffa($tariffa, $metodoPagamentoOrdineId, $aliquota);
-        }
-
-        $sum = round(array_sum($importi), 2);
-        if ($totaleOrdine > 0 && abs($sum - $totaleOrdine) > 0.01) {
-            $remaining = $totaleOrdine;
-            $lastIndex = count($importi) - 1;
-            $sumNetto = 0.0;
-            foreach ($tariffe as $tariffa) {
-                $sumNetto += self::isWalletMetodo($metodoPagamentoOrdineId)
-                    ? (float) ($tariffa->totale_spedizione_wallet ?? $tariffa->totale_spedizione ?? 0)
-                    : (float) ($tariffa->totale_spedizione ?? 0);
-            }
-            $sumNetto = round($sumNetto, 2);
-
-            foreach ($tariffe as $i => $tariffa) {
-                if ($i === $lastIndex) {
-                    $quota = round($remaining, 2);
-                } elseif ($sumNetto > 0) {
-                    $nettoRiga = self::isWalletMetodo($metodoPagamentoOrdineId)
-                        ? (float) ($tariffa->totale_spedizione_wallet ?? $tariffa->totale_spedizione ?? 0)
-                        : (float) ($tariffa->totale_spedizione ?? 0);
-                    $quota = round($totaleOrdine * ($nettoRiga / $sumNetto), 2);
-                    $remaining = round($remaining - $quota, 2);
-                } else {
-                    $quota = round($totaleOrdine / count($tariffe), 2);
-                    $remaining = round($remaining - $quota, 2);
-                }
-                $tariffa->update(['pag_effettivo_sp' => $quota]);
-            }
-
-            return;
-        }
-
-        foreach ($tariffe as $i => $tariffa) {
-            $tariffa->update(['pag_effettivo_sp' => round($importi[$i], 2)]);
+            $importo = self::importoSpedizioneDaTariffa($tariffa, $metodoPagamentoOrdineId, $aliquota);
+            $tariffa->update(['pag_effettivo_sp' => round($importo, 2)]);
         }
     }
 }

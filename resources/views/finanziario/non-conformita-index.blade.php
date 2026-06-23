@@ -36,7 +36,7 @@
                             <td class="sq-td sq-fw-700">{{ $p->numero_pratica }}</td>
                             <td class="sq-td">{{ $p->stato === \App\Models\nc_pratica::STATO_CHIUSO ? 'Chiusa' : 'Aperta' }}</td>
                             <td class="sq-td sq-text-muted">{{ $p->created_at?->format('d/m/Y H:i') }}</td>
-                            <td class="sq-td sq-td--right sq-fw-700">{{ number_format($residuo, 2, ',', '.') }} €</td>
+                            <td class="sq-td sq-td--right sq-fw-700">{{ \App\Support\ImportoEuro::format($residuo) }}</td>
                             <td class="sq-td sq-td--right">
                                 <span class="sq-nc-actions-icons">
                                     <a href="{{ route('finanziario.nc.show', $p->id) }}" class="sq-nc-action-icon" title="Dettaglio" aria-label="Dettaglio pratica {{ e($p->numero_pratica) }}">

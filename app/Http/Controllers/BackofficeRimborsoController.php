@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ordine;
 use App\Models\rimborso;
+use App\Models\User;
 use App\Support\CodiceOrdine;
 use App\Services\Rimborso\RimborsoEsecuzionePagamentoService;
 use App\Support\FiltriTabella;
@@ -21,6 +22,11 @@ class BackofficeRimborsoController extends Controller
 
     public function index(Request $request): View|RedirectResponse
     {
+        $userId = max(0, (int) $request->input('user_id', 0));
+        if ($userId > 0) {
+            return redirect()->route('backoffice.rimborsi.pendentes', ['user_id' => $userId]);
+        }
+
         if ($request->has('paga_oggi')) {
             return redirect()->route('backoffice.rimborsi.pendentes', [
                 'paga_oggi' => $request->boolean('paga_oggi') ? 1 : 0,
@@ -38,10 +44,19 @@ class BackofficeRimborsoController extends Controller
     {
         $pagaOggi = $request->boolean('paga_oggi');
         $perPage = FiltriTabella::perPage($request);
+        $userId = max(0, (int) $request->input('user_id', 0));
+        $selectedUser = $userId > 0 ? User::query()->find($userId) : null;
 
         $base = rimborso::query()
             ->whereNull('data_reale')
-            ->with(['spedizione.user', 'spedizione.ordine', 'metodoPagamentoRimborso'])
+            ->with([
+                'spedizione.user',
+                'spedizione.ordine',
+                'spedizione.corriereRecord',
+                'spedizione.spedizioneStato',
+                'metodoPagamentoRimborso',
+            ])
+            ->when($userId > 0, fn ($q) => $q->whereHas('spedizione', fn ($s) => $s->where('user_id', $userId)))
             ->orderBy('data_prevista')
             ->orderBy('id');
 
@@ -56,15 +71,20 @@ class BackofficeRimborsoController extends Controller
             'pendentes' => $pendentes,
             'perPage' => $perPage,
             'totalPendentes' => (clone $base)->count(),
+            'filtroUserId' => $userId,
+            'selectedUser' => $selectedUser,
         ]);
     }
 
     public function rimborsati(Request $request): View
     {
         $perPage = FiltriTabella::perPage($request);
+        $userId = max(0, (int) $request->input('user_id', 0));
+        $selectedUser = $userId > 0 ? User::query()->find($userId) : null;
 
         $rimborsati = rimborso::query()
             ->whereNotNull('data_reale')
+            ->when($userId > 0, fn ($q) => $q->whereHas('spedizione', fn ($s) => $s->where('user_id', $userId)))
             ->with(['spedizione.user', 'spedizione.ordine', 'metodoPagamentoRimborso'])
             ->orderByDesc('data_reale')
             ->orderByDesc('id')
@@ -74,6 +94,8 @@ class BackofficeRimborsoController extends Controller
         return view('backoffice.rimborsi.index', [
             'sezione' => 'rimborsati',
             'rimborsati' => $rimborsati,
+            'filtroUserId' => $userId,
+            'selectedUser' => $selectedUser,
         ]);
     }
 
@@ -90,7 +112,7 @@ class BackofficeRimborsoController extends Controller
             $id = CodiceOrdine::idDaRiferimento($raw);
 
             if ($id === null) {
-                $erro = 'Numero ordine non valido (usa O123 o 123).';
+                $erro = 'ID ordine non valido (solo cifre).';
             } else {
                 $ordine = ordine::query()->find($id);
                 if (! $ordine) {
@@ -149,6 +171,6 @@ class BackofficeRimborsoController extends Controller
 
         return redirect()
             ->back()
-            ->with('rimborso_bo_ok', 'Rimborso accreditato sul wallet del cliente ('.number_format((float) $rimborso->valore, 2, ',', '.').' €).');
+            ->with('rimborso_bo_ok', 'Rimborso accreditato sul wallet del cliente ('.\App\Support\ImportoEuro::format((float) $rimborso->valore).').');
     }
 }

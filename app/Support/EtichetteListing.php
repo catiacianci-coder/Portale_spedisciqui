@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\ordine;
 use App\Models\spedizione;
 use App\Support\EtichettaSpedizioneAccess as EtichettaAccess;
 use App\Support\SpedizioneEtichettaStato;
@@ -14,7 +15,7 @@ final class EtichetteListing
     /**
      * @return array{
      *     codice_interno: string,
-     *     ordine_codice: string,
+     *     ordine_id: string,
      *     data_pagamento_fmt: string,
      *     email: string,
      *     servizio: string,
@@ -36,8 +37,13 @@ final class EtichetteListing
      *     dettaglio_url: string
      * }
      */
-    public static function dettaglioPayload(spedizione $s): array
-    {
+    public static function dettaglioPayload(
+        spedizione $s,
+        string $etichettaRoute = 'spedizioni.etichetta',
+        string $dettaglioRoute = 'etichette.spedizione.dettaglio',
+        string $correcaoRoute = 'etichette.spedizione.correcao',
+        string $retryRoute = 'etichette.spedizione.retry',
+    ): array {
         $s->loadMissing([
             'ordine.user',
             'ordine.metodoPagamentoOrdine',
@@ -50,11 +56,7 @@ final class EtichetteListing
         $ord = $s->ordine;
         $importoIvato = $s->prezzoClienteIvato();
         $ldvCancellata = EtichettaAccess::etichettaCancellata($s);
-        $ldvStampabile = ! $ldvCancellata && (
-            SpedisciOnlineIntegrazione::etichettaStampabile($s)
-            || trim((string) $s->etiqueta_pdf_path) !== ''
-            || trim((string) $s->id_shipment) !== ''
-        );
+        $ldvStampabile = ! $ldvCancellata && SpedizioneEtichettaStato::haEtichettaEsistente($s);
 
         $metodo = trim((string) ($ord?->metodoPagamentoOrdine?->descrizione ?? ''));
         $podeCorrigir = SpedizioneEtichettaStato::podeCorrigir($s);
@@ -62,42 +64,107 @@ final class EtichetteListing
 
         return [
             'codice_interno' => (string) ($s->codice_interno ?? ''),
-            'ordine_codice' => (string) ($ord?->codice ?? ''),
+            'ordine_id' => $ord?->id ? (string) (int) $ord->id : '',
             'data_pagamento_fmt' => $ord?->data_pagamento?->format('d/m/Y H:i') ?? '—',
             'email' => (string) ($ord?->user?->email ?? ''),
             'servizio' => self::nomeServizio($s),
             'tracking' => trim((string) ($s->tracking ?? '')),
             'stato_label' => (string) ($s->spedizioneStato?->denominazione_stato ?? '—'),
             'importo_ivato_fmt' => $importoIvato !== null
-                ? number_format($importoIvato, 2, ',', '.').' €'
+                ? \App\Support\ImportoEuro::format($importoIvato)
                 : '—',
             'metodo_pagamento' => $metodo !== '' ? $metodo : '—',
             'mittente' => self::persona($s, true),
             'destinatario' => self::persona($s, false),
             'colli' => self::rigaColli($s),
             'valore_merce' => self::valoreMerceServizi($s),
-            'etichetta_url' => $ldvStampabile ? route('spedizioni.etichetta', $s) : null,
+            'etichetta_url' => $ldvStampabile ? route($etichettaRoute, $s) : null,
             'etichetta_disponibile' => $ldvStampabile,
             'etichetta_pendente' => $pendente,
             'pode_corrigir' => $podeCorrigir,
             'motivo_correcao' => SpedizioneEtichettaStato::motivoCorrecaoDisabilitada($s),
-            'correcao_url' => $podeCorrigir ? route('etichette.spedizione.correcao', $s) : null,
-            'retry_url' => $pendente ? route('etichette.spedizione.retry', $s) : null,
-            'dettaglio_url' => route('etichette.spedizione.dettaglio', $s),
+            'correcao_url' => $podeCorrigir ? route($correcaoRoute, $s) : null,
+            'retry_url' => $pendente ? route($retryRoute, $s) : null,
+            'dettaglio_url' => route($dettaglioRoute, $s),
         ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function dettaglioPayloadBackoffice(spedizione $s): array
+    {
+        $payload = self::dettaglioPayload(
+            $s,
+            etichettaRoute: 'backoffice.spedizioni.etichetta',
+            dettaglioRoute: 'backoffice.spedizioni.dettaglio',
+        );
+
+        $s->loadMissing(['ordine', 'user']);
+        $editabile = self::spedizioneEditabileBackoffice($s);
+        $errore = self::erroreGenerazioneEtichetta($s);
+
+        return array_merge($payload, [
+            'context' => 'backoffice',
+            'user_id' => (int) ($s->user_id ?? 0),
+            'editabile_bo' => $editabile,
+            'manual_url' => $editabile ? route('backoffice.spedizioni.manual', $s) : null,
+            'opcoes_url' => $editabile ? route('backoffice.spedizioni.opcoes', $s) : null,
+            'retry_url_bo' => $editabile && ($payload['etichetta_pendente'] || (bool) $s->ldverro)
+                ? route('backoffice.spedizioni.retry', $s)
+                : null,
+            'pdf_url' => $payload['etichetta_url'],
+            'etichetta_erro' => $errore,
+            'etichetta_erro_titolo' => 'Errore nella generazione dell\'etichetta',
+            'rastro_status' => trim((string) ($s->tracking_status ?? '')),
+        ]);
+    }
+
+    public static function spedizioneEditabileBackoffice(spedizione $s): bool
+    {
+        $s->loadMissing('ordine');
+
+        if ($s->ordine === null || ! $s->ordine->haStato(ordine::STATO_PAGATO)) {
+            return false;
+        }
+
+        if ((bool) $s->compensata || $s->padre_comp !== null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public static function erroreGenerazioneEtichetta(spedizione $s): ?string
+    {
+        if (! (bool) $s->ldverro) {
+            return null;
+        }
+
+        $s->loadMissing('corriereRecord');
+        $corriere = $s->corriereRecord;
+
+        if ($corriere && PiattaformaCorriere::corriereUsaAcquistoSendcloud($corriere)) {
+            $msg = SendcloudIntegrazione::tracciaApiAnnounce($s)['error'];
+            if ($msg !== null && $msg !== '') {
+                return $msg;
+            }
+        }
+
+        if ($corriere && PiattaformaCorriere::corriereUsaAcquistoLiccardiTms($corriere)) {
+            $data = LiccardiTmsIntegrazione::decode($s);
+            $msg = trim((string) ($data['last_error'] ?? ''));
+            if ($msg !== '') {
+                return $msg;
+            }
+        }
+
+        return 'Generazione etichetta non riuscita. Controlla i dati della spedizione o carica manualmente tracking e PDF.';
     }
 
     public static function nomeServizio(spedizione $s): string
     {
-        $s->loadMissing('corriereRecord');
-
-        return trim((string) (
-            $s->service_description
-            ?? $s->corriere
-            ?? $s->corriereRecord?->nome_visualizzato
-            ?? $s->corriereRecord?->nome_corriere
-            ?? ''
-        ));
+        return SpedizioneServizioTabella::nomeVisualizzato($s);
     }
 
     /**
@@ -162,22 +229,7 @@ final class EtichetteListing
      */
     public static function destinatarioIndirizzoRigheTabella(spedizione $s): array
     {
-        $via = trim(implode(' ', array_filter([
-            trim((string) ($s->indirizzo_d ?? '')),
-            trim((string) ($s->numero_d ?? '')),
-        ])));
-        $nazione = trim((string) ($s->frazione_d ?? ''));
-        if ($nazione === '') {
-            $nazione = 'Italia';
-        }
-        $localita = trim(implode(' / ', array_filter([
-            trim((string) ($s->citta_d ?? '')),
-            trim((string) ($s->stato_d ?? '')),
-        ])));
-        $cap = trim((string) ($s->cap_d ?? ''));
-        $rigaLocalita = trim(implode(' — ', array_filter([$localita, $cap])));
-
-        return array_values(array_filter([$via, $nazione, $rigaLocalita], static fn (string $l): bool => $l !== ''));
+        return SpedizioneIndirizzoTabella::destinatarioRighe($s);
     }
 
     public static function destinatarioIndirizzoTabella(spedizione $s): string
@@ -238,7 +290,7 @@ final class EtichetteListing
             return [
                 'tipo' => $isContrassegno ? 'contrassegno' : 'assicurazione',
                 'label' => $isContrassegno ? 'Importo contrassegno' : 'Valore assicurato',
-                'importo_fmt' => number_format($valore, 2, ',', '.').' €',
+                'importo_fmt' => \App\Support\ImportoEuro::format($valore),
             ];
         }
 

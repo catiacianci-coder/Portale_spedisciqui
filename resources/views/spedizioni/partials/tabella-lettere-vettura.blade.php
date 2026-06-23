@@ -1,18 +1,7 @@
 @php
     use App\Models\stato_spedizione;
+    use App\Support\EtichetteListing;
     use App\Support\SpedisciOnlineIntegrazione;
-
-    $fmtServizio = static function ($s): string {
-        $s->loadMissing('corriereRecord');
-
-        return trim((string) (
-            $s->service_description
-            ?? $s->corriere
-            ?? $s->corriereRecord?->nome_visualizzato
-            ?? $s->corriereRecord?->nome_corriere
-            ?? ''
-        ));
-    };
 @endphp
 <div class="sq-table-wrap sq-ordine-remessas-table-wrap">
     <table class="sq-table sq-ordine-remessas-table sq-ordine-pagato-etq-table">
@@ -26,6 +15,7 @@
                 <th class="sq-th">Servizio</th>
                 <th class="sq-th">Servizi aggiuntivi</th>
                 <th class="sq-th sq-th--right">@include('partials.th-importo-iva-inclusa')</th>
+                <th class="sq-th">Status</th>
                 <th class="sq-th">Lettera di vettura</th>
                 <th class="sq-th sq-th--right sq-th--actions">Azioni</th>
             </tr>
@@ -36,31 +26,22 @@
                     $ord = $s->ordine;
                     $statoId = (int) $s->spedizione_stato_id;
                     $nomeRem = trim((string) ($s->razione_sociale_o ?: trim((string) (($s->nome_o ?? '') . ' ' . ($s->cognome_o ?? '')))));
-                    $nomeDest = trim((string) trim((string) (($s->nome_d ?? '') . ' ' . ($s->sobrenome_d ?? ''))));
                     $addrRem = trim(implode(' ', array_filter([
                         trim((string) ($s->indirizzo_o ?? '')),
                         trim((string) ($s->numero_o ?? '')),
-                    ])));
-                    $addrDest = trim(implode(' ', array_filter([
-                        trim((string) ($s->indirizzo_d ?? '')),
-                        trim((string) ($s->numero_d ?? '')),
                     ])));
                     $linhaRem2 = trim(implode(' - ', array_filter([
                         trim((string) ($s->frazione_o ?? '')),
                         trim(implode('/', array_filter([trim((string) ($s->citta_o ?? '')), trim((string) ($s->stato_o ?? ''))]))),
                         trim((string) ($s->cap_o ?? '')),
                     ])));
-                    $linhaDest2 = trim(implode(' - ', array_filter([
-                        trim((string) ($s->frazione_d ?? '')),
-                        trim(implode('/', array_filter([trim((string) ($s->citta_d ?? '')), trim((string) ($s->stato_d ?? ''))]))),
-                        trim((string) ($s->cap_d ?? '')),
-                    ])));
-                    $servico = $fmtServizio($s);
+                    $servico = EtichetteListing::nomeServizio($s);
                     $dataPagamento = $ord?->data_pagamento?->format('d/m/Y H:i');
                     $codiceLdV = trim((string) ($s->tracking ?? ''));
                     $etichettaCancellata = SpedisciOnlineIntegrazione::etichettaCancellata($s);
                     $ldvStampabile = SpedisciOnlineIntegrazione::etichettaStampabile($s);
                     $importoIvato = $s->prezzoClienteIvato();
+                    $statoLabel = (string) ($s->spedizioneStato?->denominazione_stato ?? '—');
                     $badgeRimborso = match ($statoId) {
                         stato_spedizione::RIMBORSATA => 'Rimborsata',
                         stato_spedizione::ANNULLATA => $ord?->data_pagamento ? 'In attesa di rimborso' : null,
@@ -78,7 +59,7 @@
                             </div>
                         @endif
                     </td>
-                    <td class="sq-td sq-fw-700">{{ $ord?->codice ?? '—' }}</td>
+                    <td class="sq-td sq-fw-700">{{ $ord?->id ?? '—' }}</td>
                     <td class="sq-td sq-nowrap">{{ $dataPagamento ?? '—' }}</td>
                     <td class="sq-td sq-ordine-remessa-person">
                         <span class="sq-ordine-remessa-nome">{{ $nomeRem !== '' ? $nomeRem : '—' }}</span>
@@ -90,13 +71,7 @@
                         @endif
                     </td>
                     <td class="sq-td sq-ordine-remessa-person">
-                        <span class="sq-ordine-remessa-nome">{{ $nomeDest !== '' ? $nomeDest : '—' }}</span>
-                        @if ($addrDest !== '')
-                            <span class="sq-ordine-remessa-indirizzo">{{ $addrDest }}</span>
-                        @endif
-                        @if ($linhaDest2 !== '')
-                            <span class="sq-ordine-remessa-indirizzo">{{ $linhaDest2 }}</span>
-                        @endif
+                        @include('ordini.partials.spedizione-destinatario-tabella', ['spedizione' => $s])
                     </td>
                     <td class="sq-td">{{ $servico !== '' ? $servico : '—' }}</td>
                     <td class="sq-td sq-text-14">
@@ -105,16 +80,14 @@
                     <td class="sq-td sq-td--right">
                         @include('partials.td-importo-ivato', ['importoIvato' => $importoIvato])
                     </td>
+                    <td class="sq-td">
+                        <span class="sq-etichetta-stato">{{ $statoLabel }}</span>
+                    </td>
                     <td class="sq-td sq-ordine-etq-tracking">
                         @if ($codiceLdV !== '')
                             {{ $codiceLdV }}
                         @else
                             <span class="sq-text-muted">—</span>
-                        @endif
-                        @if ($etichettaCancellata && ! $badgeRimborso)
-                            <div class="sq-ordine-remessa-badges">
-                                <span class="sq-badge sq-badge--muted">Lettera di vettura cancellata</span>
-                            </div>
                         @endif
                     </td>
                     <td class="sq-td sq-td--right">
@@ -144,7 +117,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="10" class="sq-td">Nessuna lettera di vettura nel periodo selezionato.</td>
+                    <td colspan="11" class="sq-td">Nessuna lettera di vettura nel periodo selezionato.</td>
                 </tr>
             @endforelse
         </tbody>

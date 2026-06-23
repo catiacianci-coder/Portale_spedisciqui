@@ -89,6 +89,7 @@ class UserMittenzeService
             'email' => $user->email,
             'is_preferito' => $isPreferito,
             'is_fatturazione' => $isFatturazione,
+            'sede_liccardi' => (bool) ($a->sede_liccardi ?? false),
         ];
     }
 

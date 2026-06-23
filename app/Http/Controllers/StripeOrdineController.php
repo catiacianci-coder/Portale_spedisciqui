@@ -23,6 +23,10 @@ class StripeOrdineController extends Controller
         $outcome = $stripe->confermaDaSessionId($sessionId, $ordine);
         $ordine->refresh();
 
+        $ordine->loadMissing('spedizioni');
+        $spedizione = $ordine->spedizioni->first();
+        $corriereId = (int) ($spedizione?->id_codice_servizio ?? 0);
+
         if (! $outcome['ok']) {
             return redirect()
                 ->route('ordini.pagamento.show', $ordine)
@@ -31,7 +35,13 @@ class StripeOrdineController extends Controller
 
         $flash = $outcome['message'];
         if ($ordine->spedizioni()->where('esiste_integrazione', true)->exists()) {
-            $flash .= ' Acquisto etichetta Spedisci.online avviato.';
+            $flash .= ' Acquisto etichetta avviato (Spedisci.online / Liccardi TMS / Sendcloud se applicabile).';
+        }
+
+        if ($corriereId > 0 && $request->session()->has('checkout_ritiro_api_risposta')) {
+            return redirect()
+                ->route('checkout.show', ['corriere' => $corriereId])
+                ->with('ok', $flash);
         }
 
         return redirect()

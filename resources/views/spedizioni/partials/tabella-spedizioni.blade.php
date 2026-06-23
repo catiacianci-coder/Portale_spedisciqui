@@ -58,22 +58,16 @@
                     $daA = ($capDa !== '' ? $capDa : '—').' - '.($capA !== '' ? $capA : '—');
                     $labels = [];
                     foreach ($s->serviziAggiuntiviRighe as $riga) {
-                        $lbl = $riga->denominazione_servizio
-                            ?? $riga->corriereServizioAggiuntivo?->testo_servizio;
-                        if ($lbl) {
-                            $val = isset($riga->valore_merce) && $riga->valore_merce !== null
-                                ? (float) $riga->valore_merce
-                                : null;
-                            if ($val !== null && $val > 0) {
-                                $lbl .= ' ('.number_format($val, 2, ',', '.').' €)';
-                            }
+                        $lbl = \App\Support\ServizioAggiuntivoEtichetta::perRiga($riga);
+                        if ($lbl !== '') {
                             $labels[] = $lbl;
                         }
                     }
                     $track = trim((string) ($s->tracking ?? ''));
                     $importoRiga = $s->prezzoNettoCliente();
                     $codiceInterno = $s->codice_interno ?? '';
-                    $annullata = $s->ordine && $s->ordine->stato === \App\Models\ordine::STATO_ANNULLATO;
+                    $statoSpedId = (int) $s->spedizione_stato_id;
+                    $spedizioneAnnullata = $statoSpedId === \App\Models\stato_spedizione::ANNULLATA;
                     $etichettaCancellata = \App\Support\SpedisciOnlineIntegrazione::etichettaCancellata($s);
                     $etichettaStampabile = \App\Support\SpedisciOnlineIntegrazione::etichettaStampabile($s);
                     $stripeClass = $loop->odd ? 'sq-sped-row--stripe-white' : 'sq-sped-row--stripe-grey';
@@ -82,14 +76,11 @@
                         ? ($s->ordine && $s->ordine->stato === \App\Models\ordine::STATO_NON_PAGATO)
                         : $azioniNonPagateGlobal;
                 @endphp
-                <tr class="{{ $listingLayout ? '' : $stripeClass }}{{ $annullata ? ' sq-sped-row--annullata' : '' }}">
+                <tr class="{{ $listingLayout ? '' : $stripeClass }}{{ $spedizioneAnnullata ? ' sq-sped-row--annullata' : '' }}">
                     <td class="{{ $tdClass }} sq-nowrap codice-cell">
                         {{ e($codiceInterno) }}
                         @if ($s->reso)
                             <span class="sq-badge sq-badge--warn" style="margin-left:6px;">Reso</span>
-                        @endif
-                        @if ($etichettaCancellata)
-                            <span class="sq-badge sq-badge--muted" style="margin-left:6px;">Etichetta cancellata</span>
                         @endif
                     </td>
                     @if ($listingLayout)
@@ -99,7 +90,7 @@
                         <td class="{{ $tdClass }} sq-text-14 sq-nowrap">{{ e($daA) }}</td>
                         <td class="{{ $tdClass }}">
                             @if ($s->ordine)
-                                <span class="sq-fw-700">{{ $s->ordine->codice }}</span>
+                                <span class="sq-fw-700">{{ $s->ordine->id }}</span>
                             @else
                                 <span class="sq-text-muted">—</span>
                             @endif
@@ -107,7 +98,7 @@
                     @else
                         <td class="{{ $tdClass }}">
                             @if ($s->ordine)
-                                <span class="sq-fw-700">{{ $s->ordine->codice }}</span>
+                                <span class="sq-fw-700">{{ $s->ordine->id }}</span>
                             @else
                                 <span class="sq-text-muted">—</span>
                             @endif
@@ -122,7 +113,7 @@
                         </td>
                         <td class="{{ $tdClass }} sq-text-14 sq-nowrap">{{ e($daA) }}</td>
                     @endif
-                    <td class="{{ $tdClass }} sq-td--right sq-nowrap valor-cell">{{ $importoRiga !== null ? $fmt($importoRiga) : '—' }} €</td>
+                    <td class="{{ $tdClass }} sq-td--right sq-nowrap valor-cell">{{ $importoRiga !== null ? \App\Support\ImportoEuro::format($importoRiga) : '—' }}</td>
                     @if ($mostraColonneExtra)
                         <td class="{{ $tdClass }} sq-text-14 sq-nowrap">
                             @if (filled($s->stripe_payment_intent_id))
@@ -141,7 +132,7 @@
                     @endif
                     @if ($mostraTracking)
                         <td class="{{ $tdClass }} sq-text-14 sq-sped-track-cell">
-                            @if ($annullata)
+                            @if ($spedizioneAnnullata)
                                 <span class="sq-sped-annullata-tracking">Annullata</span>
                             @elseif ($track !== '')
                                 <span class="sq-sped-track-txt" title="{{ e($track) }}">{{ e(\Illuminate\Support\Str::limit($track, 48)) }}</span>
@@ -173,7 +164,7 @@
                                     </span>
                                 @endif
                             @else
-                                @if (! $annullata && $s->ordine)
+                                @if (! $spedizioneAnnullata && $s->ordine)
                                     <button
                                         type="button"
                                         class="{{ $listingLayout ? 'sq-btn-icone' : 'sq-ordini-icon-action sq-ordini-icon-action--view' }} js-spedizioni-ordine-detail-btn"

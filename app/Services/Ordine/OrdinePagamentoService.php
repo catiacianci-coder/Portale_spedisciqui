@@ -7,15 +7,11 @@ use App\Models\ordine;
 use App\Models\wallet_descrizione;
 use App\Models\wallet_movimento;
 use App\Models\wallet_saldo;
-use App\Services\Liccardi\LiccardiTmsAcquistoService;
 use App\Services\OrdineTotaleIvatoService;
-use App\Services\Sendcloud\SendcloudAcquistoService;
-use App\Services\SpedisciOnline\SpedisciOnlineAcquistoService;
 use App\Services\SpedizioneStatoService;
-use App\Services\Stripe\StripeCheckoutService;
-use App\Services\Stripe\StripeConfig;
 use App\Support\OrdineDatiPagamento;
 use App\Support\OrdinePagamentoEffettivo;
+use App\Support\RitiroOrdinePagamento;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -30,7 +26,7 @@ final class OrdinePagamentoService
     {
         if ($ordine->stato !== ordine::STATO_NON_PAGATO) {
             return redirect()
-                ->route('ordini.show', $ordine)
+                ->route('ordini.index', ['aba' => 'pagati'])
                 ->withErrors(['pagamento' => 'Questo ordine non è in attesa di pagamento.']);
         }
 
@@ -40,14 +36,17 @@ final class OrdinePagamentoService
                     return redirect()
                         ->route('checkout.show', ['corriere' => (int) $request->input('checkout_corriere_id')])
                         ->withErrors([
-                            'checkout' => 'Per il Wallet: clicca «Paga», conferma nella finestra e poi «Conferma».',
+                            'checkout' => 'Per il Wallet conferma il pagamento nella pagina dedicata.',
                         ]);
                 }
 
                 return redirect()
-                    ->route('ordini.pagamento.show', $ordine)
+                    ->route('ordini.pagamento.wallet', [
+                        'ordine' => $ordine,
+                        'metodo_pagamento_id' => $metodoId,
+                    ])
                     ->withErrors([
-                        'pagamento' => 'Per pagare con Wallet usa il pulsante «Paga», conferma nella finestra e poi «Conferma».',
+                        'pagamento' => 'Conferma il pagamento Wallet nella pagina dedicata.',
                     ]);
             }
 
@@ -55,19 +54,12 @@ final class OrdinePagamentoService
         }
 
         if ($this->totaleSvc->metodoIsCarta($metodoId)) {
-            if (! StripeConfig::isConfigured()) {
-                return $this->redirectPagamentoErrore($request, $ordine, 'Pagamento con carta non disponibile: configura le chiavi Stripe in .env.');
-            }
-
-            try {
-                $url = app(StripeCheckoutService::class)->createCheckoutSessionUrl($ordine, $metodoId);
-
-                return redirect()->away($url);
-            } catch (\Throwable $e) {
-                report($e);
-
-                return $this->redirectPagamentoErrore($request, $ordine, 'Impossibile avviare il pagamento Stripe. Riprova tra poco.');
-            }
+            return $this->redirectPagamentoErrore(
+                $request,
+                $ordine,
+                $metodoId,
+                'Per pagare con carta usa la pagina dedicata e inserisci i dati della carta.',
+            );
         }
 
         $metodo = metodo_pagamento_ordine::query()->find($metodoId);
@@ -76,27 +68,44 @@ final class OrdinePagamentoService
             'metodo_pagamento' => $metodo?->metodo_pagamento,
         ]);
 
-        $redirect = redirect()
-            ->route('ordini.show', $ordine)
-            ->with('ok', 'Metodo di pagamento registrato. Completa il bonifico secondo le istruzioni riportate.');
-
-        if ($this->totaleSvc->metodoIsBonifico($metodoId)) {
-            $redirect->with('mostra_popup_bonifico', true);
-        }
-
-        return $redirect;
+        return redirect()
+            ->route('ordini.index', ['aba' => 'non_pagati'])
+            ->with('ok', 'Metodo bonifico registrato. Completa il pagamento con le istruzioni ricevute.');
     }
 
-    private function redirectPagamentoErrore(Request $request, ordine $ordine, string $message): RedirectResponse
-    {
+    private function redirectPagamentoErrore(
+        Request $request,
+        ordine $ordine,
+        int $metodoId,
+        string $message,
+    ): RedirectResponse {
         if ($request->filled('checkout_corriere_id')) {
             return redirect()
                 ->route('checkout.show', ['corriere' => (int) $request->input('checkout_corriere_id')])
                 ->withErrors(['checkout' => $message]);
         }
 
+        if ($this->totaleSvc->metodoIsCarta($metodoId)) {
+            return redirect()
+                ->route('ordini.pagamento.carta', [
+                    'ordine' => $ordine,
+                    'metodo_pagamento_id' => $metodoId,
+                ])
+                ->withErrors(['pagamento' => $message]);
+        }
+
         return redirect()
             ->route('ordini.pagamento.show', $ordine)
+            ->withErrors(['pagamento' => $message]);
+    }
+
+    private function redirectPagamentoWalletErrore(ordine $ordine, int $metodoId, string $message): RedirectResponse
+    {
+        return redirect()
+            ->route('ordini.pagamento.wallet', [
+                'ordine' => $ordine,
+                'metodo_pagamento_id' => $metodoId,
+            ])
             ->withErrors(['pagamento' => $message]);
     }
 
@@ -108,9 +117,11 @@ final class OrdinePagamentoService
 
         $descr = wallet_descrizione::query()->where('codice', 'pagamento_ordine')->first();
         if (! $descr || $descr->tipo !== 'debito') {
-            return redirect()
-                ->route('ordini.pagamento.show', $ordine)
-                ->withErrors(['pagamento' => 'Configurazione Wallet non disponibile. Contatta l’assistenza.']);
+            return $this->redirectPagamentoWalletErrore(
+                $ordine,
+                $metodoId,
+                'Configurazione Wallet non disponibile. Contatta l’assistenza.',
+            );
         }
 
         $blockReason = null;
@@ -142,7 +153,7 @@ final class OrdinePagamentoService
                     'wallet_descrizione_id' => $descr->id,
                     'importo' => $totaleIvato,
                     'data_movimento' => now(),
-                    'riferimento' => (string) $locked->codice,
+                    'riferimento' => (string) $locked->id,
                     'ordine_id' => $locked->id,
                 ]);
 
@@ -152,37 +163,49 @@ final class OrdinePagamentoService
         } catch (\Throwable $e) {
             report($e);
 
-            return redirect()
-                ->route('ordini.pagamento.show', $ordine)
-                ->withErrors(['pagamento' => 'Pagamento Wallet non riuscito. Riprova o contatta l’assistenza.']);
+            return $this->redirectPagamentoWalletErrore(
+                $ordine,
+                $metodoId,
+                'Pagamento Wallet non riuscito. Riprova o contatta l’assistenza.',
+            );
         }
 
         if ($blockReason === 'saldo') {
-            return redirect()
-                ->route('ordini.pagamento.show', $ordine)
-                ->withErrors(['pagamento' => 'Saldo Wallet insufficiente al momento della conferma.']);
+            return $this->redirectPagamentoWalletErrore(
+                $ordine,
+                $metodoId,
+                'Saldo Wallet insufficiente al momento della conferma.',
+            );
         }
 
         if ($blockReason === 'stato') {
             return redirect()
-                ->route('ordini.pagamento.show', $ordine)
+                ->route('ordini.index', ['aba' => 'pagati'])
                 ->withErrors(['pagamento' => 'Questo ordine non è più in attesa di pagamento.']);
         }
 
         $ordine->refresh();
         OrdinePagamentoEffettivo::registraSuTariffe($ordine, $metodoId);
         SpedizioneStatoService::segnaPagataPerOrdine($ordine);
-        app(SpedisciOnlineAcquistoService::class)->elaboraOrdinePagato($ordine);
-        app(LiccardiTmsAcquistoService::class)->elaboraOrdinePagato($ordine);
-        app(SendcloudAcquistoService::class)->elaboraOrdinePagato($ordine);
+
+        $pickupTrace = RitiroOrdinePagamento::elaboraAcquistiEtPickupTrace($ordine);
+        RitiroOrdinePagamento::salvaPickupTraceInSessione($pickupTrace);
 
         $flashOk = 'Pagamento completato con Wallet. L’ordine risulta pagato e l’importo è stato addebitato dal saldo.';
         if ($ordine->spedizioni()->where('esiste_integrazione', true)->exists()) {
             $flashOk .= ' Acquisto etichetta avviato (Spedisci.online / Liccardi TMS / Sendcloud se applicabile).';
         }
 
+        $checkoutCorriereId = (int) request()->input('checkout_corriere_id', 0);
+
+        if ($checkoutCorriereId > 0) {
+            return redirect()
+                ->route('checkout.show', ['corriere' => $checkoutCorriereId])
+                ->with('ok', $flashOk);
+        }
+
         return redirect()
-            ->route('ordini.show', $ordine)
+            ->route('ordini.index', ['aba' => 'pagati'])
             ->with('ok', $flashOk);
     }
 }

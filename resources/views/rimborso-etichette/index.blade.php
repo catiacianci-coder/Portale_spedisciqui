@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('content')
 <div class="sq-bleed-layout">
-    <x-sq-page-banner title="Richiedi rimborso etichette" icon="fa-rotate-left" class="sq-page-banner--full" />
+    <x-sq-page-banner title="Richiedi rimborso etichette" icon="fa-hand-holding-dollar" class="sq-page-banner--full" />
     <div class="home-spedizione-wrap sq-rimborso-page ordini-index-page">
 
     @if (session('rimborso_ok'))
@@ -27,7 +27,7 @@
             </div>
             <label class="sq-filtri-label" for="valor">Riferimento</label>
             <input id="valor" name="valor" type="text" class="sq-filtri-email-input sq-mb-12" required
-                   value="{{ old('valor', $valor ?? '') }}" placeholder="es. O42 o codice spedizione">
+                   value="{{ old('valor', $valor ?? '') }}" placeholder="es. 42 o codice spedizione">
             <button type="submit" class="sq-filtri-submit">Cerca</button>
         </form>
     </div>
@@ -47,7 +47,7 @@
         </div>
 
         <div class="sq-sped-tab-section">
-            <p class="sq-fw-700 sq-mb-12">Ordine {{ $ordine->codice }}</p>
+            <p class="sq-fw-700 sq-mb-12">Ordine {{ $ordine->id }}</p>
             @include('rimborso-etichette.partials.tabella-spedizioni', ['spedizioni' => $spedizioni])
         </div>
     @endif

@@ -55,6 +55,27 @@
     const detModal = document.querySelector('[data-etichetta-dettaglio-modal]');
     const detBody = document.getElementById('sq-etichetta-dettaglio-body');
     const detTitle = document.getElementById('sq-etichetta-dettaglio-title');
+    const detPanel = detModal?.querySelector('.sq-etichetta-dettaglio-panel');
+
+    window.sqBoSyncRastreioPdfUpload = function (spedizioneId) {
+        const rast = document.getElementById('sq-bo-etq-rast-' + spedizioneId);
+        const codHidden = document.getElementById('sq-bo-etq-pdf-codigo-' + spedizioneId);
+        const file = document.getElementById('sq-bo-etq-pdf-' + spedizioneId);
+        if (!file || !file.files || !file.files.length) return;
+        const cod = rast ? (rast.value || '').trim() : (codHidden ? codHidden.value.trim() : '');
+        if (cod === '') {
+            alert('Indica il numero di tracking prima di caricare il PDF.');
+            file.value = '';
+            return;
+        }
+        if (codHidden) codHidden.value = cod;
+        const form = document.getElementById('sq-bo-etq-pdf-form-' + spedizioneId);
+        form?.submit();
+    };
+
+    const setDetDialogMode = (mode) => {
+        detPanel?.classList.toggle('sq-modal-panel--opcoes', mode === 'opcoes');
+    };
 
     const corModal = document.querySelector('[data-etichetta-correcao-modal]');
     const corBody = document.getElementById('sq-etichetta-correcao-body');
@@ -73,6 +94,7 @@
         detModal.hidden = true;
         detModal.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('sq-modal-open');
+        setDetDialogMode('dettaglio');
     };
 
     const openDet = () => {
@@ -103,9 +125,41 @@
         detBody?.querySelectorAll('.js-etichetta-correcao-open').forEach((btn) => {
             btn.addEventListener('click', () => openCorrecaoFromBtn(btn));
         });
-        detBody?.querySelectorAll('.js-etichetta-dettaglio-close').forEach((btn) => {
+        detBody?.querySelectorAll('.js-etichetta-dettaglio-close, .js-bo-fechar-modal').forEach((btn) => {
             btn.addEventListener('click', closeDet);
         });
+        detBody?.querySelectorAll('.js-bo-abrir-opcoes').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const url = btn.getAttribute('data-opcoes-url');
+                loadDettaglioHtml(url, 'opcoes', 'Opzioni spedizione');
+            });
+        });
+        detBody?.querySelectorAll('.js-bo-voltar-detalhe').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const url = btn.getAttribute('data-detalhe-url');
+                loadDettaglioHtml(url, 'dettaglio', 'Dettagli remessa');
+            });
+        });
+    };
+
+    const loadDettaglioHtml = (url, mode, title) => {
+        if (!url || !detBody) return;
+        if (detTitle) detTitle.textContent = title;
+        setDetDialogMode(mode);
+        detBody.innerHTML = '<p class="sq-m-0 sq-text-muted">Caricamento…</p>';
+        openDet();
+        fetch(url, { headers: { Accept: 'text/html', 'X-Requested-With': 'XMLHttpRequest' } })
+            .then((r) => {
+                if (!r.ok) throw new Error('HTTP');
+                return r.text();
+            })
+            .then((html) => {
+                detBody.innerHTML = html;
+                wireDettaglioActions();
+            })
+            .catch(() => {
+                detBody.innerHTML = '<div class="sq-alert sq-alert--error">Impossibile caricare i dettagli.</div>';
+            });
     };
 
     const openCorrecaoFromBtn = (btn) => {
@@ -224,22 +278,7 @@
     document.querySelectorAll('.js-etichetta-dettaglio-open').forEach((btn) => {
         btn.addEventListener('click', () => {
             const url = btn.getAttribute('data-dettaglio-url');
-            if (!url || !detBody) return;
-            if (detTitle) detTitle.textContent = 'Dettagli remessa';
-            detBody.innerHTML = '<p class="sq-m-0 sq-text-muted">Caricamento…</p>';
-            openDet();
-            fetch(url, { headers: { Accept: 'text/html', 'X-Requested-With': 'XMLHttpRequest' } })
-                .then((r) => {
-                    if (!r.ok) throw new Error('HTTP');
-                    return r.text();
-                })
-                .then((html) => {
-                    detBody.innerHTML = html;
-                    wireDettaglioActions();
-                })
-                .catch(() => {
-                    detBody.innerHTML = '<div class="sq-alert sq-alert--error">Impossibile caricare i dettagli.</div>';
-                });
+            loadDettaglioHtml(url, 'dettaglio', 'Dettagli remessa');
         });
     });
 

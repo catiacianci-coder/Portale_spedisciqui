@@ -13,7 +13,7 @@
         <div class="sq-wallet-extrato-filtri__campo sq-bo-ordini-filtri__campo--numero">
             <label class="sq-wallet-extrato-filtri__label" for="filtro-bo-ordini-numero">N. ordine</label>
             <input type="search" id="filtro-bo-ordini-numero" name="numero" value="{{ $filtros['numero'] ?? '' }}"
-                   class="sq-wallet-extrato-filtri__select" placeholder="Es.: 12 o O12" autocomplete="off">
+                   class="sq-wallet-extrato-filtri__select" placeholder="Es.: 27" autocomplete="off">
         </div>
         <div class="sq-wallet-extrato-filtri__campo sq-bo-ordini-filtri__campo--cliente">
             <label class="sq-wallet-extrato-filtri__label" for="filtro-bo-ordini-cliente">

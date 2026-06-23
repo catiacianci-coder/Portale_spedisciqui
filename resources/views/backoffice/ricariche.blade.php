@@ -65,7 +65,7 @@
                                 <td class="sq-td sq-fw-700">{{ $numeroOrdine($r) }}</td>
                                 <td class="sq-td sq-text-muted sq-nowrap">{{ $r->created_at?->timezone(config('app.timezone'))->format('d/m/Y H:i') ?? '—' }}</td>
                                 <td class="sq-td">{{ $r->user?->email ?? '—' }}</td>
-                                <td class="sq-td sq-td--right sq-wallet-ricariche-importo">{{ $fmt($r->importo) }} €</td>
+                                <td class="sq-td sq-td--right sq-wallet-ricariche-importo">{{ \App\Support\ImportoEuro::format($r->importo) }}</td>
                                 <td class="sq-td">{{ $r->metodoPagamento?->metodo_pagamento ?? '—' }}</td>
                                 <td class="sq-td">
                                     @if ($r->stato === 'accreditata')
@@ -82,7 +82,7 @@
                                             method="POST"
                                             action="{{ route('backoffice.ricariche.accredita', $r->id) }}"
                                             class="sq-form-zero"
-                                            onsubmit="return confirm('Confermi il pagamento e l\'accredito di {{ $fmt($r->importo) }} € sul wallet del cliente?');"
+                                            onsubmit="return confirm('Confermi il pagamento e l\'accredito di {{ \App\Support\ImportoEuro::format($r->importo) }} sul wallet del cliente?');"
                                         >
                                             @csrf
                                             @foreach ($queryParams as $name => $value)

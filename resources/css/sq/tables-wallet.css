@@ -1,4 +1,4 @@
-﻿/* Tabelle globali (.sq-table). Token in tokens.css (--sq-table-*). Per PDF (Dompdf) copiare gli stessi valori inline: gradiente TH, #2c5e8c, zebra #dfdfdf. */
+﻿/* Tabelle globali (.sq-table). Token in tokens.css (--sq-table-head-*). */
 .sq-table-wrap {
     overflow-x: auto;
     border: var(--sq-shell-border-width) solid var(--sq-shell-border);
@@ -20,31 +20,28 @@
 
 .sq-thead-row {
     text-align: left;
-    background: linear-gradient(
-        to bottom,
-        var(--sq-table-th-gradient-top),
-        var(--sq-table-th-gradient-bottom)
-    );
-    color: var(--sq-table-th-text);
+    background: var(--sq-table-head-bg);
+    background-image: none;
+    color: var(--sq-table-head-text);
 }
 
 .sq-thead-row--neutral,
 .sq-thead-row--warm {
-    background: linear-gradient(
-        to bottom,
-        var(--sq-table-th-gradient-top),
-        var(--sq-table-th-gradient-bottom)
-    );
-    color: var(--sq-table-th-text);
+    background: var(--sq-table-head-bg);
+    background-image: none;
+    color: var(--sq-table-head-text);
 }
 
 .sq-th {
-    padding: 10px 12px;
-    font-weight: 600;
-    color: inherit;
-    background: transparent;
-    border-right: 1px solid var(--sq-table-th-separator);
-    border-bottom: 1px solid rgba(15, 23, 42, 0.12);
+    padding: 12px 14px;
+    font-weight: var(--sq-table-head-font-weight);
+    font-size: var(--sq-table-head-font-size);
+    letter-spacing: var(--sq-table-head-letter-spacing);
+    text-transform: uppercase;
+    color: var(--sq-table-head-text);
+    background: var(--sq-table-head-bg);
+    border-right: none;
+    border-bottom: 1px solid var(--sq-table-head-border);
 }
 
 .sq-th:last-child {
@@ -1225,8 +1222,12 @@
 }
 
 .sq-nc-bo-sped-inner-table thead th {
-    background: #f5f5f5;
-    font-weight: 600;
+    background: var(--sq-table-head-bg);
+    color: var(--sq-table-head-text);
+    font-weight: var(--sq-table-head-font-weight);
+    font-size: var(--sq-table-head-font-size);
+    letter-spacing: var(--sq-table-head-letter-spacing);
+    text-transform: uppercase;
 }
 
 .sq-nc-bo-sped-inner-num {
@@ -1535,27 +1536,6 @@ a.sq-btn-pay-sm--link {
 
 .sq-wallet-extrato-table {
     font-size: 14px;
-}
-
-.sq-wallet-extrato-table .sq-thead-row,
-.sq-wallet-extrato-table .sq-thead-row--neutral,
-.sq-wallet-extrato-table .sq-thead-row--warm {
-    background: #fff;
-    background-image: none;
-}
-
-.sq-wallet-extrato-table .sq-th {
-    padding: 12px 14px;
-    font-weight: 700;
-    font-size: 11px;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--sq-accent, var(--sq-brand));
-    background: #fff;
-    border: none;
-    border-right: none;
-    border-bottom: 1px solid #eee;
-    vertical-align: middle;
 }
 
 .sq-wallet-extrato-table .sq-th--right {
@@ -1968,5 +1948,64 @@ a.sq-btn-pay-sm--link {
     justify-content: flex-end;
     gap: 8px;
     padding-top: 4px;
+}
+
+/* Backoffice — estratto Stripe */
+
+.backoffice-stripe-estratto .sq-bo-stripe-saldo {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 32px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: var(--sq-bg-soft);
+    border: 1px solid var(--sq-listing-border);
+}
+
+.backoffice-stripe-estratto .sq-bo-stripe-saldo-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--sq-text-muted);
+    margin-bottom: 4px;
+}
+
+.backoffice-stripe-estratto .sq-bo-stripe-filtri-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px 16px;
+    align-items: end;
+}
+
+.backoffice-stripe-estratto .sq-bo-stripe-custom-dates {
+    display: none;
+}
+
+.backoffice-stripe-estratto .sq-bo-stripe-actions-row,
+.backoffice-stripe-estratto .sq-bo-stripe-pager {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.backoffice-stripe-estratto .sq-bo-stripe-desc {
+    max-width: 280px;
+    word-break: break-word;
+}
+
+.backoffice-stripe-estratto .sq-bo-stripe-neg {
+    color: var(--sq-error-text);
+}
+
+.backoffice-stripe-estratto .sq-bo-stripe-tx-id {
+    font-size: 11px;
+    word-break: break-all;
+}
+
+.backoffice-stripe-estratto .sq-bo-stripe-table code {
+    font-size: 11px;
 }
 

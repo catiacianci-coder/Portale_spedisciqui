@@ -27,14 +27,13 @@
 @section('content')
 @php
     use App\Models\rimborso;
-    use App\Support\CodiceOrdine;
     $fmt = fn ($n) => number_format((float) $n, 2, ',', '.');
     $ordineLabel = static function (?int $ordineId): string {
         if ($ordineId === null || $ordineId <= 0) {
             return '—';
         }
 
-        return CodiceOrdine::format($ordineId);
+        return (string) $ordineId;
     };
 @endphp
 <div class="sq-bo-page-wrap sq-bo-reemb-page">
@@ -54,6 +53,8 @@
             <a href="{{ route('backoffice.rimborsi.rimborsati') }}" @class(['is-active' => ($sezione ?? '') === 'rimborsati'])>Rimborsati</a>
             <span class="sq-bo-reemb-subnav-sep" aria-hidden="true">·</span>
             <a href="{{ route('backoffice.rimborsi.per_ordine') }}" @class(['is-active' => ($sezione ?? '') === 'per_ordine'])>Per ordine</a>
+            <span class="sq-bo-reemb-subnav-sep" aria-hidden="true">·</span>
+            <a href="{{ route('backoffice.rimborsi.trasferimento_wallet') }}" @class(['is-active' => ($sezione ?? '') === 'trasferimento_wallet'])>Trasferimento wallet</a>
         </nav>
     @endif
 
@@ -78,15 +79,33 @@
                 <p class="sq-bo-reemb-hub-card__lead">Consulta tutte le spedizioni di un ordine entrate nel flusso di rimborso.</p>
                 <div class="sq-bo-reemb-hub-card__open">Apri</div>
             </a>
+            <a href="{{ route('backoffice.rimborsi.trasferimento_wallet') }}" class="sq-bo-reemb-hub-card">
+                <i class="fa-solid fa-wallet sq-bo-reemb-hub-card__icon" aria-hidden="true"></i>
+                <h2>Trasferimento wallet</h2>
+                <p class="sq-bo-reemb-hub-card__lead">Rimborsi accreditati sul wallet con richiesta di trasferimento su carta o bonifico.</p>
+                <div class="sq-bo-reemb-hub-card__open">Apri</div>
+            </a>
         </div>
     @endif
 
     @if (($sezione ?? '') === 'pendentes')
+        @if ($selectedUser ?? null)
+            <div class="sq-bo-user-filter-banner">
+                <span>Filtro utente: <strong>#{{ $selectedUser->id }}</strong> — {{ $selectedUser->email }}</span>
+                <span>
+                    <a href="{{ route('backoffice.rimborsi.rimborsati', ['user_id' => $selectedUser->id]) }}">Vedi rimborsati</a>
+                    ·
+                    <a href="{{ route('backoffice.rimborsi.pendentes', request()->except(['user_id', 'page'])) }}">Rimuovi filtro</a>
+                </span>
+            </div>
+        @endif
         <div class="sq-bo-reemb-card">
             <h2>Da rimborsare</h2>
             <p class="sq-bo-reemb-card-lead">
-                Rimborsi con <strong>data reale</strong> vuota: l’accredito avviene sempre sul <strong>wallet</strong> del cliente.
-                Prima di «Accredita wallet», verifica sul sito del corriere che l’etichetta risulti annullata.
+                Rimborsi con <strong>data reale</strong> vuota: l’accredito avviene sul <strong>wallet</strong> del cliente.
+                Con etichetta e tracking automatico, alla richiesta il sistema cancella sul corriere e imposta lo stato spedizione
+                «<strong>in attesa di rimborso</strong>»; in accredito verifica di nuovo tracking e stato.
+                Le righe <strong>evidenziate in rosso</strong> richiedono verifica manuale sul sito del corriere (tracking non automatico).
                 @if ($pagaOggi ?? false)
                     <strong>Filtro «Scadenza oggi»:</strong> solo quelli con data prevista ≤ oggi.
                 @else
@@ -94,10 +113,13 @@
                 @endif
             </p>
             <div class="sq-bo-reemb-toolbar">
+                @php
+                    $pendentesQuery = ($filtroUserId ?? 0) > 0 ? ['user_id' => $filtroUserId] : [];
+                @endphp
                 @if ($pagaOggi ?? false)
-                    <a href="{{ route('backoffice.rimborsi.pendentes') }}" class="sq-bo-reemb-btn sq-bo-reemb-btn--sec">Mostra tutti ({{ $totalPendentes ?? 0 }})</a>
+                    <a href="{{ route('backoffice.rimborsi.pendentes', $pendentesQuery) }}" class="sq-bo-reemb-btn sq-bo-reemb-btn--sec">Mostra tutti ({{ $totalPendentes ?? 0 }})</a>
                 @else
-                    <a href="{{ route('backoffice.rimborsi.pendentes', ['paga_oggi' => 1]) }}" class="sq-bo-reemb-btn">Scadenza oggi</a>
+                    <a href="{{ route('backoffice.rimborsi.pendentes', array_merge($pendentesQuery, ['paga_oggi' => 1])) }}" class="sq-bo-reemb-btn">Scadenza oggi</a>
                 @endif
             </div>
             @if ($pendentes->isEmpty())
@@ -129,6 +151,7 @@
                                 <th>Metodo rimborso</th>
                                 <th>Motivo</th>
                                 <th>Richiesta</th>
+                                <th>Stato sped.</th>
                                 <th>Prevista</th>
                                 <th></th>
                             </tr>
@@ -139,18 +162,25 @@
                                     $s = $r->spedizione;
                                     $oid = (int) ($r->ordine_id ?? $s?->ordine_id ?? 0);
                                     $atraso = $r->data_prevista && $r->data_prevista->lt(now()->startOfDay());
+                                    $verificaManuale = $r->richiedeVerificaManualeOperatore();
                                 @endphp
-                                <tr>
+                                <tr @class(['sq-bo-reemb-row--evidenziato' => $verificaManuale])>
                                     <td>#{{ $r->id }}</td>
                                     <td>{{ $r->codice_interno ?? $s?->codice_interno ?? '—' }}</td>
                                     <td class="sq-td-muted">{{ $ordineLabel($oid > 0 ? $oid : null) }}</td>
                                     <td class="sq-td-muted">#{{ $s?->id ?? '—' }}</td>
-                                    <td class="sq-td-rastreio">{{ $s?->codiceTracking() ?: '—' }}</td>
+                                    <td class="sq-td-rastreio">{{ $s?->codigoRastreio() ?: '—' }}</td>
                                     <td>{{ $s?->user?->email ?? '—' }}</td>
-                                    <td class="sq-td-valore">{{ $fmt($r->valore) }} €</td>
+                                    <td class="sq-td-valore">{{ \App\Support\ImportoEuro::format($r->valore) }}</td>
                                     <td>{{ $r->metodoPagamentoRimborso?->metodo_pagamento ?? '—' }}</td>
                                     <td class="sq-td-muted">{{ $r->labelMotivo() }}</td>
                                     <td class="sq-td-muted">{{ $r->data_richiesta?->format('d/m/Y') ?? '—' }}</td>
+                                    <td class="sq-td-muted">
+                                        {{ $s?->spedizioneStato?->denominazione_stato ?? '—' }}
+                                        @if ($verificaManuale)
+                                            <div class="sq-bo-reemb-tag-manuale">Verifica manuale corriere</div>
+                                        @endif
+                                    </td>
                                     <td>
                                         {{ $r->data_prevista?->format('d/m/Y') ?? '—' }}
                                         @if ($atraso)
@@ -160,7 +190,7 @@
                                     <td>
                                         <div class="sq-bo-reemb-acoes">
                                             <form method="POST" action="{{ route('backoffice.rimborsi.paga', $r) }}"
-                                                  onsubmit="return confirm('Confermi l’accredito di {{ $fmt($r->valore) }} € sul wallet del cliente?');">
+                                                  onsubmit="return confirm('Confermi l’accredito di {{ \App\Support\ImportoEuro::format($r->valore) }} sul wallet del cliente?');">
                                                 @csrf
                                                 <button type="submit" class="sq-filtri-submit">Accredita wallet</button>
                                             </form>
@@ -177,6 +207,16 @@
     @endif
 
     @if (($sezione ?? '') === 'rimborsati')
+        @if ($selectedUser ?? null)
+            <div class="sq-bo-user-filter-banner">
+                <span>Filtro utente: <strong>#{{ $selectedUser->id }}</strong> — {{ $selectedUser->email }}</span>
+                <span>
+                    <a href="{{ route('backoffice.rimborsi.pendentes', ['user_id' => $selectedUser->id]) }}">Vedi pendenti</a>
+                    ·
+                    <a href="{{ route('backoffice.rimborsi.rimborsati', request()->except(['user_id', 'page'])) }}">Rimuovi filtro</a>
+                </span>
+            </div>
+        @endif
         <div class="sq-bo-reemb-card">
             <h2>Rimborsati</h2>
             <p class="sq-bo-reemb-card-lead">Storico dei rimborsi già accreditati sul wallet dal back office.</p>
@@ -211,7 +251,7 @@
                                     <td class="sq-td-muted">{{ $ordineLabel($oid > 0 ? $oid : null) }}</td>
                                     <td class="sq-td-muted">#{{ $s?->id ?? '—' }}</td>
                                     <td>{{ $s?->user?->email ?? '—' }}</td>
-                                    <td class="sq-td-valore">{{ $fmt($r->valore) }} €</td>
+                                    <td class="sq-td-valore">{{ \App\Support\ImportoEuro::format($r->valore) }}</td>
                                     <td>{{ $r->metodoPagamentoRimborso?->metodo_pagamento ?? '—' }}</td>
                                     <td class="sq-td-muted">{{ $r->labelMotivo() }}</td>
                                     <td class="sq-td-muted">{{ $r->data_richiesta?->format('d/m/Y') ?? '—' }}</td>
@@ -229,11 +269,11 @@
     @if (($sezione ?? '') === 'per_ordine')
         <div class="sq-bo-reemb-card">
             <h2>Rimborso per ordine</h2>
-            <p class="sq-bo-reemb-card-lead">Inserisci il numero ordine (O123 o solo cifre). Elenca solo le spedizioni con richiesta di rimborso registrata.</p>
+            <p class="sq-bo-reemb-card-lead">Inserisci l'ID ordine (solo cifre). Elenca solo le spedizioni con richiesta di rimborso registrata.</p>
             <form method="GET" action="{{ route('backoffice.rimborsi.per_ordine') }}" class="sq-bo-reemb-por-ordine-form">
                 <div>
                     <label class="sq-filtri-label" for="ordine">Ordine</label>
-                    <input id="ordine" name="ordine" type="text" value="{{ e($filtroOrdine ?? '') }}" placeholder="O123" style="min-width:160px;">
+                    <input id="ordine" name="ordine" type="text" value="{{ e($filtroOrdine ?? '') }}" placeholder="27" style="min-width:160px;">
                 </div>
                 <div>
                     <label class="sq-filtri-label" for="situazione">Situazione</label>
@@ -282,16 +322,16 @@
                                     <td>#{{ $r->id }}</td>
                                     <td>{{ $r->codice_interno ?? '—' }}</td>
                                     <td class="sq-td-muted">#{{ $s?->id ?? '—' }}</td>
-                                    <td class="sq-td-rastreio">{{ $s?->codiceTracking() ?: '—' }}</td>
+                                    <td class="sq-td-rastreio">{{ $s?->codigoRastreio() ?: '—' }}</td>
                                     <td class="sq-td-muted">{{ $r->data_richiesta?->format('d/m/Y') ?? '—' }}</td>
                                     <td class="sq-td-muted">{{ $r->data_prevista?->format('d/m/Y') ?? '—' }}</td>
                                     <td>{{ $r->data_reale ? 'Rimborsato' : 'In attesa' }}</td>
-                                    <td class="sq-td-valore">{{ $fmt($r->valore) }} €</td>
+                                    <td class="sq-td-valore">{{ \App\Support\ImportoEuro::format($r->valore) }}</td>
                                     <td>
                                         @if (! $r->data_reale)
                                             <div class="sq-bo-reemb-acoes">
                                                 <form method="POST" action="{{ route('backoffice.rimborsi.paga', $r) }}"
-                                                      onsubmit="return confirm('Confermi l’accredito di {{ $fmt($r->valore) }} € sul wallet del cliente?');">
+                                                      onsubmit="return confirm('Confermi l’accredito di {{ \App\Support\ImportoEuro::format($r->valore) }} sul wallet del cliente?');">
                                                     @csrf
                                                     <button type="submit" class="sq-filtri-submit">Accredita wallet</button>
                                                 </form>

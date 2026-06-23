@@ -51,6 +51,8 @@ class RegisteredUserController extends Controller
             'email' => $validated['email'],
             'password' => $validated['password'],
             'tipo_utente' => $validated['tipo_utente'],
+            'is_account_disabled' => true,
+            'postagem_bloqueado_pelo_bo' => false,
         ]);
 
         session([

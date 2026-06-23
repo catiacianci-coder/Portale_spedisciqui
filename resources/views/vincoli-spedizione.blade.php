@@ -122,16 +122,24 @@
 
     @php
         $homeVantaggi = config('home_vantaggi', []);
+        $hasPremiumBanner = Route::has('tariffe_scontate.index');
+        $hasFaqBanner = Route::has('faq.index');
     @endphp
-    @if (count($homeVantaggi) > 0)
+    @if ($hasPremiumBanner || $hasFaqBanner || count($homeVantaggi) > 0)
         <section class="home-vantaggi" aria-label="Servizi e vantaggi">
             <h2 class="home-vantaggi-title">Con Spedisciqui la logistica diventa semplice</h2>
             <div class="home-vantaggi-grid">
+                @if ($hasPremiumBanner)
+                    @include('partials.home-premium-banner')
+                @endif
+                @if ($hasFaqBanner)
+                    @include('partials.home-faq-banner')
+                @endif
                 @foreach ($homeVantaggi as $idx => $row)
                     <div class="home-vantaggio-item">
                         <div class="home-vantaggio-circle">
                             @if (! empty($row['img']) && is_string($row['img']) && is_file(public_path($row['img'])))
-                                <img src="{{ asset($row['img']) }}" alt="{{ $row['titolo'] ?? '' }}" class="home-vantaggio-img" width="64" height="64" loading="lazy" decoding="async">
+                                <img src="{{ asset($row['img']) }}" alt="{{ $row['titolo'] ?? '' }}" class="home-vantaggio-img" width="80" height="80" loading="lazy" decoding="async">
                             @elseif (! empty($row['icon']) && is_string($row['icon']))
                                 <i class="fa-solid {{ $row['icon'] }} home-vantaggio-icon" aria-hidden="true"></i>
                             @else
@@ -159,11 +167,10 @@
                     @foreach (array_merge($partnerCorrieriList, $partnerCorrieriList) as $p)
                         <div class="home-partner-slide">
                             @if (!empty($p['logo_url']))
-                                <img src="{{ $p['logo_url'] }}" alt="{{ $p['nome'] }}" class="home-partner-logo" width="140" height="70" loading="lazy" decoding="async">
+                                <img src="{{ $p['logo_url'] }}" alt="" class="home-partner-logo" width="140" height="70" loading="lazy" decoding="async">
                             @else
-                                <div class="home-partner-placeholder">{{ function_exists('mb_substr') ? mb_strtoupper(mb_substr($p['nome'], 0, 1, 'UTF-8')) : strtoupper(substr($p['nome'], 0, 1)) }}</div>
+                                <div class="home-partner-placeholder" aria-hidden="true">{{ function_exists('mb_substr') ? mb_strtoupper(mb_substr($p['nome'], 0, 1, 'UTF-8')) : strtoupper(substr($p['nome'], 0, 1)) }}</div>
                             @endif
-                            <span class="home-partner-name">{{ $p['nome'] }}</span>
                         </div>
                     @endforeach
                 </div>
@@ -171,7 +178,7 @@
         </section>
     @endif
 
-    @if (!empty($input['id_comune_origine'] ?? null))
+    @if (!empty($input['id_comune_origine'] ?? null) && app()->environment('local', 'staging', 'testing'))
         <div class="home-spedizione-debug">
             <strong>Risoluzione CAP</strong><br>
             Origine: comune ID <strong>{{ $input['id_comune_origine'] }}</strong> &middot;
@@ -260,22 +267,20 @@
         if (!input || !hidden || !list) return;
 
         let controller = null;
-        let lastSelectedCap = '';
+        let lastSelectedLabel = '';
 
         const run = debounce(async () => {
             const q = (input.value || '').trim();
             if (q.length === 0) {
                 hidden.value = '';
-                lastSelectedCap = '';
+                lastSelectedLabel = '';
                 hideList(list);
                 return;
             }
 
-            const padded = q.replace(/\D/g, '').length === q.length && q.length <= 5
-                ? q.padStart(5, '0')
-                : q;
-            if (hidden.value && padded !== lastSelectedCap) {
+            if (hidden.value && q !== lastSelectedLabel) {
                 hidden.value = '';
+                lastSelectedLabel = '';
             }
 
             if (/^\d+$/.test(q)) {
@@ -332,9 +337,10 @@
 
                     row.addEventListener('mousedown', (e) => {
                         e.preventDefault();
-                        input.value = it.cap;
+                        const label = it.label || `${it.cap} — ${it.comune} (${it.provincia})`;
+                        input.value = label;
                         hidden.value = String(it.id);
-                        lastSelectedCap = it.cap;
+                        lastSelectedLabel = label;
                         hideList(list);
                     });
 

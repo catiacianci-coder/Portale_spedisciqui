@@ -6,6 +6,7 @@ use App\Models\spedizione;
 use App\Services\SpedizioneStatoService;
 use App\Support\LiccardiTmsIntegrazione;
 use App\Support\PiattaformaCorriere;
+use App\Support\UserPostingEnablement;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -23,7 +24,11 @@ class LiccardiTmsLabelService
 
     public function createFromSpedizione(spedizione $spedizione): LiccardiTmsLabelResult
     {
-        $spedizione->loadMissing(['corriereRecord', 'serviziAggiuntiviRighe']);
+        $spedizione->loadMissing(['corriereRecord', 'serviziAggiuntiviRighe', 'user']);
+
+        if (UserPostingEnablement::tentaSegnaBloccoPostPagamento($spedizione)) {
+            return $this->segnaErrore($spedizione, UserPostingEnablement::messaggioBlocco($spedizione->user));
+        }
 
         if (! $this->client->isConfigured()) {
             return $this->segnaErrore($spedizione, 'API Liccardi TMS non configurata (parametri globali).');

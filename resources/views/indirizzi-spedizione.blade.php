@@ -2,10 +2,6 @@
 @section('content')
 @php
     $v = $values;
-    $nomeCorriere = trim((string) ($riga['corriere']['nome_visualizzato'] ?? ''));
-    if ($nomeCorriere === '') {
-        $nomeCorriere = (string) ($riga['corriere']['nome_corriere'] ?? 'Corriere');
-    }
     $canRubricaDest = Auth::check() && Auth::user()->hasVerifiedEmail();
     $mittentiRubrica = $mittentiRubrica ?? [];
     $mittenteRubricaIdSelezionato = $mittenteRubricaIdSelezionato ?? 0;
@@ -29,11 +25,7 @@
         </div>
     @endif
 
-    <h1 class="sq-h1-carrello sq-text-heading sq-mb-8">Indirizzi</h1>
-    <p class="sq-intro sq-mb-18">
-        Corriere: <strong class="sq-saldo-strong">{{ $nomeCorriere }}</strong>.
-        CAP, città e provincia <strong>non sono modificabili</strong>: la tariffa è stata calcolata su questi dati.
-    </p>
+    <h1 class="sq-h1-carrello sq-text-heading sq-mb-18">Indirizzi</h1>
 
     <form method="POST" action="{{ route('spedizione.indirizzi.store') }}" class="sq-indirizzi-form"
           data-consegna-punto="{{ $consegnaPunto ? '1' : '0' }}">

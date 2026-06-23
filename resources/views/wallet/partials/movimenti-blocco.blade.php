@@ -3,22 +3,21 @@
   $linkOrdineCliente (bool): true = layout pagina movimenti cliente (Ordine prima, colonna Azioni)
 --}}
 @php
-    $fmt = fn ($n) => number_format((float) $n, 2, ',', '.');
-    $fmtImportoMov = static function ($mv) use ($fmt): string {
-        $n = $fmt($mv->importo) . ' €';
+    $fmtImportoMov = static function ($mv): string {
+        $n = \App\Support\ImportoEuro::format((float) $mv->importo);
 
-        return ($mv->tipo === 'debito') ? '-'.$n : $n;
+        return ($mv->tipo === 'debito') ? '− '.$n : $n;
     };
 @endphp
 
 <div class="wallet-movimenti-blocco sq-wallet-saldo-card">
     @if (empty($emailCliente))
-        <p class="sq-wallet-saldo-line">Saldo attuale <strong>{{ $fmt($saldo) }} €</strong></p>
+        <p class="sq-wallet-saldo-line">Saldo attuale <strong>{{ \App\Support\ImportoEuro::format($saldo) }}</strong></p>
     @else
         <div class="sq-wallet-saldo-row">
             <div>
                 <p class="sq-wallet-saldo-label">Saldo attuale</p>
-                <p class="sq-wallet-saldo-value">{{ $fmt($saldo) }} €</p>
+                <p class="sq-wallet-saldo-value">{{ \App\Support\ImportoEuro::format($saldo) }}</p>
             </div>
             <p class="sq-wallet-cliente-email">Cliente: <strong class="sq-text-heading">{{ $emailCliente }}</strong></p>
         </div>
@@ -47,7 +46,7 @@
                     <tr>
                         <td class="sq-td sq-td--border-warm sq-mov-td-muted-sm">
                             @if ($mv->ordine_id && $o)
-                                {{ $o->codice }}
+                                {{ $o->id }}
                             @elseif ($orw !== '')
                                 {{ $orw }}
                             @elseif ($mv->ordine_id)
@@ -124,7 +123,7 @@
                                 $orw = trim((string) ($mv->ricaricaRichiesta?->numero_ordine_wallet ?? ''));
                             @endphp
                             @if ($mv->ordine_id && $o)
-                                {{ $o->codice }}
+                                {{ $o->id }}
                             @elseif ($orw !== '')
                                 {{ $orw }}
                             @elseif ($mv->ordine_id)

@@ -70,7 +70,7 @@
             ? (float) $sx['valore_merce']
             : null;
         if ($valoreMerce !== null && $valoreMerce > 0) {
-            $label .= ' ('.number_format($valoreMerce, 2, ',', '.').' €)';
+            $label .= ' ('.\App\Support\ImportoEuro::format($valoreMerce).')';
         }
         $etichetteServizi[] = $label;
     }

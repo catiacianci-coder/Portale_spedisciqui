@@ -18,7 +18,7 @@
     @endphp
     @if ($lv['applicato'] ?? false)
         <div class="sq-alert sq-alert--success sq-mb-16">
-            Sconto volume Liccardi applicato: −{{ number_format((float) ($lv['sconto_totale'] ?? 0), 2, ',', '.') }} €
+            Sconto volume Liccardi applicato: −{{ \App\Support\ImportoEuro::format((float) ($lv['sconto_totale'] ?? 0)) }}
             su {{ (int) ($lv['righe_liccardi'] ?? 0) }} spedizioni.
         </div>
     @endif
@@ -119,11 +119,11 @@
         const tIm = row.querySelector('.js-td-imponibile');
         const tIv = row.querySelector('.js-td-iva');
         const tTo = row.querySelector('.js-td-totale');
-        if (tTr) tTr.textContent = formatIt(baseTrasporto) + ' €';
-        if (tSe) tSe.textContent = formatIt(extraFisso) + ' €';
-        if (tIm) tIm.textContent = formatIt(imponibile) + ' €';
-        if (tIv) tIv.textContent = formatIt(iva) + ' €';
-        if (tTo) tTo.textContent = formatIt(totale) + ' €';
+        if (tTr) tTr.textContent = '€ ' + formatIt(baseTrasporto);
+        if (tSe) tSe.textContent = '€ ' + formatIt(extraFisso);
+        if (tIm) tIm.textContent = '€ ' + formatIt(imponibile);
+        if (tIv) tIv.textContent = '€ ' + formatIt(iva);
+        if (tTo) tTo.textContent = '€ ' + formatIt(totale);
     });
 })();
 </script>

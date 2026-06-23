@@ -107,6 +107,7 @@ class UserMittenzaController extends Controller
         $copy = $mittenza->replicate();
         $copy->is_preferito = false;
         $copy->is_fatturazione = false;
+        $copy->sede_liccardi = false;
         $copy->save();
 
         return redirect()

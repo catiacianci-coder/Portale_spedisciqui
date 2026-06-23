@@ -22,7 +22,7 @@
     @endphp
 
     <div class="sq-card sq-card--mb-14 sq-card--p-14-16">
-        <p class="sq-m-0 sq-text-main">Residuo complessivo da pagare: <strong>{{ $fmt($residuoTot) }} €</strong></p>
+        <p class="sq-m-0 sq-text-main">Residuo complessivo da pagare: <strong>{{ \App\Support\ImportoEuro::format($residuoTot) }}</strong></p>
         @if ($residuoTot > 0 && $pratica->stato === \App\Models\nc_pratica::STATO_APERTO)
             <form class="sq-mt-12" method="get" action="{{ route('pagamento_nc.index') }}">
                 <input type="hidden" name="pratica" value="{{ $pratica->id }}">
@@ -67,7 +67,7 @@
                                     </td>
                                 @endif
                                 <td class="sq-td sq-fw-700">{{ $r->codice_interno }}</td>
-                                <td class="sq-td sq-td--right">{{ $fmt($r->delta) }} €</td>
+                                <td class="sq-td sq-td--right">{{ \App\Support\ImportoEuro::format($r->delta) }}</td>
                                 <td class="sq-td">{{ $r->stato_riga === \App\Models\nc_pratica_riga::STATO_PAGATO ? 'Pagata' : 'Da pagare' }}</td>
                                 <td class="sq-td sq-td--right">
                                     @if ($rigaPagabile($r))

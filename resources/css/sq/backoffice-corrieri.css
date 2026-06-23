@@ -1,0 +1,325 @@
+.sq-bo-corrieri-page {
+    padding-bottom: 32px;
+}
+
+.sq-bo-corrieri-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 720px) {
+    .sq-bo-corrieri-tabs {
+        grid-template-columns: 1fr;
+    }
+}
+
+.sq-bo-corrieri-section-lead {
+    margin: 0 0 14px;
+    font-size: 0.88rem;
+    color: #6b7280;
+    line-height: 1.45;
+}
+
+.sq-bo-corrieri-section-lead--inbox {
+    margin: 0 0 12px;
+    padding: 0 2px;
+}
+
+.sq-bo-corrieri-table .sq-bo-corrieri-col-id {
+    width: 48px;
+    font-variant-numeric: tabular-nums;
+}
+
+.sq-bo-corrieri-table .sq-bo-corrieri-col-azioni {
+    width: 1%;
+    white-space: nowrap;
+}
+
+.sq-bo-corrieri-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 6px;
+}
+
+.sq-bo-corrieri-action-form {
+    margin: 0;
+    display: inline-flex;
+    flex: 0 0 auto;
+}
+
+.sq-bo-corrieri-page .sq-bo-corrieri-actions .sq-bo-btn-link {
+    width: auto;
+    min-width: 0;
+    white-space: nowrap;
+    padding: 4px 10px;
+    font-size: 11px;
+    line-height: 1.2;
+    text-decoration: none;
+}
+
+.sq-bo-corrieri-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    font-size: 10px;
+    font-weight: 700;
+    font-family: inherit;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    white-space: nowrap;
+    box-sizing: border-box;
+    flex: 0 0 auto;
+}
+
+.sq-bo-corrieri-btn--ok {
+    background: #15803d;
+    color: #fff;
+}
+
+.sq-bo-corrieri-btn--warn {
+    background: #dc2626;
+    color: #fff;
+}
+
+.sq-bo-corrieri-btn--edit {
+    background: #1d4ed8;
+    color: #fff;
+}
+
+.sq-bo-corrieri-btn--edit.is-active {
+    background: #374151;
+}
+
+.sq-bo-corrieri-btn--ghost {
+    background: #fff;
+    color: #374151;
+    border-color: #d1d5db;
+}
+
+.sq-bo-corrieri-sub {
+    margin-top: 2px;
+    font-size: 0.78rem;
+    color: #6b7280;
+}
+
+.sq-bo-corrieri-muted {
+    font-size: 0.82rem;
+    color: #6b7280;
+    max-width: 180px;
+    word-break: break-word;
+}
+
+.sq-bo-corrieri-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: #f3f4f6;
+    color: #6b7280;
+    white-space: nowrap;
+}
+
+.sq-bo-corrieri-pill--ok {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.sq-bo-corrieri-pill--car {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.sq-bo-corrieri-row--open {
+    background: #fffbeb;
+}
+
+.sq-bo-corrieri-edit-box {
+    margin-top: 16px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-left: 5px solid var(--sq-brand, #0d9488);
+    border-radius: 12px;
+    padding: 16px 18px;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+
+.sq-bo-corrieri-edit-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #ececec;
+}
+
+.sq-bo-corrieri-edit-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 800;
+    color: #111827;
+}
+
+.sq-bo-corrieri-edit-id {
+    margin-left: 8px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #9ca3af;
+}
+
+.sq-bo-corrieri-kv-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 1px solid #ececec;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fafafa;
+}
+
+.sq-bo-corrieri-kv-row {
+    display: grid;
+    grid-template-columns: minmax(160px, 220px) minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+    padding: 10px 14px;
+    border-bottom: 1px solid #ececec;
+    background: #fff;
+}
+
+.sq-bo-corrieri-kv-row:last-child {
+    border-bottom: 0;
+}
+
+.sq-bo-corrieri-kv-row:nth-child(even) {
+    background: #fcfcfc;
+}
+
+.sq-bo-corrieri-kv-label {
+    margin: 0;
+    padding-top: 8px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #374151;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    word-break: break-word;
+}
+
+.sq-bo-corrieri-kv-label--corriere {
+    padding-top: 6px;
+    font-family: inherit;
+    font-size: 0.84rem;
+    color: #111827;
+}
+
+.sq-bo-corrieri-kv-corriere-id {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #9ca3af;
+    font-variant-numeric: tabular-nums;
+}
+
+.sq-bo-corrieri-kv-value {
+    min-width: 0;
+}
+
+.sq-bo-corrieri-kv-hint {
+    margin: 6px 0 0;
+    font-size: 0.75rem;
+    color: #6b7280;
+    line-height: 1.35;
+}
+
+.sq-bo-corrieri-inp {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+    padding: 7px 10px;
+    font-size: 0.86rem;
+    font-family: inherit;
+    background: #fff;
+}
+
+.sq-bo-corrieri-inp:focus {
+    outline: 2px solid rgba(13, 148, 136, 0.25);
+    border-color: var(--sq-brand, #0d9488);
+}
+
+.sq-bo-corrieri-inp--area {
+    min-height: 56px;
+    resize: vertical;
+}
+
+.sq-bo-corrieri-form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.sq-bo-corrieri-field-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
+.sq-bo-corrieri-field-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid #d1d5db;
+    background: #fff;
+    color: #374151;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    text-decoration: none;
+    line-height: 1.2;
+}
+
+.sq-bo-corrieri-field-chip:hover {
+    border-color: #93c5fd;
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.sq-bo-corrieri-field-chip.is-active {
+    border-color: var(--sq-brand, #0d9488);
+    background: var(--sq-brand, #0d9488);
+    color: #fff;
+}
+
+.sq-bo-corrieri-empty {
+    padding: 28px 16px;
+    text-align: center;
+    color: #6b7280;
+    font-size: 0.9rem;
+    border: 1px dashed #d1d5db;
+    border-radius: 10px;
+    background: #fafafa;
+}
+
+@media (max-width: 720px) {
+    .sq-bo-corrieri-kv-row {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+
+    .sq-bo-corrieri-kv-label {
+        padding-top: 0;
+    }
+
+    .sq-bo-corrieri-table .sq-bo-corrieri-col-azioni {
+        width: auto;
+    }
+}

@@ -29,7 +29,10 @@ class rimborso extends Model
         'giorni',
         'data_prevista',
         'data_reale',
+        'data_richiesta_trasferimento_esterno',
+        'data_trasferimento_esterno',
         'stripe_payment_intent_id',
+        'revolut_transaction_id',
         'credito_avviso_letto_in',
     ];
 
@@ -41,6 +44,8 @@ class rimborso extends Model
             'data_richiesta' => 'datetime',
             'data_prevista' => 'date',
             'data_reale' => 'datetime',
+            'data_richiesta_trasferimento_esterno' => 'datetime',
+            'data_trasferimento_esterno' => 'datetime',
             'credito_avviso_letto_in' => 'datetime',
         ];
     }
@@ -72,6 +77,82 @@ class rimborso extends Model
             self::MOTIVO_SENZA_ETICHETTA => 'Senza etichetta',
             default => '—',
         };
+    }
+
+    public function richiedeVerificaManualeOperatore(): bool
+    {
+        return \App\Support\RimborsoFlussoEtichetta::richiedeVerificaManualeOperatore($this);
+    }
+
+    public function isAccreditatoSuWallet(): bool
+    {
+        return $this->data_reale !== null
+            && $this->metodoPagamentoRimborso?->isWallet();
+    }
+
+    public function haRichiestaTrasferimentoEsterno(): bool
+    {
+        return $this->data_richiesta_trasferimento_esterno !== null;
+    }
+
+    public function isTrasferimentoEsternoCompletato(): bool
+    {
+        return $this->data_trasferimento_esterno !== null;
+    }
+
+    /** Metodo con cui l’ordine è stato pagato (carta, bonifico, wallet). */
+    public function labelMetodoPagamentoOrdine(): string
+    {
+        $ordine = $this->ordine ?? $this->spedizione?->ordine;
+        $metodo = $ordine?->metodoPagamentoOrdine;
+        if (! $metodo) {
+            return '—';
+        }
+
+        if ($metodo->isCarta()) {
+            return 'Carta';
+        }
+        if ($metodo->isBonifico()) {
+            return 'Bonifico';
+        }
+        if ($metodo->isWallet()) {
+            return 'Wallet';
+        }
+
+        return $metodo->metodo_pagamento ?? '—';
+    }
+
+    public function canTrasferimentoEsterno(): bool
+    {
+        if (! $this->isAccreditatoSuWallet() || $this->isTrasferimentoEsternoCompletato()) {
+            return false;
+        }
+
+        $ordine = $this->ordine ?? $this->spedizione?->ordine;
+        $metodo = $ordine?->metodoPagamentoOrdine;
+        if (! $metodo) {
+            return false;
+        }
+
+        return $metodo->isCarta() || $metodo->isBonifico();
+    }
+
+    public function nomeBeneficiarioBonifico(): string
+    {
+        $this->loadMissing('spedizione.user.anagrafica');
+        $user = $this->spedizione?->user;
+        $anag = $user?->anagrafica;
+
+        if ($anag) {
+            $rs = trim((string) ($anag->denominazione_ragione_sociale ?? ''));
+            if ($rs !== '') {
+                return $rs;
+            }
+
+            return trim(trim((string) ($anag->nome ?? '')).' '.trim((string) ($anag->cognome ?? '')));
+        }
+
+        return trim((string) ($user?->email ?? ''));
     }
 
     public static function resolveMotivoFromSpedizione(spedizione $spedizione): int

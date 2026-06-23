@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\nc_pratica;
 use App\Models\nc_pratica_riga;
+use App\Models\User;
 use App\Services\NcCsvImportService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -28,6 +29,8 @@ class BackofficeNonConformitaController extends Controller
             $statoFiltro = '';
         }
         $numeroPratica = trim((string) $request->input('numero_pratica', ''));
+        $userId = max(0, (int) $request->input('user_id', 0));
+        $selectedUser = $userId > 0 ? User::query()->find($userId) : null;
 
         $filtroErrors = [];
         if ($cliente !== '' && ! filter_var($cliente, FILTER_VALIDATE_EMAIL)) {
@@ -56,7 +59,9 @@ class BackofficeNonConformitaController extends Controller
         if ($from !== null && $to !== null) {
             $q->whereBetween('created_at', [$from, $to]);
         }
-        if ($cliente !== '' && $filtroErrors === []) {
+        if ($userId > 0 && $filtroErrors === []) {
+            $q->where('user_id', $userId);
+        } elseif ($cliente !== '' && $filtroErrors === []) {
             $q->whereHas('user', fn ($qq) => $qq->where('email', $cliente));
         }
         if ($numeroPratica !== '') {
@@ -99,6 +104,8 @@ class BackofficeNonConformitaController extends Controller
             'filtroCliente' => $cliente,
             'filtroStatoPratica' => $statoFiltro,
             'filtroNumeroPratica' => $numeroPratica,
+            'filtroUserId' => $userId,
+            'selectedUser' => $selectedUser,
             'filtroErrors' => $filtroErrors,
         ]);
     }

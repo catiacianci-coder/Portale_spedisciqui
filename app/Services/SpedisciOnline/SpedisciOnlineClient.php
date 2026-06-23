@@ -11,12 +11,12 @@ use Illuminate\Support\Facades\Http;
 class SpedisciOnlineClient
 {
     public function __construct(
-        private readonly string $tenant = 'quick',
+        private readonly string $tenant = 'eamulti',
     ) {}
 
     public static function forPiattaforma(?string $piattaforma): self
     {
-        $tenant = PiattaformaCorriere::tenantSpedisciOnline($piattaforma) ?? 'quick';
+        $tenant = PiattaformaCorriere::tenantSpedisciOnline($piattaforma) ?? 'eamulti';
 
         return new self($tenant);
     }
@@ -52,6 +52,11 @@ class SpedisciOnlineClient
     public function post(string $path, array $payload = []): Response
     {
         return $this->http()->post(ltrim($path, '/'), $payload);
+    }
+
+    public function get(string $path): Response
+    {
+        return $this->http()->get(ltrim($path, '/'));
     }
 
     public function baseUrl(): string

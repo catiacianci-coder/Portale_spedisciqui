@@ -5,10 +5,13 @@ namespace App\Services\Preventivo;
 use App\Models\corriere;
 use App\Models\tariffa;
 use App\Services\Liccardi\LiccardiTmsRatesService;
-use App\Services\OrdineTotaleIvatoService;
+use App\Support\LiccardiPremiumPricing;
+use App\Support\MetodoPagamentoCodice;
+use App\Support\PreventivoColonnePagamento;
 use App\Services\RegolePricingService;
 use App\Services\Sendcloud\SendcloudClient;
 use App\Services\Sendcloud\SendcloudShippingOptionsService;
+use App\Services\SpedisciOnline\SpedisciOnlineRatesService;
 use App\Services\TariffaPrezzoBaseService;
 use App\Support\PiattaformaCorriere;
 use Carbon\Carbon;
@@ -21,6 +24,7 @@ final class PreventivoRigaPrezzoService
     public function __construct(
         private readonly SendcloudShippingOptionsService $sendcloudRates,
         private readonly LiccardiTmsRatesService $liccardiTmsRates,
+        private readonly SpedisciOnlineRatesService $spedisciOnlineRates,
         private readonly RegolePricingService $regolePricingService,
     ) {}
 
@@ -140,7 +144,33 @@ final class PreventivoRigaPrezzoService
             return $this->ricalcolaEsternoSendcloud($preventivo, $corriere);
         }
 
+        if (PiattaformaCorriere::corriereUsaPreventivoSpedisciOnline($corriere)) {
+            return $this->ricalcolaEsternoSpedisciOnline($preventivo, $corriere);
+        }
+
         return ['ok' => false, 'error' => 'Piattaforma esterna non ancora supportata per il ricalcolo.'];
+    }
+
+    private function ricalcolaEsternoSpedisciOnline(array $preventivo, corriere $corriere): array
+    {
+        $result = $this->spedisciOnlineRates->quoteForPreventivo($preventivo, $corriere);
+        $quote = is_array($result['quote'] ?? null) ? $result['quote'] : null;
+        $amount = $quote['price_amount'] ?? null;
+
+        if (! ($result['configured'] ?? false)) {
+            return ['ok' => false, 'error' => (string) ($result['error'] ?? 'API Spedisci.online non configurata.')];
+        }
+
+        if ($amount === null || (float) $amount <= 0) {
+            return ['ok' => false, 'error' => (string) ($result['error'] ?? 'Quotazione Spedisci.online non disponibile.')];
+        }
+
+        return $this->esitoDaCostoApi($corriere, (float) $amount, [
+            'piattaforma' => PiattaformaCorriere::normalizza($corriere->piattaforma),
+            'carrier_code' => $result['carrier_code'] ?? $corriere->carrier_code,
+            'contract_code' => $result['contract_code'] ?? $corriere->contract_code,
+            'quote' => $quote,
+        ]);
     }
 
     private function ricalcolaEsternoLiccardiTms(array $preventivo, corriere $corriere): array
@@ -157,9 +187,18 @@ final class PreventivoRigaPrezzoService
             return ['ok' => false, 'error' => (string) ($result['error'] ?? 'Quotazione Liccardi TMS non disponibile.')];
         }
 
-        return $this->esitoDaCostoApi($corriere, (float) $amount, [
+        $user = auth()->user();
+        if (! LiccardiPremiumPricing::mostraPreventivoLiccardi($user)) {
+            return ['ok' => false, 'error' => 'Preventivo Liccardi disponibile solo per clienti premium.'];
+        }
+
+        $costoBase = LiccardiPremiumPricing::costoTrasportoBase((float) $amount);
+
+        return $this->esitoDaCostoApi($corriere, $costoBase, [
             'piattaforma' => PiattaformaCorriere::LICCARDI_TMS,
             'quote' => $quote,
+            'liccardi_importo_originale' => (float) $amount,
+            'liccardi_premium_base' => $costoBase,
         ]);
     }
 
@@ -314,7 +353,7 @@ final class PreventivoRigaPrezzoService
      */
     private function walletPaymentModifier(): array
     {
-        $pct = app(OrdineTotaleIvatoService::class)->commissioniWalletOrdine();
+        $pct = PreventivoColonnePagamento::commissioniPctMetodo(MetodoPagamentoCodice::WALLET);
 
         return ['pct' => $pct, 'abs' => 0.0];
     }

@@ -44,24 +44,45 @@
         @php
             $mostrati = 0;
             $idDestino = (int) ($p['input']['id_comune_destino'] ?? 0);
+            $utenteLiccardi = (bool) ($utenteLiccardi ?? false);
 
-            $prezzoClienteDaCostoApi = static function (?float $costoApi, array $cor): ?float {
+            $prezzoClienteDaCostoApi = static function (?float $costoApi, array $cor, bool $applicaBasePremiumLiccardi = false): ?float {
                 if ($costoApi === null) {
                     return null;
+                }
+                if ($applicaBasePremiumLiccardi) {
+                    $costoApi = \App\Support\LiccardiPremiumPricing::costoTrasportoBase($costoApi);
                 }
                 $pct = (float) ($cor['ricarico_percentuale'] ?? 0);
 
                 return round($costoApi * (1 + ($pct / 100)), 2);
             };
 
+            $corrieriIdsNascosti = $corrieriIdsNascosti ?? [];
+
             $righeOk = collect($p['righe'] ?? [])
-                ->filter(fn ($r) => \App\Support\PreventivoRigaSelezionabile::isSelezionabile($r)
-                    && \App\Support\PreventivoRigaSelezionabile::haQuotazioneEsternaValida(
-                        $r,
-                        $sendcloudQuotePerCorriere ?? [],
-                        $liccardiQuotePerCorriere ?? [],
-                    ))
-                ->sortBy(function ($r) use ($sendcloudQuotePerCorriere, $liccardiQuotePerCorriere, $corriereCampiAggiornati, $prezzoClienteDaCostoApi) {
+                ->filter(function ($r) use ($sendcloudQuotePerCorriere, $liccardiQuotePerCorriere, $spedisciQuotePerCorriere, $utenteLiccardi, $corrieriIdsNascosti) {
+                    $cid = (int) ($r['corriere']['id'] ?? 0);
+                    if (in_array($cid, $corrieriIdsNascosti, true)) {
+                        return false;
+                    }
+                    $cor = $r['corriere'] ?? [];
+                    $piattaforma = \App\Support\PiattaformaCorriere::normalizza($cor['piattaforma'] ?? '');
+                    $usaTariffaInterna = (bool) ($cor['tariffa_interna'] ?? true);
+                    $isLiccardiTms = \App\Support\PiattaformaCorriere::usaPreventiviLiccardiTms($piattaforma) && ! $usaTariffaInterna;
+                    if ($isLiccardiTms && ! $utenteLiccardi) {
+                        return false;
+                    }
+
+                    return \App\Support\PreventivoRigaSelezionabile::isSelezionabile($r)
+                        && \App\Support\PreventivoRigaSelezionabile::haQuotazioneEsternaValida(
+                            $r,
+                            $sendcloudQuotePerCorriere ?? [],
+                            $liccardiQuotePerCorriere ?? [],
+                            $spedisciQuotePerCorriere ?? [],
+                        );
+                })
+                ->sortBy(function ($r) use ($sendcloudQuotePerCorriere, $liccardiQuotePerCorriere, $spedisciQuotePerCorriere, $corriereCampiAggiornati, $prezzoClienteDaCostoApi) {
                     $cid = (int) ($r['corriere']['id'] ?? 0);
                     $cor = array_merge($r['corriere'] ?? [], ($corriereCampiAggiornati[$cid] ?? []));
                     $piattaforma = \App\Support\PiattaformaCorriere::normalizza($cor['piattaforma'] ?? '');
@@ -74,6 +95,13 @@
                     if (\App\Support\PiattaformaCorriere::usaPreventiviLiccardiTms($piattaforma)
                         && ! (bool) ($cor['tariffa_interna'] ?? true)) {
                         $q = $liccardiQuotePerCorriere[$cid]['quote']['price_amount'] ?? null;
+                        if ($q !== null) {
+                            return (float) ($prezzoClienteDaCostoApi((float) $q, $cor, true) ?? $q);
+                        }
+                    }
+                    if (\App\Support\PiattaformaCorriere::usaPreventiviSpedisciOnline($piattaforma)
+                        && ! (bool) ($cor['tariffa_interna'] ?? true)) {
+                        $q = $spedisciQuotePerCorriere[$cid]['quote']['price_amount'] ?? null;
                         if ($q !== null) {
                             return (float) ($prezzoClienteDaCostoApi((float) $q, $cor) ?? $q);
                         }
@@ -134,10 +162,13 @@
                             $usaTariffaInterna = (bool) ($cor['tariffa_interna'] ?? data_get($r, 'corriere.tariffa_interna', true));
                             $isSendcloud = \App\Support\PiattaformaCorriere::usaPreventiviSendcloud($piattaforma);
                             $isLiccardiTms = \App\Support\PiattaformaCorriere::usaPreventiviLiccardiTms($piattaforma) && ! $usaTariffaInterna;
+                            $isSpedisciOnline = \App\Support\PiattaformaCorriere::usaPreventiviSpedisciOnline($piattaforma) && ! $usaTariffaInterna;
                             $sendcloudProbe = $sendcloudQuotePerCorriere[$cid] ?? null;
                             $sendcloudQuote = is_array($sendcloudProbe['quote'] ?? null) ? $sendcloudProbe['quote'] : null;
                             $liccardiProbe = $liccardiQuotePerCorriere[$cid] ?? null;
                             $liccardiQuote = is_array($liccardiProbe['quote'] ?? null) ? $liccardiProbe['quote'] : null;
+                            $spedisciProbe = $spedisciQuotePerCorriere[$cid] ?? null;
+                            $spedisciQuote = is_array($spedisciProbe['quote'] ?? null) ? $spedisciProbe['quote'] : null;
                             $extraGg = $extraGiorniDisagiato($cid);
                             $formatGgLavorativi = static function (int $giorniMin, int $ampiezza = 2): string {
                                 $giorniMax = $giorniMin + $ampiezza;
@@ -166,9 +197,15 @@
                                 $costoApiTrasporto = (float) $sendcloudQuote['price_amount'];
                             } elseif ($isLiccardiTms && isset($liccardiQuote['price_amount']) && $liccardiQuote['price_amount'] !== null) {
                                 $costoApiTrasporto = (float) $liccardiQuote['price_amount'];
+                            } elseif ($isSpedisciOnline && isset($spedisciQuote['price_amount']) && $spedisciQuote['price_amount'] !== null) {
+                                $costoApiTrasporto = (float) $spedisciQuote['price_amount'];
                             }
                             if ($costoApiTrasporto !== null) {
-                                $prezzoClienteTrasporto = (float) ($prezzoClienteDaCostoApi($costoApiTrasporto, $cor) ?? $costoApiTrasporto);
+                                $prezzoClienteTrasporto = (float) ($prezzoClienteDaCostoApi(
+                                    $costoApiTrasporto,
+                                    $cor,
+                                    $isLiccardiTms && $utenteLiccardi,
+                                ) ?? $costoApiTrasporto);
                             } else {
                                 $prezzoClienteTrasporto = (float) ($r['prezzo_finale'] ?? 0);
                             }
@@ -195,7 +232,7 @@
                                 : '';
                             $renderPrezzoValore = function (?float $importoCliente): string {
                                 $valore = $importoCliente !== null
-                                    ? number_format($importoCliente, 2, ',', '.').' €'
+                                    ? \App\Support\ImportoEuro::format($importoCliente)
                                     : '—';
 
                                 return '<div class="sq-prev-prezzo-block">'
@@ -264,7 +301,7 @@
                                     </div>
                                 </div>
 
-                                @if ($isLiccardiTms)
+                                @if ($isLiccardiTms && ! $utenteLiccardi)
                                     @php
                                         $prezzoVolumeLiccardi = \App\Support\LiccardiVolumeSconto::trasportoScontato($prezzoClienteTrasporto);
                                     @endphp
@@ -273,22 +310,10 @@
                                             {{ \App\Support\LiccardiVolumeSconto::messaggioPreventivo() }}
                                         </p>
                                         <p class="sq-prev-liccardi-volume-prezzo sq-m-0">
-                                            Prezzo con sconto volume: {{ number_format($prezzoVolumeLiccardi, 2, ',', '.') }} €
+                                            Prezzo con sconto volume: {{ \App\Support\ImportoEuro::format($prezzoVolumeLiccardi) }}
                                         </p>
                                     </div>
                                 @endif
-
-                                @include('preventivi.partials.api-debug', [
-                                    'preventivo' => $p,
-                                    'riga' => $r,
-                                    'corriere' => $cor,
-                                    'isSendcloud' => $isSendcloud,
-                                    'isLiccardiTms' => $isLiccardiTms,
-                                    'usaTariffaInterna' => $usaTariffaInterna,
-                                    'sendcloudProbe' => $sendcloudProbe,
-                                    'liccardiProbe' => $liccardiProbe,
-                                    'spedisciProbe' => $spedisciOnlineProbePerCorriere[$cid] ?? null,
-                                ])
 
                                 @php $serviziInd = $serviziIndicativiPerCorriere[$cid] ?? []; @endphp
                                 @if (! empty($serviziInd))

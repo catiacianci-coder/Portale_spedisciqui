@@ -4,7 +4,7 @@
 @endphp
 <div class="sq-etichetta-det-inner">
     <p class="sq-etichetta-dettaglio-meta sq-m-0">
-        N. ordine: <strong>{{ $d['ordine_codice'] ?: '—' }}</strong>
+        N. ordine: <strong>{{ $d['ordine_id'] ?: '—' }}</strong>
         @if ($d['data_pagamento_fmt'] !== '—')
             — {{ $d['data_pagamento_fmt'] }}
         @endif

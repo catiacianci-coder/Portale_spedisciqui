@@ -254,7 +254,7 @@ final class LiccardiTmsProbeRunner
 
     private static function formatEuro(float $n): string
     {
-        return number_format($n, 2, ',', '.').' €';
+        return \App\Support\ImportoEuro::format($n);
     }
 
     /**

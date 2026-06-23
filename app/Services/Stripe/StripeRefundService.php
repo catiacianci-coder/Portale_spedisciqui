@@ -4,13 +4,11 @@ namespace App\Services\Stripe;
 
 use App\Models\metodo_pagamento_ordine;
 use App\Models\ordine;
-use App\Models\rimborso;
-use App\Support\RimborsoRecordBuilder;
-use App\Services\OrdineTotaleIvatoService;
 use App\Services\Liccardi\LiccardiTmsAcquistoService;
+use App\Services\Rimborso\RimborsoStripeSpedizioniService;
 use App\Services\Sendcloud\SendcloudAcquistoService;
 use App\Services\SpedisciOnline\SpedisciOnlineAcquistoService;
-use App\Support\OrdineDatiPagamento;
+use App\Support\OrdinePagamentoEffettivo;
 use App\Support\StripeOrdineStripeIds;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -49,7 +47,7 @@ class StripeRefundService
     }
 
     /**
-     * Rimborso su Stripe + annullamento ordine (etichette Spedisci se presenti).
+     * Rimborso su Stripe: ordine resta pagato, spedizioni → rimborsata.
      *
      * @param  float|null  $importoEuro  Importo in euro; null = rimborso totale pagato
      * @return array{ok: bool, message: string, refund_id: ?string, amount_euro: ?float}
@@ -74,8 +72,10 @@ class StripeRefundService
             $totalePagato = (float) ($ordine->total_pagamento ?? 0);
         }
         if ($totalePagato <= 0 && $ordine->metodo_pagamento_ordinis_id) {
-            $totalePagato = app(OrdineTotaleIvatoService::class)
-                ->totaliPerMetodo($ordine, (int) $ordine->metodo_pagamento_ordinis_id)['totale'];
+            $totalePagato = OrdinePagamentoEffettivo::importoOrdine(
+                $ordine,
+                (int) $ordine->metodo_pagamento_ordinis_id,
+            );
         }
 
         $amountCents = null;
@@ -85,11 +85,11 @@ class StripeRefundService
                 return ['ok' => false, 'message' => 'Importo rimborso non valido.', 'refund_id' => null, 'amount_euro' => null];
             }
             if ($totalePagato > 0 && $importoEuro - $totalePagato > 0.01) {
-                return ['ok' => false, 'message' => 'L’importo supera il totale pagato ('.number_format($totalePagato, 2, ',', '.').' €).', 'refund_id' => null, 'amount_euro' => null];
+                return ['ok' => false, 'message' => 'L’importo supera il totale pagato ('.\App\Support\ImportoEuro::format($totalePagato).').', 'refund_id' => null, 'amount_euro' => null];
             }
             $amountCents = (int) round($importoEuro * 100);
             if ($amountCents < 50) {
-                return ['ok' => false, 'message' => 'Importo minimo rimborso 0,50 €.', 'refund_id' => null, 'amount_euro' => null];
+                return ['ok' => false, 'message' => 'Importo minimo rimborso '.\App\Support\ImportoEuro::format(0.5).'.', 'refund_id' => null, 'amount_euro' => null];
             }
         }
 
@@ -160,29 +160,27 @@ class StripeRefundService
             default => 'Rimborso Stripe — richiesto dal cliente',
         };
 
-        DB::transaction(function () use ($ordine, $refund, $refundedEuro, $paymentIntentId, $motivoRimborso): void {
-            $locked = ordine::query()->whereKey($ordine->id)->lockForUpdate()->firstOrFail();
-            $locked->update(array_merge(
-                OrdineDatiPagamento::attributiAnnullamento(),
-                [
-                    'stripe_refund_id' => $refund->id,
-                    'stripe_refund_amount' => $refundedEuro,
-                    'stripe_refunded_at' => now(),
-                ],
-            ));
+        $rimborsoIntero = $importoEuro === null;
 
-            rimborso::query()->create(
-                RimborsoRecordBuilder::daRimborsoStripe(
-                    $locked,
-                    $refund->id,
-                    $paymentIntentId,
-                    $refundedEuro,
-                    $motivoRimborso,
-                ),
+        DB::transaction(function () use ($ordine, $refund, $refundedEuro, $paymentIntentId, $motivoRimborso, $rimborsoIntero): void {
+            $locked = ordine::query()->whereKey($ordine->id)->lockForUpdate()->firstOrFail();
+            $locked->update([
+                'stripe_refund_id' => $refund->id,
+                'stripe_refund_amount' => $refundedEuro,
+                'stripe_refunded_at' => now(),
+            ]);
+
+            app(RimborsoStripeSpedizioniService::class)->applicaRimborsoStripe(
+                $locked->fresh(['spedizioni.tariffaSpedizione', 'spedizioni.rimborso']),
+                $refund->id,
+                $paymentIntentId,
+                $refundedEuro,
+                $motivoRimborso,
+                $rimborsoIntero,
             );
         });
 
-        $msg = 'Rimborso Stripe di '.number_format($refundedEuro, 2, ',', '.').' € completato (ID '.$refund->id.'). Ordine annullato.';
+        $msg = 'Rimborso Stripe di '.\App\Support\ImportoEuro::format($refundedEuro).' completato (ID '.$refund->id.'). L\'ordine resta pagato.';
         if ($spedisciDelete !== []) {
             $msg .= ' Etichette Spedisci.online eliminate.';
         }

@@ -1,44 +1,35 @@
 @php
     use App\Models\stato_spedizione;
+    use App\Support\EtichetteListing;
 
-    $mostraSelezione = (bool) ($mostraSelezione ?? false);
-    $podeEditar = (bool) ($podeEditar ?? false);
     $cardTitle = (string) ($cardTitle ?? 'Spedizioni dell\'ordine');
-    $colspanVazio = $mostraSelezione ? 9 : 8;
     $spedizioniOrdinate = $ordine->spedizioni->sortByDesc('id')->values();
     $totaleIvatoOrdine = (float) ($totaleIvatoOrdine ?? 0);
+    $totaleIvatoStandard = (float) ($totaleIvatoStandard ?? $totaleIvatoOrdine);
+    $totaleIvatoWallet = (float) ($totaleIvatoWallet ?? 0);
+    $mostraPrezziDuali = (bool) ($mostraPrezziDuali ?? false);
+    $mostraMittente = (bool) ($mostraMittente ?? true);
+    $colBase = 7 + ($mostraMittente ? 1 : 0);
+    $colspanVazio = $colBase;
+    $colspanFooter = $colBase - 1;
 @endphp
 <div class="sq-ordine-remessas-card">
-    @if ($mostraSelezione)
-        <form method="post" action="{{ route('ordini.spedizioni.elimina-marcate', $ordine) }}" id="form-elimina-spedizioni-marcate" class="sq-ordine-remessas-form">
-            @csrf
-    @endif
     <div class="sq-ordine-remessas-card-head">
         <strong>{{ $cardTitle }}</strong>
         @isset($cardMeta)
             <span class="sq-ordine-remessas-card-meta">{!! $cardMeta !!}</span>
         @endisset
-        @if ($mostraSelezione && $podeEditar)
-            <div class="sq-ordine-remessas-toolbar">
-                <label class="sq-ordine-remessas-check-all">
-                    <input type="checkbox" id="marcar-todos-spedizioni">
-                    Seleziona tutte
-                </label>
-                <button type="submit" class="sq-btn-elimina-marcate" id="btn-elimina-spedizioni-marcate" disabled>Elimina selezionate</button>
-            </div>
-        @endif
     </div>
     <div class="sq-table-wrap sq-ordine-remessas-table-wrap">
         <table class="sq-table sq-ordine-remessas-table">
             <thead>
                 <tr class="sq-thead-row sq-thead-row--neutral">
-                    @if ($mostraSelezione)
-                        <th class="sq-th" style="width:44px;">&nbsp;</th>
-                    @endif
                     <th class="sq-th">Data</th>
                     <th class="sq-th">Codice spedizione</th>
                     <th class="sq-th">Ordine</th>
-                    <th class="sq-th">Mittente</th>
+                    @if ($mostraMittente)
+                        <th class="sq-th">Mittente</th>
+                    @endif
                     <th class="sq-th">Destinatario</th>
                     <th class="sq-th">Servizio</th>
                     <th class="sq-th">Servizi aggiuntivi</th>
@@ -50,36 +41,20 @@
                     @php
                         $annullata = (int) $s->spedizione_stato_id === stato_spedizione::ANNULLATA;
                         $nomeRem = trim((string) ($s->razione_sociale_o ?: trim((string) (($s->nome_o ?? '') . ' ' . ($s->cognome_o ?? '')))));
-                        $nomeDest = trim((string) trim((string) (($s->nome_d ?? '') . ' ' . ($s->sobrenome_d ?? ''))));
                         $addrRem = trim(implode(' ', array_filter([
                             trim((string) ($s->indirizzo_o ?? '')),
                             trim((string) ($s->numero_o ?? '')),
-                        ])));
-                        $addrDest = trim(implode(' ', array_filter([
-                            trim((string) ($s->indirizzo_d ?? '')),
-                            trim((string) ($s->numero_d ?? '')),
                         ])));
                         $linhaRem2 = trim(implode(' - ', array_filter([
                             trim((string) ($s->frazione_o ?? '')),
                             trim(implode('/', array_filter([trim((string) ($s->citta_o ?? '')), trim((string) ($s->stato_o ?? ''))]))),
                             trim((string) ($s->cap_o ?? '')),
                         ])));
-                        $linhaDest2 = trim(implode(' - ', array_filter([
-                            trim((string) ($s->frazione_d ?? '')),
-                            trim(implode('/', array_filter([trim((string) ($s->citta_d ?? '')), trim((string) ($s->stato_d ?? ''))]))),
-                            trim((string) ($s->cap_d ?? '')),
-                        ])));
-                        $servico = trim((string) ($servizioPerSpedizione[(int) $s->id] ?? $s->service_description ?? $s->corriere ?? ''));
+                        $servico = EtichetteListing::nomeServizio($s);
                         $importoIvato = $s->prezzoClienteIvato();
+                        $importoIvatoWallet = $mostraPrezziDuali ? $s->prezzoClienteIvatoWallet() : null;
                     @endphp
                     <tr @class(['sq-ordine-remessa--annullata' => $annullata])>
-                        @if ($mostraSelezione)
-                            <td class="sq-td">
-                                @if ($podeEditar && ! $annullata)
-                                    <input type="checkbox" name="spedizioni[]" value="{{ $s->id }}" class="chk-spedizione-ordine">
-                                @endif
-                            </td>
-                        @endif
                         <td class="sq-td sq-nowrap">
                             {{ $s->created_at?->format('d/m/Y H:i') ?? '—' }}
                             @if ($annullata)
@@ -89,24 +64,20 @@
                             @endif
                         </td>
                         <td class="sq-td sq-ordine-remessa-codice">{{ $s->codice_interno ?: '—' }}</td>
-                        <td class="sq-td sq-fw-700">{{ $ordine->codice }}</td>
+                        <td class="sq-td sq-fw-700">{{ $ordine->id }}</td>
+                        @if ($mostraMittente)
+                            <td class="sq-td sq-ordine-remessa-person">
+                                <span class="sq-ordine-remessa-nome">{{ $nomeRem !== '' ? $nomeRem : '—' }}</span>
+                                @if ($addrRem !== '')
+                                    <span class="sq-ordine-remessa-indirizzo">{{ $addrRem }}</span>
+                                @endif
+                                @if ($linhaRem2 !== '')
+                                    <span class="sq-ordine-remessa-indirizzo">{{ $linhaRem2 }}</span>
+                                @endif
+                            </td>
+                        @endif
                         <td class="sq-td sq-ordine-remessa-person">
-                            <span class="sq-ordine-remessa-nome">{{ $nomeRem !== '' ? $nomeRem : '—' }}</span>
-                            @if ($addrRem !== '')
-                                <span class="sq-ordine-remessa-indirizzo">{{ $addrRem }}</span>
-                            @endif
-                            @if ($linhaRem2 !== '')
-                                <span class="sq-ordine-remessa-indirizzo">{{ $linhaRem2 }}</span>
-                            @endif
-                        </td>
-                        <td class="sq-td sq-ordine-remessa-person">
-                            <span class="sq-ordine-remessa-nome">{{ $nomeDest !== '' ? $nomeDest : '—' }}</span>
-                            @if ($addrDest !== '')
-                                <span class="sq-ordine-remessa-indirizzo">{{ $addrDest }}</span>
-                            @endif
-                            @if ($linhaDest2 !== '')
-                                <span class="sq-ordine-remessa-indirizzo">{{ $linhaDest2 }}</span>
-                            @endif
+                            @include('ordini.partials.spedizione-destinatario-tabella', ['spedizione' => $s])
                         </td>
                         <td class="sq-td">{{ $servico !== '' ? $servico : '—' }}</td>
                         <td class="sq-td sq-text-14">
@@ -116,7 +87,15 @@
                             @if ($annullata)
                                 <span class="sq-text-muted">—</span>
                             @else
-                                @include('partials.td-importo-ivato', ['importoIvato' => $importoIvato])
+                                @if ($mostraPrezziDuali)
+                                    @include('partials.due-prezzi-standard-wallet', [
+                                        'prezzoStandard' => $importoIvato,
+                                        'prezzoWallet' => $importoIvatoWallet,
+                                        'compact' => true,
+                                    ])
+                                @else
+                                    @include('partials.td-importo-ivato', ['importoIvato' => $importoIvato])
+                                @endif
                             @endif
                         </td>
                     </tr>
@@ -129,14 +108,21 @@
             @if ($spedizioniOrdinate->isNotEmpty())
                 <tfoot>
                     <tr>
-                        <td colspan="{{ $mostraSelezione ? 8 : 7 }}" class="sq-td sq-td--right sq-fw-700">Totale ordine (IVA inclusa)</td>
-                        <td class="sq-td sq-td--right sq-fw-700">{{ number_format($totaleIvatoOrdine, 2, ',', '.') }} €</td>
+                        <td colspan="{{ $colspanFooter }}" class="sq-td sq-td--right sq-fw-700">Totale ordine (IVA inclusa)</td>
+                        <td class="sq-td sq-td--right sq-fw-700">
+                            @if ($mostraPrezziDuali)
+                                @include('partials.due-prezzi-standard-wallet', [
+                                    'prezzoStandard' => $totaleIvatoStandard,
+                                    'prezzoWallet' => $totaleIvatoWallet,
+                                    'compact' => true,
+                                ])
+                            @else
+                                {{ \App\Support\ImportoEuro::format($totaleIvatoOrdine) }}
+                            @endif
+                        </td>
                     </tr>
                 </tfoot>
             @endif
         </table>
     </div>
-    @if ($mostraSelezione)
-        </form>
-    @endif
 </div>

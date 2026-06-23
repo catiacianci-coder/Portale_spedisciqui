@@ -56,7 +56,7 @@
             <div>
                 <label for="filtro-numero-ordine" class="sq-filtri-label">Numero ordine</label>
                 <input id="filtro-numero-ordine" name="numero_ordine" type="text" value="{{ $filtroNumeroOrdine }}"
-                       class="sq-filtri-email-input" placeholder="es. O12">
+                       class="sq-filtri-email-input" placeholder="es. 27">
             </div>
             @include('partials.filtri-periodo', [
                 'periodId' => 'period_ordini',
@@ -85,7 +85,9 @@
                 <colgroup>
                     <col class="sq-col-numero">
                     <col class="sq-col-data">
-                    <col class="sq-col-data">
+                    @if ($aba !== 'non_pagati')
+                        <col class="sq-col-data">
+                    @endif
                     <col style="width:14%">
                     <col style="width:10%">
                     <col class="sq-col-azioni">
@@ -94,7 +96,9 @@
                     <tr class="sq-thead-row sq-thead-row--neutral">
                         <th class="sq-th">N. ordine</th>
                         <th class="sq-th">Data</th>
-                        <th class="sq-th">{{ $aba === 'annullati' ? 'Data annullamento' : 'Data pagamento' }}</th>
+                        @if ($aba !== 'non_pagati')
+                            <th class="sq-th">{{ $aba === 'annullati' ? 'Data annullamento' : 'Data pagamento' }}</th>
+                        @endif
                         <th class="sq-th sq-th--right">@include('partials.th-importo-iva-inclusa')</th>
                         <th class="sq-th">Spedizioni</th>
                         <th class="sq-th sq-th--right">Azioni</th>
@@ -103,24 +107,44 @@
                 <tbody>
                     @foreach ($ordini as $o)
                         @php
-                            $costoOrdine = \App\Support\OrdineRiepilogo::totaleIvatoAttivo($o);
-                            $qtdSpedizioni = (int) ($o->spedizioni_attive_count ?? \App\Support\OrdineRiepilogo::contaSpedizioniAttive($o));
+                            if ($aba === 'non_pagati') {
+                                $totaliDuali = \App\Support\OrdineRiepilogo::totaliDualiNonPagato($o);
+                                $costoOrdineStandard = $totaliDuali['standard'];
+                                $costoOrdineWallet = $totaliDuali['wallet'];
+                            } else {
+                                $costoOrdine = \App\Support\OrdineRiepilogo::totaleIvatoAttivo($o);
+                            }
+                            $qtdSpedizioni = (int) ($o->spedizioni_count ?? $o->spedizioni()->count());
                             $dataPagamento = $o->data_pagamento;
                             $dataAnnullamento = $o->annullato_in ?? ($aba === 'annullati' ? $o->updated_at : null);
                         @endphp
                         <tr>
-                            <td class="sq-td sq-fw-700">{{ $o->codice }}</td>
+                            <td class="sq-td sq-fw-700">{{ $o->id }}</td>
                             <td class="sq-td sq-td--muted sq-nowrap">{{ $o->created_at?->format('d/m/Y H:i') }}</td>
-                            <td class="sq-td sq-td--muted sq-nowrap">
-                                @if ($aba === 'annullati')
-                                    {{ $dataAnnullamento?->format('d/m/Y H:i') ?? '—' }}
-                                @elseif ($dataPagamento)
-                                    {{ $dataPagamento->format('d/m/Y H:i') }}
+                            @if ($aba !== 'non_pagati')
+                                <td class="sq-td sq-td--muted sq-nowrap">
+                                    @if ($aba === 'annullati')
+                                        {{ $dataAnnullamento?->format('d/m/Y H:i') ?? '—' }}
+                                    @elseif ($dataPagamento)
+                                        {{ $dataPagamento->format('d/m/Y H:i') }}
+                                    @else
+                                        <span class="sq-text-muted">—</span>
+                                    @endif
+                                </td>
+                            @endif
+                            <td class="sq-td sq-td--right sq-nowrap">
+                                @if ($aba === 'non_pagati')
+                                    @include('partials.due-prezzi-standard-wallet', [
+                                        'prezzoStandard' => $costoOrdineStandard,
+                                        'prezzoWallet' => $costoOrdineWallet,
+                                        'compact' => true,
+                                    ])
+                                @elseif ($aba === 'pagati')
+                                    <span class="sq-fw-700">{{ \App\Support\OrdineRiepilogo::importoPagatoTabella($o) }}</span>
                                 @else
-                                    <span class="sq-text-muted">—</span>
+                                    <span class="sq-fw-700">{{ \App\Support\ImportoEuro::format($costoOrdine) }}</span>
                                 @endif
                             </td>
-                            <td class="sq-td sq-td--right sq-fw-700 sq-nowrap">{{ number_format($costoOrdine, 2, ',', '.') }} €</td>
                             <td class="sq-td">{{ $qtdSpedizioni }}</td>
                             <td class="sq-td sq-td--right">
                                 <div class="sq-ordini-actions-icons">
@@ -290,6 +314,53 @@
         const textOrDash = (v) => v != null && String(v).trim() !== '' ? String(v) : '—';
         const spedizioni = payload && Array.isArray(payload.spedizioni) ? payload.spedizioni : [];
         const pagamentoWallet = !!(payload && payload.pagamento_wallet);
+        const mostraPrezziDuali = !!(payload && payload.mostra_prezzi_duali);
+
+        const renderImportoCell = (tdImporto, sp) => {
+            tdImporto.replaceChildren();
+            if (mostraPrezziDuali && (sp.importo_ivato_fmt || sp.importo_ivato_wallet_fmt)) {
+                const wrap = document.createElement('div');
+                wrap.className = 'sq-due-prezzi sq-due-prezzi--compact';
+
+                const rigaStandard = document.createElement('div');
+                rigaStandard.className = 'sq-due-prezzi-riga';
+                const labelStandard = document.createElement('span');
+                labelStandard.className = 'sq-due-prezzi-label';
+                labelStandard.textContent = 'Carte/Bonifico';
+                const valStandard = document.createElement('span');
+                valStandard.className = 'sq-due-prezzi-val sq-fw-700';
+                valStandard.textContent = sp.importo_ivato_fmt ? String(sp.importo_ivato_fmt) : '—';
+                rigaStandard.appendChild(labelStandard);
+                rigaStandard.appendChild(valStandard);
+
+                const rigaWallet = document.createElement('div');
+                rigaWallet.className = 'sq-due-prezzi-riga sq-due-prezzi-riga--wallet';
+                const labelWallet = document.createElement('span');
+                labelWallet.className = 'sq-due-prezzi-label';
+                labelWallet.textContent = 'Wallet';
+                const valWallet = document.createElement('span');
+                valWallet.className = 'sq-due-prezzi-val sq-fw-700';
+                valWallet.textContent = sp.importo_ivato_wallet_fmt ? String(sp.importo_ivato_wallet_fmt) : '—';
+                rigaWallet.appendChild(labelWallet);
+                rigaWallet.appendChild(valWallet);
+
+                wrap.appendChild(rigaStandard);
+                wrap.appendChild(rigaWallet);
+                tdImporto.appendChild(wrap);
+                return;
+            }
+
+            const importoMain = document.createElement('div');
+            importoMain.className = 'sq-fw-700';
+            importoMain.textContent = sp.importo_ivato_fmt ? String(sp.importo_ivato_fmt) : '—';
+            tdImporto.appendChild(importoMain);
+            if (pagamentoWallet && sp.importo_ivato_fmt) {
+                const notaWallet = document.createElement('div');
+                notaWallet.className = 'sq-ordini-importo-wallet-note';
+                notaWallet.textContent = 'importo scontato con wallet';
+                tdImporto.appendChild(notaWallet);
+            }
+        };
 
         const statoClass = (badge) => {
             const map = {
@@ -320,9 +391,9 @@
             headRow.className = 'sq-thead-row sq-thead-row--warm';
             [
                 { label: 'Codice interno', right: false },
-                { label: 'Stato', right: false },
                 { label: 'Destinatario', right: false },
                 { label: 'Servizio', right: false },
+                { label: 'Status', right: false },
                 { label: 'Lettera di vettura', right: false },
                 { label: 'Importo (IVA inclusa)', right: true },
             ].forEach(({ label, right }) => {
@@ -344,14 +415,6 @@
                 tdCodice.textContent = textOrDash(sp.codice_interno);
                 tr.appendChild(tdCodice);
 
-                const tdStato = document.createElement('td');
-                tdStato.className = 'sq-td sq-td--border-warm';
-                const statoSpan = document.createElement('span');
-                statoSpan.className = 'sq-stato-tabella ' + statoClass(sp.stato_badge);
-                statoSpan.textContent = textOrDash(sp.stato_label);
-                tdStato.appendChild(statoSpan);
-                tr.appendChild(tdStato);
-
                 const tdDest = document.createElement('td');
                 tdDest.className = 'sq-td sq-td--border-warm';
                 tdDest.textContent = textOrDash(sp.destinatario_tabella);
@@ -361,6 +424,14 @@
                 tdServ.className = 'sq-td sq-td--border-warm sq-text-14';
                 tdServ.textContent = textOrDash(sp.servizio_tabella);
                 tr.appendChild(tdServ);
+
+                const tdStato = document.createElement('td');
+                tdStato.className = 'sq-td sq-td--border-warm';
+                const statoSpan = document.createElement('span');
+                statoSpan.className = 'sq-stato-tabella ' + statoClass(sp.stato_badge);
+                statoSpan.textContent = textOrDash(sp.stato_label);
+                tdStato.appendChild(statoSpan);
+                tr.appendChild(tdStato);
 
                 const tdTrack = document.createElement('td');
                 tdTrack.className = 'sq-td sq-td--border-warm sq-text-14';
@@ -376,16 +447,7 @@
 
                 const tdImporto = document.createElement('td');
                 tdImporto.className = 'sq-td sq-td--border-warm sq-td--right sq-nowrap';
-                const importoMain = document.createElement('div');
-                importoMain.className = 'sq-fw-700';
-                importoMain.textContent = sp.importo_ivato_fmt ? String(sp.importo_ivato_fmt) : '—';
-                tdImporto.appendChild(importoMain);
-                if (pagamentoWallet && sp.importo_ivato_fmt) {
-                    const notaWallet = document.createElement('div');
-                    notaWallet.className = 'sq-ordini-importo-wallet-note';
-                    notaWallet.textContent = 'importo scontato con wallet';
-                    tdImporto.appendChild(notaWallet);
-                }
+                renderImportoCell(tdImporto, sp);
                 tr.appendChild(tdImporto);
 
                 tbody.appendChild(tr);
@@ -418,4 +480,40 @@
     });
 })();
 </script>
+
+@if (session('checkout_ordine_creato_id'))
+    @php $ordineCreatoId = (int) session('checkout_ordine_creato_id'); @endphp
+    <div id="sq-checkout-ordine-modal" class="sq-modal" data-checkout-ordine-modal>
+        <div class="sq-modal-backdrop js-checkout-ordine-modal-close" tabindex="-1" aria-hidden="true"></div>
+        <div class="sq-modal-panel" role="dialog" aria-modal="true" aria-labelledby="sq-checkout-ordine-modal-title">
+            <h2 id="sq-checkout-ordine-modal-title" class="sq-modal-title">Ordine creato</h2>
+            <p class="sq-modal-text sq-m-0 sq-mb-16">
+                Questa spedizione si trova nell’ordine n. {{ $ordineCreatoId }}; puoi selezionarlo dai tuoi ordini non pagati e procedere al pagamento.
+            </p>
+            <div class="sq-modal-actions">
+                <button type="button" class="sq-btn-primary sq-modal-btn js-checkout-ordine-modal-close">OK</button>
+            </div>
+        </div>
+    </div>
+    <script>
+    (() => {
+        const modal = document.querySelector('[data-checkout-ordine-modal]');
+        if (!modal) return;
+        modal.hidden = false;
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('sq-modal-open');
+        const close = () => {
+            modal.hidden = true;
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('sq-modal-open');
+        };
+        modal.querySelectorAll('.js-checkout-ordine-modal-close').forEach((el) => {
+            el.addEventListener('click', () => close());
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !modal.hidden) close();
+        });
+    })();
+    </script>
+@endif
 @endsection

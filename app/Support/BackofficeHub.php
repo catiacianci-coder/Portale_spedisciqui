@@ -11,6 +11,13 @@ final class BackofficeHub
     {
         return [
             [
+                'id' => 'utenti',
+                'label' => 'Utenti',
+                'description' => 'Clienti registrati: ricerca avanzata, abilitazione postagem e collegamenti operativi.',
+                'route' => 'backoffice.utenti.index',
+                'icon' => 'fa-solid fa-user-shield',
+            ],
+            [
                 'id' => 'tickets',
                 'label' => 'Ticket assistenza',
                 'description' => 'Nuovi, aperti, in attesa e risolti: coda richieste di assistenza dei clienti.',
@@ -25,9 +32,16 @@ final class BackofficeHub
                 'icon' => 'fa-solid fa-triangle-exclamation',
             ],
             [
+                'id' => 'stripe_estratto',
+                'label' => 'Estratto Stripe',
+                'description' => 'Movimenti Stripe (addebiti, rimborsi, commissioni, bonifici) per periodo, con export CSV.',
+                'route' => 'backoffice.stripe_estratto.index',
+                'icon' => 'fa-brands fa-stripe-s',
+            ],
+            [
                 'id' => 'rimborsi',
                 'label' => 'Gestione rimborsi',
-                'description' => 'Pendenti da pagare, storico rimborsati e ricerca per ordine.',
+                'description' => 'Pendenti da pagare, storico rimborsati, ricerca per ordine e trasferimenti wallet.',
                 'route' => 'backoffice.rimborsi.index',
                 'icon' => 'fa-solid fa-money-bill-transfer',
             ],
@@ -69,7 +83,7 @@ final class BackofficeHub
             [
                 'id' => 'corrieri',
                 'label' => 'Corrieri',
-                'description' => 'Anagrafica corrieri, ricarichi, servizi e parametri di integrazione.',
+                'description' => 'Anagrafica corrieri, carosello home e modifica campi per servizio o per attributo.',
                 'route' => 'backoffice.corrieri.index',
                 'icon' => 'fa-solid fa-dolly',
             ],
@@ -82,9 +96,9 @@ final class BackofficeHub
             ],
             [
                 'id' => 'parametri',
-                'label' => 'Parametri globali',
-                'description' => 'IVA, commissioni metodi di pagamento e chiavi API (Stripe, corrieri, …).',
-                'route' => 'backoffice.parametri_globali.edit',
+                'label' => 'Utilities',
+                'description' => 'Parametri globali (tabella), ricarichi e configurazioni di sistema.',
+                'route' => 'backoffice.utilities.index',
                 'icon' => 'fa-solid fa-sliders',
             ],
             [

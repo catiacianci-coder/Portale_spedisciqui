@@ -65,6 +65,8 @@ final class RimborsoStripeSpedizioneService
                     'codice_interno' => $codiceInterno,
                     'rimborso_id' => (string) $rimborso->id,
                 ],
+            ], [
+                'idempotency_key' => 'rimborso-trasferimento-'.$rimborso->id,
             ]);
         } catch (\Throwable $e) {
             Log::warning('Stripe rimborso spedizione fallito', [

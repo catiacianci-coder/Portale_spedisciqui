@@ -13,10 +13,10 @@
 <dl class="sq-pay-metodo-card__amounts">
     <div class="sq-pay-metodo-card__amount-row">
         <dt>Imponibile</dt>
-        <dd>{{ $imponibileFmt }} €</dd>
+        <dd @if (! empty($amountsDynamic)) class="js-pay-imponibile-fmt" @endif>{{ ! empty($amountsDynamic) ? '—' : $imponibileFmt }}</dd>
     </div>
     <div class="sq-pay-metodo-card__amount-row sq-pay-metodo-card__amount-row--total">
         <dt>Totale ivato</dt>
-        <dd>{{ $totaleFmt }} €</dd>
+        <dd @if (! empty($amountsDynamic)) class="js-pay-totale-fmt" @endif>{{ ! empty($amountsDynamic) ? '—' : $totaleFmt }}</dd>
     </div>
 </dl>

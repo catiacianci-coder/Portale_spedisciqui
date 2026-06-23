@@ -1,5 +1,5 @@
 /*
- * Prova identità: header/footer bianchi, calcolatore teal, CTA giallo zafferano
+ * Prova identità: header/footer bianchi, calcolatore teal, CTA arancio
  * Attivo con data-sq-accent="teal-saffron" su <html>
  * Rimuovi l'attributo (o torna a "teal" / arancio) per disattivare.
  */
@@ -13,17 +13,17 @@ html[data-sq-accent='teal-saffron'] {
     --sq-accent-soft: #e8f0f2;
     --sq-accent-soft-2: #d5e3e7;
     --sq-accent-border-soft: #b8cfd6;
-    --sq-brand: #dea90b;
-    --sq-brand-hover: #c9960a;
-    --sq-brand-dark: #b8860a;
-    --sq-brand-on: #1f2937;
+    --sq-brand: #ff6600;
+    --sq-brand-hover: #e65c00;
+    --sq-brand-dark: #cc5200;
+    --sq-brand-on: #ffffff;
     --sq-bg-page: #f5f7f8;
-    --sq-border-brand: #f0d878;
-    --sq-shadow-brand: 0 4px 16px rgba(222, 169, 11, 0.38);
-    --sq-shadow-brand-lg: 0 6px 20px rgba(222, 169, 11, 0.46);
-    --sq-brand-glow-12: rgba(222, 169, 11, 0.14);
-    --sq-brand-glow-14: rgba(222, 169, 11, 0.18);
-    --sq-brand-glow-10: rgba(222, 169, 11, 0.12);
+    --sq-border-brand: #fed7aa;
+    --sq-shadow-brand: 0 4px 16px rgba(255, 102, 0, 0.35);
+    --sq-shadow-brand-lg: 0 6px 20px rgba(255, 102, 0, 0.42);
+    --sq-brand-glow-12: rgba(255, 102, 0, 0.12);
+    --sq-brand-glow-14: rgba(255, 102, 0, 0.14);
+    --sq-brand-glow-10: rgba(255, 102, 0, 0.1);
     --sq-titlebar-bg: #0a5969;
     --sq-titlebar-bg-dark: #084856;
     --sq-titlebar-text: #ffffff;
@@ -155,7 +155,7 @@ html[data-sq-accent='teal-saffron'] .home-spedizione-form {
     padding-bottom: clamp(28px, 5vw, 44px);
 }
 
-/* CTA giallo zafferano */
+/* CTA arancio */
 html[data-sq-accent='teal-saffron'] .home-spedizione-cta,
 html[data-sq-accent='teal-saffron'] .sq-btn-primary,
 html[data-sq-accent='teal-saffron'] .sq-btn-primary-block,

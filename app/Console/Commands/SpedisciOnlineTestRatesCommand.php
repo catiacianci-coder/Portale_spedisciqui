@@ -4,20 +4,21 @@ namespace App\Console\Commands;
 
 use App\Services\SpedisciOnline\SpedisciOnlineClient;
 use App\Services\SpedisciOnline\SpedisciOnlineRatesService;
+use App\Support\PiattaformaCorriere;
 use Illuminate\Console\Command;
 
 class SpedisciOnlineTestRatesCommand extends Command
 {
-    protected $signature = 'spedisci-online:test-rates {--tenant=quick : quick o liccardi}';
+    protected $signature = 'spedisci-online:test-rates {--tenant=eamulti : eamulti o liccardi}';
 
-    protected $description = 'Test POST /shipping/rates su Spedisci.online (tenant quick o liccardi)';
+    protected $description = 'Test POST /shipping/rates su Spedisci.online (tenant eamulti o liccardi)';
 
     public function handle(SpedisciOnlineRatesService $rates): int
     {
         $tenant = (string) $this->option('tenant');
         $piattaforma = $tenant === 'liccardi'
-            ? 'liccardi_spediscionline_preventivi_propri'
-            : 'quick_spediscionline_preventivi_propri';
+            ? PiattaformaCorriere::LICCARDI_PREVENTIVI_PROPRI
+            : PiattaformaCorriere::EAMULTIEXP_SPEDISCIONLINE;
 
         $client = SpedisciOnlineClient::forPiattaforma($piattaforma);
         if (! $client->isConfigured()) {

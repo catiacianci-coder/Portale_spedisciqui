@@ -43,9 +43,44 @@ class StripeWebhookHandler
         match ($event->type) {
             'checkout.session.completed' => $this->onCheckoutSessionCompleted($event),
             'checkout.session.async_payment_succeeded' => $this->onCheckoutSessionCompleted($event),
+            'payment_intent.succeeded' => $this->onPaymentIntentSucceeded($event),
             'charge.refunded', 'refund.created', 'refund.updated' => $this->onRefundEvent($event),
             default => null,
         };
+    }
+
+    private function onPaymentIntentSucceeded(Event $event): void
+    {
+        /** @var \Stripe\PaymentIntent $intent */
+        $intent = $event->data->object;
+
+        $ordineId = (int) ($intent->metadata['ordine_id'] ?? 0);
+        $metodoId = (int) ($intent->metadata['metodo_pagamento_id'] ?? 0);
+
+        if ($ordineId <= 0 || $metodoId <= 0) {
+            return;
+        }
+
+        $ordine = ordine::query()->find($ordineId);
+        if (! $ordine) {
+            Log::warning('Stripe webhook payment_intent.succeeded: ordine non trovato', ['ordine_id' => $ordineId]);
+
+            return;
+        }
+
+        $result = app(OrdineCompletaPagamentoService::class)->segnaPagato(
+            $ordine,
+            $metodoId,
+            null,
+            (string) $intent->id,
+        );
+
+        if (! $result['ok'] && ! ($result['already'] ?? false)) {
+            Log::warning('Stripe webhook payment_intent.succeeded: segnaPagato fallito', [
+                'ordine_id' => $ordineId,
+                'reason' => $result['reason'] ?? null,
+            ]);
+        }
     }
 
     private function onCheckoutSessionCompleted(Event $event): void

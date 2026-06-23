@@ -36,11 +36,13 @@ final class PreventivoRigaSelezionabile
      *
      * @param  array<int, array<string, mixed>>  $sendcloudQuotePerCorriere
      * @param  array<int, array<string, mixed>>  $liccardiQuotePerCorriere
+     * @param  array<int, array<string, mixed>>  $spedisciQuotePerCorriere
      */
     public static function haQuotazioneEsternaValida(
         array $riga,
         array $sendcloudQuotePerCorriere = [],
         array $liccardiQuotePerCorriere = [],
+        array $spedisciQuotePerCorriere = [],
     ): bool {
         if ((bool) data_get($riga, 'corriere.tariffa_interna', true)) {
             return true;
@@ -57,6 +59,12 @@ final class PreventivoRigaSelezionabile
 
         if (PiattaformaCorriere::usaPreventiviLiccardiTms($piattaforma)) {
             $amount = data_get($liccardiQuotePerCorriere, $cid.'.quote.price_amount');
+
+            return $amount !== null && (float) $amount > 0;
+        }
+
+        if (PiattaformaCorriere::usaPreventiviSpedisciOnline($piattaforma)) {
+            $amount = data_get($spedisciQuotePerCorriere, $cid.'.quote.price_amount');
 
             return $amount !== null && (float) $amount > 0;
         }

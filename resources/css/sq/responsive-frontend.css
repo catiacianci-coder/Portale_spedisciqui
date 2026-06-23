@@ -1,0 +1,510 @@
+/**
+ * Front office — layout responsive (mobile / tablet).
+ * Importato per ultimo in app.css.
+ */
+
+/* --- Header: menu link legali su mobile --- */
+.sq-header-nav-menu {
+    position: relative;
+    display: block;
+}
+
+.sq-header-nav-menu > summary {
+    display: none;
+    list-style: none;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 0 12px;
+    border: 1px solid var(--sq-border);
+    border-radius: 10px;
+    background: var(--sq-bg-white);
+    font-family: var(--sq-font-ui);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--sq-header-link);
+}
+
+.sq-header-nav-menu > summary::-webkit-details-marker {
+    display: none;
+}
+
+.sq-header-nav-menu-body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 16px;
+}
+
+@media (max-width: 899px) {
+    .sq-header {
+        align-items: center;
+    }
+
+    .sq-header-left {
+        flex: 1 1 auto;
+        align-items: center;
+    }
+
+    .sq-header-nav-menu > summary {
+        display: inline-flex;
+    }
+
+    .sq-header-nav-menu-body {
+        display: none;
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        z-index: 1350;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        min-width: min(280px, calc(100vw - 28px));
+        padding: 8px;
+        background: var(--sq-bg-white);
+        border: 1px solid var(--sq-border);
+        border-radius: 12px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+    }
+
+    .sq-header-nav-menu[open] .sq-header-nav-menu-body {
+        display: flex;
+    }
+
+    .sq-header-nav-menu-body .sq-header-link {
+        display: block;
+        padding: 10px 12px;
+        border-radius: 8px;
+        white-space: normal;
+    }
+
+    .sq-header-nav-menu-body .sq-header-link:hover {
+        background: var(--sq-bg-soft);
+    }
+
+    .sq-header-logo {
+        max-width: 140px;
+    }
+
+    .sq-header-user-name {
+        max-width: 10ch;
+    }
+
+    .sq-header-right {
+        gap: 12px 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .sq-header-btn-register {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+    .sq-header-right .sq-header-link--assist {
+        font-size: 13px;
+    }
+}
+
+/* --- Stepper checkout --- */
+@media (max-width: 899px) {
+    .sq-checkout-stepper {
+        padding: 10px 12px;
+        margin-bottom: 14px;
+    }
+
+    .sq-checkout-stepper-list {
+        min-width: 0;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 4px 0;
+    }
+
+    .sq-checkout-stepper-li {
+        flex: 0 1 auto;
+    }
+
+    .sq-checkout-stepper-li:last-child {
+        flex: 0 1 auto;
+    }
+
+    .sq-checkout-stepper-connector {
+        display: none;
+    }
+
+    .sq-checkout-stepper-item {
+        min-width: 56px;
+        max-width: 72px;
+    }
+
+    .sq-checkout-stepper-label {
+        font-size: 9px;
+    }
+}
+
+/* --- Home / creazione spedizione --- */
+@media (max-width: 899px) {
+    .home-spedizione-wrap {
+        padding: 12px 12px 28px;
+    }
+
+    .home-spedizione-card {
+        padding: 20px 16px;
+        border-radius: 12px;
+    }
+
+    .sq-homepage-avviso {
+        flex-direction: column;
+        text-align: center;
+        gap: 8px;
+    }
+
+    .sq-home-premium-banner {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 18px 16px;
+    }
+
+    .sq-home-premium-banner__icon {
+        width: 64px;
+        height: 64px;
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .home-spedizione-cta {
+        width: 100%;
+    }
+}
+
+/* --- Registrazione --- */
+@media (max-width: 899px) {
+    .register-container {
+        max-width: 100%;
+        margin: 16px auto 32px;
+        padding: 22px 18px;
+        border-radius: 10px;
+    }
+
+    .register-container .cf-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .register-container .btn-verify {
+        width: 100% !important;
+        margin-top: 8px !important;
+    }
+
+    .register-container .row,
+    .register-row--addr {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .register-container .row div,
+    .register-row--addr > div:first-child,
+    .register-row--addr > div:last-child {
+        flex: 1 1 auto;
+        width: 100%;
+    }
+
+    .register-comune-suggest {
+        max-height: min(220px, 40vh);
+        overflow-y: auto;
+    }
+}
+
+/* --- Preventivi --- */
+@media (max-width: 899px) {
+    .sq-page-preventivi {
+        padding: 12px 10px 24px;
+    }
+
+    .sq-prev-riepilogo-line {
+        white-space: normal;
+        line-height: 1.45;
+    }
+
+    .sq-prev-hero {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 14px;
+    }
+
+    .sq-prev-cities {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .sq-prev-city-box,
+    .sq-prev-dim-box {
+        width: 100%;
+    }
+
+    .sq-prev-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .sq-prev-ordina-row {
+        width: 100%;
+    }
+
+    .sq-prev-ordina-select {
+        width: 100%;
+        max-width: none;
+    }
+
+    .sq-prev-thead-shell {
+        display: none;
+    }
+
+    .sq-prev-table-min {
+        min-width: 0;
+    }
+
+    .sq-prev-table-scroll {
+        overflow-x: visible;
+    }
+
+    .preventivo-card-inner.sq-prev-card-grid {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding: 14px 14px 16px;
+    }
+
+    .preventivo-card-inner.sq-prev-card-grid > * {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .sq-prev-card-grid > *::before {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--sq-brand);
+    }
+
+    .preventivo-card-inner.sq-prev-card-grid > .sq-minw-0::before {
+        content: 'Corriere';
+    }
+
+    .preventivo-card-inner.sq-prev-card-grid > .sq-prev-punti-ritiro-cell:not(:empty)::before {
+        content: 'Punto ritiro';
+    }
+
+    .preventivo-card-inner.sq-prev-card-grid > .sq-prev-punti-ritiro-cell:empty {
+        display: none;
+    }
+
+    .preventivo-card-inner.sq-prev-card-grid > .sq-prev-mode-cell:first-of-type::before {
+        content: 'Ritiro';
+    }
+
+    .preventivo-card-inner.sq-prev-card-grid > .sq-prev-mode-cell:last-of-type::before {
+        content: 'Consegna';
+    }
+
+    .preventivo-card-inner.sq-prev-card-grid > .sq-prev-tempi::before {
+        content: 'Tempi';
+    }
+
+    .preventivo-card-inner.sq-prev-card-grid > .sq-prev-prezzo-cell::before {
+        content: 'Prezzo';
+    }
+
+    .preventivo-card-inner.sq-prev-card-grid > .sq-prev-actions-cell::before {
+        content: 'Seleziona';
+        width: 100%;
+        text-align: left;
+    }
+
+    .sq-prev-corriere-col {
+        flex-direction: row;
+        align-items: center;
+        max-width: none;
+        width: 100%;
+        gap: 12px;
+    }
+
+    .sq-prev-prezzo-cell {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .sq-prev-prezzo-val {
+        font-size: 1.15rem;
+    }
+
+    .sq-prev-actions-cell {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        margin-top: 4px;
+        padding-top: 10px;
+        border-top: 1px solid var(--sq-border-light);
+    }
+
+    .sq-prev-actions-cell .sq-prev-btn-corriere,
+    .sq-prev-actions-cell .btn-seleziona-corriere {
+        width: 100%;
+        height: auto;
+        min-height: 48px;
+        padding: 10px 16px;
+        justify-content: center;
+        border-radius: 10px;
+        border: 1px solid var(--sq-border);
+        background: var(--sq-bg-soft);
+    }
+
+    .sq-prev-actions-cell .sq-prev-btn-corriere svg {
+        width: 28px;
+        height: 28px;
+    }
+}
+
+/* --- Indirizzi spedizione --- */
+@media (max-width: 640px) {
+    .sq-page-indirizzi {
+        padding: 12px 10px 28px;
+    }
+
+    .sq-indirizzi-grid-2,
+    .sq-indirizzi-grid-via {
+        grid-template-columns: 1fr;
+    }
+
+    .sq-indirizzi-col-panel {
+        padding: 14px 12px 16px;
+    }
+
+    .sq-indirizzi-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .sq-indirizzi-btn-confirm {
+        width: 100%;
+    }
+}
+
+/* --- Checkout / pagamento --- */
+@media (max-width: 899px) {
+    .sq-page-checkout,
+    .sq-content--frontend .checkout-page.sq-page-checkout {
+        padding: 12px 12px 24px !important;
+    }
+
+    .sq-content--frontend .sq-checkout-indirizzi--fullbleed {
+        width: 100%;
+        margin: 0 0 12px;
+    }
+
+    .sq-checkout-indirizzi--oneline .sq-checkout-indirizzi-inner {
+        white-space: normal;
+        overflow-x: visible;
+    }
+
+    .sq-checkout-indirizzi--oneline .sq-checkout-indirizzi-seg,
+    .sq-checkout-indirizzi--oneline .sq-checkout-indirizzi-sep {
+        display: block;
+        white-space: normal;
+    }
+
+    .sq-checkout-indirizzi--oneline .sq-checkout-indirizzi-sep {
+        display: none;
+    }
+
+    .sq-checkout-indirizzi--oneline .sq-checkout-indirizzi-seg + .sq-checkout-indirizzi-seg {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid var(--sq-border-light);
+    }
+
+    .sq-checkout-head-card .sq-card-inner-flex {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .sq-checkout-punto .sq-sc-dest-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .sq-checkout-punto .sq-sc-dest-map-frame {
+        min-height: 220px;
+    }
+
+    .sq-checkout-punto .sq-sc-dest-map {
+        min-height: 200px;
+    }
+
+    .sq-checkout-ritiro-cal-head,
+    .sq-checkout-ritiro-cal-body {
+        grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+        gap: 6px;
+    }
+
+    .sq-checkout-ritiro-cal-head {
+        display: none;
+    }
+
+    .sq-checkout-actions,
+    .sq-checkout-actions--compact {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .sq-checkout-action-form,
+    .sq-checkout-action-btn {
+        width: 100%;
+    }
+
+    .sq-checkout-riepilogo-grid {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+
+    .sq-checkout-prezzo-riga {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 640px) {
+    .sq-pay-metodo-card,
+    .sq-pay-metodo-card-form {
+        width: 100%;
+    }
+
+    .checkout-page .sq-checkout-metodo-item,
+    .sq-pay-metodi-grid .sq-pay-metodo-tile {
+        flex: 1 1 100%;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .sq-pay-metodo-tile {
+        align-items: stretch;
+    }
+
+    .ordine-pagamento-checkout-page {
+        padding: 4px 12px 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .sq-cart-grid {
+        grid-template-columns: 1fr !important;
+    }
+}

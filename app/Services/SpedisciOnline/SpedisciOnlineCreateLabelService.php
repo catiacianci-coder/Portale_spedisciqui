@@ -3,7 +3,8 @@
 namespace App\Services\SpedisciOnline;
 
 use App\Models\corriere;
-use Illuminate\Http\Client\Response;
+use App\Models\spedizione;
+use App\Support\SpedisciOnlineEamultiContratti;
 
 /**
  * Payload per POST /shipping/create (doc: https://apidocs.spedisci.online/api/shipping/create).
@@ -29,20 +30,48 @@ class SpedisciOnlineCreateLabelService
             'lunghezza' => $input['spessore'] ?? 30,
             'larghezza' => $input['larghezza'] ?? 20,
             'altezza' => $input['altezza'] ?? 15,
-            'mittente_nome' => $input['mittente_nome'] ?? 'Mittente test',
-            'mittente_azienda' => $input['mittente_azienda'] ?? '',
-            'mittente_indirizzo' => $input['mittente_indirizzo'] ?? 'Via test 1',
-            'mittente_telefono' => $input['mittente_telefono'] ?? '',
-            'mittente_email' => $input['mittente_email'] ?? '',
-            'destinatario_nome' => $input['destinatario_nome'] ?? 'Destinatario test',
-            'destinatario_azienda' => $input['destinatario_azienda'] ?? '',
-            'destinatario_indirizzo' => $input['destinatario_indirizzo'] ?? 'Via test 2',
-            'destinatario_telefono' => $input['destinatario_telefono'] ?? '',
-            'destinatario_email' => $input['destinatario_email'] ?? '',
-            'note' => $input['note_spedizione'] ?? 'Etichetta test portale Spedisciqui',
+            'mittente_nome' => trim((string) ($input['mittente_nome'] ?? '')),
+            'mittente_azienda' => trim((string) ($input['mittente_azienda'] ?? '')),
+            'mittente_indirizzo' => trim((string) ($input['mittente_indirizzo'] ?? '')),
+            'mittente_telefono' => trim((string) ($input['mittente_telefono'] ?? '')),
+            'mittente_email' => trim((string) ($input['mittente_email'] ?? '')),
+            'destinatario_nome' => trim((string) ($input['destinatario_nome'] ?? '')),
+            'destinatario_azienda' => trim((string) ($input['destinatario_azienda'] ?? '')),
+            'destinatario_indirizzo' => trim((string) ($input['destinatario_indirizzo'] ?? '')),
+            'destinatario_telefono' => trim((string) ($input['destinatario_telefono'] ?? '')),
+            'destinatario_email' => trim((string) ($input['destinatario_email'] ?? '')),
+            'note' => trim((string) ($input['note_spedizione'] ?? '')),
             'valore_assicurazione' => $input['valore_assicurazione'] ?? 0,
             'contrassegno' => $input['contrassegno'] ?? 0,
         ];
+    }
+
+    /**
+     * Payload create da spedizione pagata (stessa struttura della pagina test).
+     *
+     * @return array<string, mixed>
+     */
+    public function buildCreatePayloadFromSpedizione(spedizione $spedizione, ?corriere $corriere = null): array
+    {
+        $corriere ??= $spedizione->corriereRecord;
+        $input = $this->rates->buildInputFromSpedizione($spedizione);
+
+        $createInput = array_merge($input, [
+            'spessore' => $input['lunghezza'] ?? 30,
+            'note_spedizione' => $input['note'] ?? '',
+            'label_format' => 'PDF',
+        ]);
+
+        if ($corriere) {
+            $createInput['create_carrier_code'] = $corriere->carrier_code;
+        }
+
+        $contractSnapshot = trim((string) ($spedizione->codice_servizio ?? ''));
+        if ($contractSnapshot !== '') {
+            $createInput['create_contract_code'] = $contractSnapshot;
+        }
+
+        return $this->buildCreatePayload($createInput, $corriere);
     }
 
     /**
@@ -60,8 +89,7 @@ class SpedisciOnlineCreateLabelService
         ));
         $contractCode = trim((string) (
             $input['create_contract_code']
-            ?? $corriere?->contract_code
-            ?? ''
+            ?? ($corriere ? SpedisciOnlineEamultiContratti::contractCodeForCorriere($corriere) : '')
         ));
         $labelFormat = trim((string) ($input['label_format'] ?? 'PDF'));
         if ($labelFormat === '') {

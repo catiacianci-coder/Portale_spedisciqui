@@ -202,6 +202,7 @@ final class SpedizioneCampiPersistenza
             'nome' => $s->nome_d,
             'cognome' => $s->sobrenome_d,
             'ragione_sociale' => $s->ragione_sociale_d,
+            'denominazione_impresa' => $s->ragione_sociale_d,
             'cap' => $s->cap_d,
             'comune' => $s->citta_d,
             'indirizzo' => $s->indirizzo_d,
@@ -254,17 +255,13 @@ final class SpedizioneCampiPersistenza
         return null;
     }
 
-    /** Importo ivato pagato dal cliente (pag_effettivo_sp se pagato, altrimenti cliente_ivato). */
+    /** Importo ivato pagato dal cliente: ordine pagato → solo pag_effettivo_sp; altrimenti stima pre-pagamento. */
     public static function prezzoClienteIvatoDaOrdine(spedizione $s): ?float
     {
         $s->loadMissing(['tariffaSpedizione', 'ordine.metodoPagamentoOrdine']);
 
-        if ($s->ordine?->haStato(\App\Models\ordine::STATO_PAGATO)
-            && $s->tariffaSpedizione !== null
-            && $s->tariffaSpedizione->pag_effettivo_sp !== null) {
-            $pagato = round((float) $s->tariffaSpedizione->pag_effettivo_sp, 2);
-
-            return $pagato > 0 ? $pagato : null;
+        if ($s->ordine?->haStato(\App\Models\ordine::STATO_PAGATO)) {
+            return self::pagEffettivoSp($s);
         }
 
         if ($s->tariffaSpedizione !== null && $s->tariffaSpedizione->cliente_ivato !== null) {
@@ -286,6 +283,93 @@ final class SpedizioneCampiPersistenza
             $netto,
             TariffaSpedizioneClienteIvato::aliquotaIva($s->ordine),
             $commissioni,
+        );
+
+        return $ivato > 0 ? $ivato : null;
+    }
+
+    /** Importo ivato effettivamente pagato per la spedizione (solo ordini pagati). */
+    public static function pagEffettivoSp(spedizione $s): ?float
+    {
+        $s->loadMissing(['tariffaSpedizione', 'ordine']);
+
+        if (! $s->ordine?->haStato(\App\Models\ordine::STATO_PAGATO)) {
+            return null;
+        }
+
+        $pagato = $s->tariffaSpedizione?->pag_effettivo_sp;
+        if ($pagato === null) {
+            return null;
+        }
+
+        $ivato = round((float) $pagato, 2);
+
+        return $ivato > 0 ? $ivato : null;
+    }
+
+    public static function prezzoNettoWalletDaOrdine(spedizione $s): ?float
+    {
+        $s->loadMissing(['tariffaSpedizione', 'ordine']);
+        if ($s->tariffaSpedizione && $s->tariffaSpedizione->totale_spedizione_wallet !== null) {
+            return round((float) $s->tariffaSpedizione->totale_spedizione_wallet, 2);
+        }
+
+        $s->loadMissing('ordine');
+        $ordine = $s->ordine;
+        if ($ordine === null) {
+            return null;
+        }
+
+        $righe = $ordine->dettaglio_json['righe'] ?? [];
+        if (! is_array($righe)) {
+            return null;
+        }
+
+        $carrelloId = trim((string) ($s->carrello_id ?? ''));
+        foreach ($righe as $r) {
+            if (! is_array($r)) {
+                continue;
+            }
+            $r = RigaCarrelloOrdine::normalizza($r);
+            if ($carrelloId !== '' && (string) ($r['id'] ?? '') === $carrelloId) {
+                return isset($r['netto_wallet_iva_esc'])
+                    ? round((float) $r['netto_wallet_iva_esc'], 2)
+                    : (isset($r['netto_iva_esc']) ? round((float) $r['netto_iva_esc'], 2) : null);
+            }
+        }
+
+        $index = $s->ordine?->spedizioni?->search(fn (spedizione $x) => (int) $x->id === (int) $s->id);
+        if ($index !== false && isset($righe[$index]) && is_array($righe[$index])) {
+            $r = RigaCarrelloOrdine::normalizza($righe[$index]);
+
+            return isset($r['netto_wallet_iva_esc'])
+                ? round((float) $r['netto_wallet_iva_esc'], 2)
+                : (isset($r['netto_iva_esc']) ? round((float) $r['netto_iva_esc'], 2) : null);
+        }
+
+        return null;
+    }
+
+    /** Importo ivato Wallet (cliente_ivato_wallet) per ordini non pagati. */
+    public static function prezzoClienteIvatoWalletDaOrdine(spedizione $s): ?float
+    {
+        $s->loadMissing(['tariffaSpedizione', 'ordine']);
+
+        if ($s->tariffaSpedizione !== null && $s->tariffaSpedizione->cliente_ivato_wallet !== null) {
+            $ivato = round((float) $s->tariffaSpedizione->cliente_ivato_wallet, 2);
+
+            return $ivato > 0 ? $ivato : null;
+        }
+
+        $netto = self::prezzoNettoWalletDaOrdine($s);
+        if ($netto === null || $netto <= 0) {
+            return null;
+        }
+
+        $ivato = TariffaSpedizioneClienteIvato::calcolaDaNetto(
+            $netto,
+            TariffaSpedizioneClienteIvato::aliquotaIva($s->ordine),
+            0,
         );
 
         return $ivato > 0 ? $ivato : null;

@@ -17,7 +17,9 @@ use App\Support\CorrierePuntoEtichetta;
 use App\Support\DestinatarioConsegnaPunti;
 use App\Support\MittentePickupPunti;
 use App\Support\PiattaformaCorriere;
+use App\Support\LiccardiPremiumPricing;
 use App\Support\PreventivoColonnePagamento;
+use App\Support\PreventivoRigheAlternativiFilter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -70,6 +72,7 @@ class PreventiviController extends Controller
         $request->session()->put(self::SESSION_KEY, $preventivo);
 
         $spedisciOnlineProbePerCorriere = [];
+        $spedisciQuotePerCorriere = [];
         $sendcloudQuotePerCorriere = [];
         $liccardiQuotePerCorriere = [];
         foreach ($corrieriIdsInt as $id) {
@@ -158,8 +161,19 @@ class PreventiviController extends Controller
         $liccardiCorrieri = $corrieriPerId->filter(
             fn (corriere $c): bool => PiattaformaCorriere::corriereUsaPreventivoLiccardiTms($c)
         );
+        $utenteLiccardi = LiccardiPremiumPricing::utenteLiccardi($request->user());
         foreach ($liccardiCorrieri as $cid => $corriereRow) {
+            if (! $utenteLiccardi) {
+                continue;
+            }
             $liccardiQuotePerCorriere[(int) $cid] = $liccardiTmsRatesService->quoteForPreventivo($preventivo, $corriereRow);
+        }
+
+        $spedisciCorrieri = $corrieriPerId->filter(
+            fn (corriere $c): bool => PiattaformaCorriere::corriereUsaPreventivoSpedisciOnline($c)
+        );
+        foreach ($spedisciCorrieri as $cid => $corriereRow) {
+            $spedisciQuotePerCorriere[(int) $cid] = $ratesService->quoteForPreventivo($preventivo, $corriereRow);
         }
 
         $idTipoSped = (int) data_get($preventivo, 'input.id_tipo_spediziones', 0);
@@ -207,6 +221,13 @@ class PreventiviController extends Controller
                 } elseif (PiattaformaCorriere::usaPreventiviLiccardiTms($piattaformaRiga) && ! $usaTariffaInternaRiga) {
                     $q = $liccardiQuotePerCorriere[$idCorriere]['quote']['price_amount'] ?? null;
                     if ($q !== null) {
+                        $trasportoBaseFornitore = $utenteLiccardi
+                            ? LiccardiPremiumPricing::costoTrasportoBase((float) $q)
+                            : (float) $q;
+                    }
+                } elseif (PiattaformaCorriere::usaPreventiviSpedisciOnline($piattaformaRiga) && ! $usaTariffaInternaRiga) {
+                    $q = $spedisciQuotePerCorriere[$idCorriere]['quote']['price_amount'] ?? null;
+                    if ($q !== null) {
                         $trasportoBaseFornitore = (float) $q;
                     }
                 } else {
@@ -228,6 +249,11 @@ class PreventiviController extends Controller
 
         $inputPreventivo = is_array($preventivo['input'] ?? null) ? $preventivo['input'] : [];
 
+        $corrieriIdsNascosti = PreventivoRigheAlternativiFilter::corriereIdsDaNascondere(
+            $sendcloudQuotePerCorriere,
+            $spedisciQuotePerCorriere,
+        );
+
         return view('preventivi', [
             'preventivo' => $preventivo,
             'colonnePagamento' => PreventivoColonnePagamento::colonneAttive(),
@@ -235,8 +261,11 @@ class PreventiviController extends Controller
             'logoUrlPerCorriere' => $logoUrlPerCorriere,
             'corriereCampiAggiornati' => $corriereCampiAggiornati,
             'spedisciOnlineProbePerCorriere' => $spedisciOnlineProbePerCorriere,
+            'spedisciQuotePerCorriere' => $spedisciQuotePerCorriere,
             'sendcloudQuotePerCorriere' => $sendcloudQuotePerCorriere,
             'liccardiQuotePerCorriere' => $liccardiQuotePerCorriere,
+            'corrieriIdsNascosti' => $corrieriIdsNascosti,
+            'utenteLiccardi' => $utenteLiccardi,
             'sendcloudConfigured' => SendcloudClient::isConfigured(),
             'liccardiTmsConfigured' => LiccardiTmsClient::isConfigured(),
             'capOriginePreventivo' => (string) ($inputPreventivo['cap_origine'] ?? ''),

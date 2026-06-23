@@ -64,7 +64,16 @@
 
     <section class="sq-mb-18">
         <h2 class="sq-h2-brand sq-mb-12">Filtri</h2>
+        @if ($selectedUser ?? null)
+            <div class="sq-bo-user-filter-banner">
+                <span>Filtro utente: <strong>#{{ $selectedUser->id }}</strong> — {{ $selectedUser->email }}</span>
+                <a href="{{ route('backoffice.nc.index', request()->except(['user_id', 'cliente'])) }}">Rimuovi filtro utente</a>
+            </div>
+        @endif
         <form method="get" action="{{ route('backoffice.nc.index') }}" class="sq-nc-bo-filters">
+            @if (($filtroUserId ?? 0) > 0)
+                <input type="hidden" name="user_id" value="{{ $filtroUserId }}">
+            @endif
             <div class="sq-nc-bo-field">
                 <label class="sq-label-sm-muted">Periodo emissione</label>
                 <select name="period" class="sq-select-bo">
@@ -86,7 +95,11 @@
             </div>
             <div class="sq-nc-bo-field sq-nc-bo-field--grow">
                 <label class="sq-label-sm-muted">Utente (email)</label>
-                <input type="email" name="cliente" value="{{ $filtroCliente }}" class="sq-select-bo sq-nc-email" placeholder="email@esempio.it">
+                @if ($selectedUser ?? null)
+                    <input type="text" class="sq-select-bo sq-nc-email" value="{{ $selectedUser->email }}" readonly>
+                @else
+                    <input type="email" name="cliente" value="{{ $filtroCliente }}" class="sq-select-bo sq-nc-email" placeholder="email@esempio.it">
+                @endif
             </div>
             <div class="sq-nc-bo-field">
                 <label class="sq-label-sm-muted">Stato pratica</label>
@@ -113,7 +126,7 @@
             <p class="sq-text-muted sq-m-0">Nessuna pratica con i filtri attuali.</p>
         @else
             @php
-                $fmtEuro = static fn (float $v): string => number_format($v, 2, ',', '.');
+                $fmtEuro = static fn (float $v): string => \App\Support\ImportoEuro::format($v);
             @endphp
             <div class="sq-nc-bo-client-list">
                 @foreach ($pratichePerCliente as $blocco)
@@ -203,7 +216,7 @@
                                                                         <tr>
                                                                             <td>{{ $dataOrd?->format('d/m/Y H:i') ?? '—' }}</td>
                                                                             <td><strong>{{ $r->codice_interno }}</strong></td>
-                                                                            <td>{{ $ord?->codice ?? '—' }}</td>
+                                                                            <td>{{ $ord?->id ?? '—' }}</td>
                                                                             <td class="sq-nc-bo-sped-inner-track">{{ $track !== '' ? e(\Illuminate\Support\Str::limit($track, 48)) : '—' }}</td>
                                                                             <td class="sq-nc-bo-sped-inner-num">{{ $fmtEuro((float) $r->prezzo_pagato) }}</td>
                                                                             <td class="sq-nc-bo-sped-inner-num">{{ $fmtEuro((float) $r->importo_dovuto) }}</td>

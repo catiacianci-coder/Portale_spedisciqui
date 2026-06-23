@@ -32,7 +32,7 @@ class StripeCheckoutService
         $totali = OrdineTotaliPagamento::totaliPerMetodo($ordine, $metodoId);
         $amountCents = (int) round($totali['totale'] * 100);
         if ($amountCents < 50) {
-            throw new \InvalidArgumentException('Importo ordine troppo basso per Stripe (minimo 0,50 €).');
+            throw new \InvalidArgumentException('Importo ordine troppo basso per Stripe (minimo '.\App\Support\ImportoEuro::format(0.5).').');
         }
 
         Stripe::setApiKey(StripeConfig::secretKey());
@@ -129,6 +129,8 @@ class StripeCheckoutService
         if ($result['already']) {
             return ['ok' => true, 'already' => true, 'message' => 'Ordine già risultava pagato.'];
         }
+
+        RitiroOrdinePagamento::salvaPickupTraceInSessione($result['pickup_trace'] ?? null);
 
         return ['ok' => true, 'already' => false, 'message' => 'Pagamento con carta completato.'];
     }

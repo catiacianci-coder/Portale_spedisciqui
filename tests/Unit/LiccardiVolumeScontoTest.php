@@ -23,12 +23,16 @@ class LiccardiVolumeScontoTest extends TestCase
     public function test_trasporto_pieno_ripristina_da_originale_o_sconto(): void
     {
         $this->assertSame(15.40, LiccardiVolumeSconto::trasportoPieno([
-            'trasporto_iva_esc' => 12.40,
-            'trasporto_iva_esc_originale' => 15.40,
+            'trasporto_base_iva_esc' => 12.40,
+            'trasporto_base_iva_esc_originale' => 15.40,
+        ]));
+        $this->assertSame(15.40, LiccardiVolumeSconto::trasportoPieno([
+            'trasporto_base_iva_esc' => 12.40,
+            'liccardi_volume_sconto_eur' => 3.0,
         ]));
         $this->assertSame(15.40, LiccardiVolumeSconto::trasportoPieno([
             'trasporto_iva_esc' => 12.40,
-            'liccardi_volume_sconto_eur' => 3.0,
+            'trasporto_iva_esc_originale' => 15.40,
         ]));
     }
 }

@@ -41,6 +41,16 @@
             'request' => $probe['payload'] ?? null,
             'response' => $probe['response_json'] ?? null,
         ];
+    } elseif ($isSpedisciOnline ?? false) {
+        $probe = is_array($spedisciProbe ?? null) ? $spedisciProbe : [];
+        $blocks[] = [
+            'titolo' => 'Spedisci.online',
+            'endpoint' => trim((string) (($probe['api_base'] ?? '').'/shipping/rates')),
+            'http_status' => $probe['http_status'] ?? null,
+            'error' => $probe['error'] ?? null,
+            'request' => $probe['payload'] ?? null,
+            'response' => $probe['raw_body'] ?? ($probe['rates'] ?? null),
+        ];
     } elseif ($usaTariffaInterna ?? false) {
         $blocks[] = [
             'titolo' => 'Tariffa interna (DB)',
@@ -74,7 +84,7 @@
     }
 
     $spProbe = is_array($spedisciProbe ?? null) ? $spedisciProbe : [];
-    if ($spProbe !== []) {
+    if ($spProbe !== [] && ! ($isSpedisciOnline ?? false)) {
         $blocks[] = [
             'titolo' => 'Spedisci.online (verifica rates)',
             'endpoint' => trim((string) (($spProbe['api_base'] ?? '').'/shipping/rates')),

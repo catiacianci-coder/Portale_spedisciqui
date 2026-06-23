@@ -44,7 +44,7 @@ final class WalletMovimentoExtratoPresenter
         $partes = [];
         if ($m->ordine_id !== null && (int) $m->ordine_id > 0) {
             $m->loadMissing('ordine');
-            $codiceOrd = $m->ordine?->codice ?? ('O'.(int) $m->ordine_id);
+            $codiceOrd = $m->ordine_id ? (string) (int) $m->ordine_id : '—';
             $partes[] = 'Ordine '.$codiceOrd;
         }
 
@@ -74,7 +74,7 @@ final class WalletMovimentoExtratoPresenter
     {
         if ($m->ordine_id !== null && (int) $m->ordine_id > 0) {
             $m->loadMissing('ordine');
-            $codice = $m->ordine?->codice ?? ('O'.(int) $m->ordine_id);
+            $codice = $m->ordine_id ? (string) (int) $m->ordine_id : '—';
 
             return 'Ordine '.$codice;
         }
@@ -98,7 +98,7 @@ final class WalletMovimentoExtratoPresenter
 
         if ($m->ordine_id !== null && (int) $m->ordine_id > 0) {
             $m->loadMissing('ordine');
-            $codice = $m->ordine?->codice ?? ('O'.(int) $m->ordine_id);
+            $codice = $m->ordine_id ? (string) (int) $m->ordine_id : '—';
 
             return 'Ordine '.$codice;
         }

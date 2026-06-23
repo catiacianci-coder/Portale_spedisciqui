@@ -28,6 +28,7 @@ class CheckoutPagamentoRequest extends FormRequest
             'punto_address_line' => ['nullable', 'string', 'max:255'],
             'punto_postal_code' => ['nullable', 'string', 'max:16'],
             'punto_city' => ['nullable', 'string', 'max:120'],
+            'data_ritiro' => ['nullable', 'date'],
         ];
     }
 }

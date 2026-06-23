@@ -27,6 +27,6 @@ class OrdinePolicy
     public function cancel(User $user, ordine $ordine): bool
     {
         return $this->view($user, $ordine)
-            && in_array($ordine->stato, [ordine::STATO_NON_PAGATO, ordine::STATO_PAGATO], true);
+            && $ordine->stato === ordine::STATO_NON_PAGATO;
     }
 }

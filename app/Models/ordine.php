@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Support\CodiceOrdine;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,8 +11,8 @@ class ordine extends Model
 {
     protected $table = 'ordinis';
 
-    /** Prefisso pubblico ordine: O + id. */
-    public const PREFIX_CODICE = 'O';
+    /** @deprecated L’ordine si identifica solo con {@see id}; alias numerico per viste legacy. */
+    public const PREFIX_CODICE = '';
 
     public const STATO_NON_PAGATO = 'non_pagato';
 
@@ -48,6 +47,7 @@ class ordine extends Model
         'chiave_causale',
         'revolut_transaction_id',
         'dettaglio_json',
+        'varie_1',
         'varie4',
         'varie5',
     ];
@@ -99,6 +99,34 @@ class ordine extends Model
         return $this->haStato(self::STATO_ANNULLATO);
     }
 
+    /** Etichetta stato ordine per backoffice (Non pagato / Pagato / Annullato). */
+    public function labelStatoOrdine(): string
+    {
+        if ($this->relationLoaded('statoOrdine') && $this->statoOrdine) {
+            $nome = trim((string) ($this->statoOrdine->denominazione ?? ''));
+            if ($nome !== '') {
+                return $nome;
+            }
+        }
+
+        return match ($this->stato) {
+            self::STATO_PAGATO => 'Pagato',
+            self::STATO_NON_PAGATO => 'Non pagato',
+            self::STATO_ANNULLATO => 'Annullato',
+            default => '—',
+        };
+    }
+
+    public function classeCssStatoOrdineBo(): string
+    {
+        return match ($this->stato) {
+            self::STATO_PAGATO => 'sq-bo-ordini-stato sq-bo-ordini-stato--pagato',
+            self::STATO_NON_PAGATO => 'sq-bo-ordini-stato sq-bo-ordini-stato--non-pagato',
+            self::STATO_ANNULLATO => 'sq-bo-ordini-stato sq-bo-ordini-stato--annullato',
+            default => 'sq-bo-ordini-stato',
+        };
+    }
+
     public function marcarComoAnnullato(?\DateTimeInterface $quando = null): void
     {
         $quando ??= now();
@@ -117,10 +145,10 @@ class ordine extends Model
         return $query->orderByDesc('id');
     }
 
-    /** Codice pubblico O{id} (non è colonna DB). */
+    /** Identificativo ordine (= id numerico, non colonna DB). */
     public function getCodiceAttribute(): string
     {
-        return CodiceOrdine::format((int) $this->id);
+        return (string) (int) $this->id;
     }
 
     /** Alias compatibilità viste che usavano numero progressivo. */

@@ -10,6 +10,7 @@ class servizi_aggiuntivi extends Model
 
     protected $fillable = [
         'denominazione_servizio',
+        'abbrev',
         'varie',
     ];
 }

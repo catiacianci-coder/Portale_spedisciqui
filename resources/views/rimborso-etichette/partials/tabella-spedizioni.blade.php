@@ -11,9 +11,9 @@
                 <th class="sq-th sq-th--warm sq-th--codice">Codice</th>
                 <th class="sq-th sq-th--warm">Destinatario</th>
                 <th class="sq-th sq-th--warm">Servizio</th>
+                <th class="sq-th sq-th--warm">Status</th>
                 <th class="sq-th sq-th--warm">Tracking</th>
                 <th class="sq-th sq-th--warm sq-th--right">@include('partials.th-importo-iva-inclusa')</th>
-                <th class="sq-th sq-th--warm">Stato</th>
                 <th class="sq-th sq-th--warm sq-th--right sq-th--actions">Azioni</th>
             </tr>
         </thead>
@@ -30,6 +30,12 @@
                     <td class="sq-td sq-td--border-warm sq-nowrap sq-fw-700">{{ e($s->codice_interno) }}</td>
                     <td class="sq-td sq-td--border-warm">{{ e(RimborsoEtichettaUi::nomeDestinatario($s)) }}</td>
                     <td class="sq-td sq-td--border-warm sq-text-14">{{ e(RimborsoEtichettaUi::nomeServizioVisualizzato($s)) }}</td>
+                    <td class="sq-td sq-td--border-warm">
+                        @include('partials.stato-tabella-badge', [
+                            'stato' => $statoUi['badge'],
+                            'label' => $statoUi['testo'],
+                        ])
+                    </td>
                     <td class="sq-td sq-td--border-warm sq-text-14">
                         @if ($track !== '')
                             <span class="sq-sped-track-txt" title="{{ e($track) }}">{{ e(\Illuminate\Support\Str::limit($track, 40)) }}</span>
@@ -37,12 +43,6 @@
                     </td>
                     <td class="sq-td sq-td--border-warm sq-td--right">
                         @include('partials.td-importo-ivato', ['importoIvato' => $importo])
-                    </td>
-                    <td class="sq-td sq-td--border-warm">
-                        @include('partials.stato-tabella-badge', [
-                            'stato' => $statoUi['badge'],
-                            'label' => $statoUi['testo'],
-                        ])
                     </td>
                     <td class="sq-td sq-td--border-warm sq-td--right">
                         <div class="sq-ordini-actions-icons">

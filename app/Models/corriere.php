@@ -19,6 +19,7 @@ class corriere extends Model
         'tipo_o_d',
         'numero_contratto',
         'attivo',
+        'ord_carosello',
         'tariffa_interna',
         'id_ricarico',
         'piattaforma',

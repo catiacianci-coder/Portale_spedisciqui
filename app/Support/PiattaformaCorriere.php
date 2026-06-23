@@ -9,10 +9,13 @@ final class PiattaformaCorriere
 {
     public const SENDCLOUD = 'sendcloud';
 
-    /** Preventivo da tariffas interne; acquisto etichetta via Spedisci.online (tenant Quick). */
+    /** @deprecated Usare {@see EAMULTIEXP_SPEDISCIONLINE}. */
     public const QUICK_PREVENTIVI_PROPRI = 'quick_spediscionline_preventivi_propri';
 
-    /** Preventivo e acquisto interamente via Spedisci.online (tenant Quick). */
+    /** Preventivo e acquisto via Spedisci.online tenant eamulti (hub eamultiexpr). */
+    public const EAMULTIEXP_SPEDISCIONLINE = 'eamultiexp-spediscionline';
+
+    /** Preventivo e acquisto interamente via Spedisci.online (tenant Quick legacy). */
     public const QUICK_SPEDISCIONLINE = 'quick_spediscionline';
 
     /** Preventivo da tariffas interne; acquisto etichetta via Spedisci.online (tenant Liccardi). */
@@ -27,7 +30,7 @@ final class PiattaformaCorriere
     }
 
     /**
-     * Chiave tenant in config services.spedisci_online.tenants (quick|liccardi).
+     * Chiave tenant API Spedisci.online (eamulti|liccardi).
      */
     public static function tenantSpedisciOnline(?string $piattaforma): ?string
     {
@@ -37,11 +40,31 @@ final class PiattaformaCorriere
             return 'liccardi';
         }
 
-        if (str_starts_with($p, 'quick_')) {
-            return 'quick';
+        if (str_starts_with($p, 'quick_') || str_starts_with($p, 'eamultiexp')) {
+            return 'eamulti';
         }
 
         return null;
+    }
+
+    /**
+     * Preventivo da API Spedisci.online (tenant eamulti o liccardi), non da tabella tariffas.
+     */
+    public static function usaPreventiviSpedisciOnline(?string $piattaforma): bool
+    {
+        if (self::tenantSpedisciOnline($piattaforma) === null) {
+            return false;
+        }
+
+        $p = self::normalizza($piattaforma);
+
+        return $p !== self::LICCARDI_TMS && ! str_starts_with($p, 'liccardi_');
+    }
+
+    public static function corriereUsaPreventivoSpedisciOnline(\App\Models\corriere $corriere): bool
+    {
+        return ! (bool) ($corriere->tariffa_interna ?? true)
+            && self::usaPreventiviSpedisciOnline($corriere->piattaforma);
     }
 
     /**
@@ -105,7 +128,7 @@ final class PiattaformaCorriere
     }
 
     /**
-     * Dopo il pagamento: etichetta via Spedisci.online (tenant quick/liccardi).
+     * Dopo il pagamento: etichetta via Spedisci.online (tenant eamulti/liccardi).
      * Esclude i corrieri che quotano e creano già via TMS Liccardi diretto.
      */
     public static function corriereUsaAcquistoSpedisciOnline(\App\Models\corriere $corriere): bool

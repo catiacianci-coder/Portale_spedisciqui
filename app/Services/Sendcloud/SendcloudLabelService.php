@@ -6,6 +6,7 @@ use App\Models\spedizione;
 use App\Services\SpedizioneStatoService;
 use App\Support\PiattaformaCorriere;
 use App\Support\SendcloudIntegrazione;
+use App\Support\UserPostingEnablement;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -22,7 +23,11 @@ class SendcloudLabelService
 
     public function createFromSpedizione(spedizione $spedizione): SendcloudLabelResult
     {
-        $spedizione->loadMissing(['corriereRecord', 'serviziAggiuntiviRighe']);
+        $spedizione->loadMissing(['corriereRecord', 'serviziAggiuntiviRighe', 'user']);
+
+        if (UserPostingEnablement::tentaSegnaBloccoPostPagamento($spedizione)) {
+            return new SendcloudLabelResult(false, UserPostingEnablement::messaggioBlocco($spedizione->user));
+        }
 
         if (! SendcloudClient::isConfigured()) {
             return new SendcloudLabelResult(false, 'API Sendcloud non configurata (chiavi parametri globali).');

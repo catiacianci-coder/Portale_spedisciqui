@@ -26,6 +26,7 @@
             <a href="{{ route('backoffice.gestao_documentos.index', ['tab' => 'documentos', 'slug' => \App\Models\LegalDocumentVersion::SLUG_COOKIES]) }}" @class(['is-active' => $slug === \App\Models\LegalDocumentVersion::SLUG_COOKIES])>Politica cookie</a>
             <a href="{{ route('backoffice.gestao_documentos.index', ['tab' => 'documentos', 'slug' => \App\Models\LegalDocumentVersion::SLUG_REEMBOLSO]) }}" @class(['is-active' => $slug === \App\Models\LegalDocumentVersion::SLUG_REEMBOLSO])>Politica di rimborso</a>
             <a href="{{ route('backoffice.gestao_documentos.index', ['tab' => 'documentos', 'slug' => \App\Models\LegalDocumentVersion::SLUG_CONDICOES_WALLET]) }}" @class(['is-active' => $slug === \App\Models\LegalDocumentVersion::SLUG_CONDICOES_WALLET])>Condizioni Wallet</a>
+            <a href="{{ route('backoffice.gestao_documentos.index', ['tab' => 'documentos', 'slug' => \App\Models\LegalDocumentVersion::SLUG_TARIFFE_SCONTATE]) }}" @class(['is-active' => $slug === \App\Models\LegalDocumentVersion::SLUG_TARIFFE_SCONTATE])>Tariffe scontate</a>
         </nav>
     @endif
 
@@ -35,6 +36,11 @@
     @if ($tab === 'documentos' && $rotaPublica !== null)
         <p class="sq-mb-16">
             <a href="{{ route($rotaPublica) }}" target="_blank" rel="noopener" class="sq-link-brand">Vedi pagina pubblica « {{ \App\Models\LegalDocumentVersion::labelPaginaPublica($slug) }} »</a>
+        </p>
+    @endif
+    @if ($tab === 'documentos' && $slug === \App\Models\LegalDocumentVersion::SLUG_TARIFFE_SCONTATE)
+        <p class="sq-mb-16">
+            <a href="{{ route('tariffe_scontate.index') }}" target="_blank" rel="noopener" class="sq-link-brand">Vedi pagina pubblica « Tariffe scontate »</a>
         </p>
     @endif
     @if ($tab === 'documentos' && $slug === \App\Models\LegalDocumentVersion::SLUG_CONDICOES_WALLET)

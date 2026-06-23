@@ -5,12 +5,10 @@ namespace App\Services\Stripe;
 use App\Models\metodo_pagamento_ordine;
 use App\Models\ordine;
 use App\Services\OrdineTotaleIvatoService;
-use App\Services\Liccardi\LiccardiTmsAcquistoService;
-use App\Services\Sendcloud\SendcloudAcquistoService;
-use App\Services\SpedisciOnline\SpedisciOnlineAcquistoService;
 use App\Services\SpedizioneStatoService;
 use App\Support\OrdineDatiPagamento;
 use App\Support\OrdinePagamentoEffettivo;
+use App\Support\RitiroOrdinePagamento;
 use App\Support\StripeOrdineStripeIds;
 use Illuminate\Support\Facades\DB;
 
@@ -20,7 +18,7 @@ use Illuminate\Support\Facades\DB;
 class OrdineCompletaPagamentoService
 {
     /**
-     * @return array{ok: bool, already: bool, reason: ?string}
+     * @return array{ok: bool, already: bool, reason: ?string, pickup_trace: ?array}
      */
     public function segnaPagato(
         ordine $ordine,
@@ -95,18 +93,16 @@ class OrdineCompletaPagamentoService
                 StripeOrdineStripeIds::propagaPaymentIntentSuSpedizioni($ordine->fresh(), $stripePaymentIntentId);
             }
 
-            return ['ok' => true, 'already' => true, 'reason' => null];
+            return ['ok' => true, 'already' => true, 'reason' => null, 'pickup_trace' => null];
         }
 
         if ($blockReason !== null) {
-            return ['ok' => false, 'already' => false, 'reason' => $blockReason];
+            return ['ok' => false, 'already' => false, 'reason' => $blockReason, 'pickup_trace' => null];
         }
 
         $ordine->refresh();
-        app(SpedisciOnlineAcquistoService::class)->elaboraOrdinePagato($ordine);
-        app(LiccardiTmsAcquistoService::class)->elaboraOrdinePagato($ordine);
-        app(SendcloudAcquistoService::class)->elaboraOrdinePagato($ordine);
+        $pickupTrace = RitiroOrdinePagamento::elaboraAcquistiEtPickupTrace($ordine);
 
-        return ['ok' => true, 'already' => false, 'reason' => null];
+        return ['ok' => true, 'already' => false, 'reason' => null, 'pickup_trace' => $pickupTrace];
     }
 }

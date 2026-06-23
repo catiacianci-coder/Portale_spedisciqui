@@ -22,12 +22,16 @@
     @endif
 
     <div class="assistenza-bo-cards">
-        <a href="{{ route('backoffice.tickets.index') }}" class="assistenza-bo-card assistenza-bo-card--todos {{ $filter === null || $filter === '' ? 'is-active' : '' }}">
+        <a href="{{ route('backoffice.tickets.index') }}" class="assistenza-bo-card assistenza-bo-card--todos {{ ($filter === null || $filter === '') && ($filterTipo ?? null) === null ? 'is-active' : '' }}">
             <div class="assistenza-bo-card__title"><i class="fa-solid fa-list-ul" aria-hidden="true"></i> Tutti</div>
             <div class="assistenza-bo-card__count">{{ array_sum($counts) }}</div>
         </a>
+        <a href="{{ route('backoffice.tickets.index', ['tipo' => 'richieste_premium']) }}" class="assistenza-bo-card assistenza-bo-card--premium {{ ($filterTipo ?? null) === 'richieste_premium' ? 'is-active' : '' }}">
+            <div class="assistenza-bo-card__title"><i class="fa-solid fa-star" aria-hidden="true"></i> Richieste premium</div>
+            <div class="assistenza-bo-card__count">{{ $countPremium ?? 0 }}</div>
+        </a>
         @foreach ($stati as $stato)
-            <a href="{{ route('backoffice.tickets.index', ['stato' => $stato->codigo]) }}" class="assistenza-bo-card assistenza-bo-card--st-{{ $stato->codigo }} {{ $filter === $stato->codigo ? 'is-active' : '' }}">
+            <a href="{{ route('backoffice.tickets.index', ['stato' => $stato->codigo]) }}" class="assistenza-bo-card assistenza-bo-card--st-{{ $stato->codigo }} {{ $filter === $stato->codigo && ($filterTipo ?? null) === null ? 'is-active' : '' }}">
                 <div class="assistenza-bo-card__title">
                     <i class="fa-solid {{ $cartaoIcones[$stato->codigo] ?? 'fa-ticket' }}" aria-hidden="true"></i>
                     {{ $cartaoTitulos[$stato->codigo] ?? $stato->nome }}
@@ -44,7 +48,9 @@
     ])
 
     <p class="assistenza-bo-filter-hint">
-        @if ($filter)
+        @if (($filterTipo ?? null) === 'richieste_premium')
+            Visualizzazione richieste tariffe scontate (premium).
+        @elseif ($filter)
             Visualizzazione ticket in «{{ $cartaoTitulos[$filter] ?? $filter }}».
         @else
             Visualizzazione di tutti i ticket.

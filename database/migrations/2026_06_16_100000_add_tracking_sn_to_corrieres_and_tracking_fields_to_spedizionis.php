@@ -22,7 +22,8 @@ return new class extends Migration
 
         corriere::query()->each(function (corriere $corriere): void {
             $haApi = PiattaformaCorriere::corriereUsaAcquistoSendcloud($corriere)
-                || PiattaformaCorriere::corriereUsaAcquistoLiccardiTms($corriere);
+                || PiattaformaCorriere::corriereUsaAcquistoLiccardiTms($corriere)
+                || PiattaformaCorriere::normalizza($corriere->piattaforma) === PiattaformaCorriere::EAMULTIEXP_SPEDISCIONLINE;
 
             $corriere->forceFill([
                 'trackingsn' => $haApi,

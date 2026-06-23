@@ -44,7 +44,7 @@
     @if (! empty($insurancePayload))
         <h3 class="sq-sim-h2 sq-mt-24">Chiamata B — trasporto + assicurazione test
             @if (($valoreAssicurazioneTest ?? 0) > 0)
-                ({{ number_format((float) $valoreAssicurazioneTest, 2, ',', '.') }} €)
+                ({{ \App\Support\ImportoEuro::format((float) $valoreAssicurazioneTest) }})
             @endif
         </h3>
         <p class="sq-text-muted sq-mb-14">Costo supplemento in <code class="sq-code">quotes[].price.breakdown</code> → <code class="sq-code">insurance_price</code>.</p>

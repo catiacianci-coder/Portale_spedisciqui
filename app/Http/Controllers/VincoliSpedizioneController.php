@@ -11,7 +11,8 @@ use App\Models\parametri_globali;
 use App\Models\tariffa;
 use App\Models\tipo_spedizone;
 use App\Support\CorriereLogo;
-use App\Services\OrdineTotaleIvatoService;
+use App\Support\MetodoPagamentoCodice;
+use App\Support\PreventivoColonnePagamento;
 use App\Services\RegolePricingService;
 use App\Services\TariffaPrezzoBaseService;
 use App\Services\UserImballaggiDefault;
@@ -40,9 +41,16 @@ class VincoliSpedizioneController extends Controller
             app(UserMittenzeService::class)->ensureForUser($u);
             $prefMitt = $u->mittenze()->where('is_preferito', true)->first();
             if ($prefMitt) {
-                $capMittentePreferitoDefault = (string) ($prefMitt->cap ?? '');
                 if ($prefMitt->id_comune) {
-                    $idComuneMittentePreferitoDefault = (string) $prefMitt->id_comune;
+                    $comunePref = comune::query()->find($prefMitt->id_comune);
+                    if ($comunePref) {
+                        $capMittentePreferitoDefault = $this->formatCapComuneLabel($comunePref);
+                        $idComuneMittentePreferitoDefault = (string) $prefMitt->id_comune;
+                    } else {
+                        $capMittentePreferitoDefault = $this->formatCapPadded((string) ($prefMitt->cap ?? ''));
+                    }
+                } else {
+                    $capMittentePreferitoDefault = $this->formatCapPadded((string) ($prefMitt->cap ?? ''));
                 }
             }
             app(UserImballaggiDefault::class)->ensureDefaults($u);
@@ -66,7 +74,9 @@ class VincoliSpedizioneController extends Controller
 
         $partnerCorrieri = corriere::query()
             ->where('attivo', true)
-            ->orderByRaw("COALESCE(NULLIF(TRIM(nome_visualizzato), ''), nome_corriere)")
+            ->where('ord_carosello', '>', 0)
+            ->orderBy('ord_carosello')
+            ->orderBy('id')
             ->get(['id', 'nome_corriere', 'nome_visualizzato'])
             ->map(function (corriere $c) {
                 $nome = trim((string) $c->nome_visualizzato);
@@ -99,8 +109,8 @@ class VincoliSpedizioneController extends Controller
         $validated = $request->validate([
             'id_tipo_spediziones' => ['required', 'integer', 'exists:tipo_spediziones,id'],
             'ambito_spedizione' => ['required', 'in:nazionale,internazionale'],
-            'cap_origine' => ['required', 'string', 'max:10'],
-            'cap_destino' => ['required', 'string', 'max:10'],
+            'cap_origine' => ['required', 'string', 'max:80'],
+            'cap_destino' => ['required', 'string', 'max:80'],
             'id_comune_origine' => ['nullable', 'integer', 'exists:comuni,id'],
             'id_comune_destino' => ['nullable', 'integer', 'exists:comuni,id'],
             'altezza' => ['required', 'numeric', 'min:0.01'],
@@ -109,17 +119,14 @@ class VincoliSpedizioneController extends Controller
             'peso' => ['required', 'numeric', 'min:0.01'],
         ]);
 
-        $capOrigine = str_pad(trim($validated['cap_origine']), 5, '0', STR_PAD_LEFT);
-        $capDestino = str_pad(trim($validated['cap_destino']), 5, '0', STR_PAD_LEFT);
-
         $idComuneOrigine = $this->risolviComuneIdDaCapOSelezione(
-            $capOrigine,
+            trim($validated['cap_origine']),
             $validated['id_comune_origine'] ?? null,
             'cap_origine'
         );
 
         $idComuneDestino = $this->risolviComuneIdDaCapOSelezione(
-            $capDestino,
+            trim($validated['cap_destino']),
             $validated['id_comune_destino'] ?? null,
             'cap_destino'
         );
@@ -151,6 +158,9 @@ class VincoliSpedizioneController extends Controller
 
         $origineComune = comune::query()->find($idComuneOrigine);
         $destinoComune = comune::query()->find($idComuneDestino);
+
+        $capOrigine = $this->formatCapPadded((string) ($origineComune->cap ?? ''));
+        $capDestino = $this->formatCapPadded((string) ($destinoComune->cap ?? ''));
 
         $corrieri = corriere::query()
             ->where('attivo', true)
@@ -307,7 +317,7 @@ class VincoliSpedizioneController extends Controller
         return response()->json($results);
     }
 
-    private function risolviComuneIdDaCapOSelezione(string $capPadded, ?int $idSelezionato, string $fieldKey): int|\Illuminate\Http\RedirectResponse
+    private function risolviComuneIdDaCapOSelezione(string $rawDisplay, ?int $idSelezionato, string $fieldKey): int|\Illuminate\Http\RedirectResponse
     {
         if ($idSelezionato) {
             $comune = comune::query()->find($idSelezionato);
@@ -315,12 +325,12 @@ class VincoliSpedizioneController extends Controller
                 return back()->withErrors([$fieldKey => 'Comune selezionato non valido.'])->withInput();
             }
 
-            $capComune = str_pad((string) $comune->cap, 5, '0', STR_PAD_LEFT);
-            if ($capComune !== $capPadded) {
-                return back()->withErrors([$fieldKey => 'Il CAP non corrisponde al comune selezionato.'])->withInput();
-            }
-
             return (int) $comune->id;
+        }
+
+        $capPadded = $this->estraiCapPadded($rawDisplay);
+        if ($capPadded === null) {
+            return back()->withErrors([$fieldKey => 'CAP non valido.'])->withInput();
         }
 
         $comuni = comune::query()->where('cap', $capPadded)->get();
@@ -335,6 +345,43 @@ class VincoliSpedizioneController extends Controller
             : 'CAP ambiguo: scegli un comune dall’autocomplete.';
 
         return back()->withErrors($errors)->withInput();
+    }
+
+    private function formatCapPadded(string $cap): string
+    {
+        return str_pad(trim($cap), 5, '0', STR_PAD_LEFT);
+    }
+
+    private function formatCapComuneLabel(comune $comune): string
+    {
+        return $this->formatCapPadded((string) $comune->cap)
+            . ' — '
+            . $comune->comune
+            . ' ('
+            . $comune->provincia
+            . ')';
+    }
+
+    private function estraiCapPadded(string $raw): ?string
+    {
+        $trim = trim($raw);
+        if ($trim === '') {
+            return null;
+        }
+
+        if (ctype_digit($trim)) {
+            return $this->formatCapPadded($trim);
+        }
+
+        if (preg_match('/^(\d{5})\b/u', $trim, $matches)) {
+            return $matches[1];
+        }
+
+        if (preg_match('/^(\d+)/u', $trim, $matches) && strlen($matches[1]) <= 5) {
+            return $this->formatCapPadded($matches[1]);
+        }
+
+        return null;
     }
 
     private function corriereCopreTratta(corriere $corriere, int $idComuneOrigine, int $idComuneDestino): bool
@@ -443,7 +490,7 @@ class VincoliSpedizioneController extends Controller
      */
     private function walletPaymentModifier(): array
     {
-        $pct = app(OrdineTotaleIvatoService::class)->commissioniWalletOrdine();
+        $pct = PreventivoColonnePagamento::commissioniPctMetodo(MetodoPagamentoCodice::WALLET);
 
         return ['pct' => $pct, 'abs' => 0.0];
     }

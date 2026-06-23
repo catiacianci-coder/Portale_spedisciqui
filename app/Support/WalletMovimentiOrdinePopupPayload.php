@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\ordine;
 use App\Models\spedizione;
+use App\Support\ServizioAggiuntivoEtichetta;
 use App\Services\OrdineTotaleIvatoService;
 use App\Support\SpedizioneCampiPersistenza;
 
@@ -35,8 +36,9 @@ final class WalletMovimentiOrdinePopupPayload
             && app(OrdineTotaleIvatoService::class)->metodoIsWallet((int) $ordine->metodo_pagamento_ordinis_id);
 
         return [
-            'codice' => (string) $ordine->codice,
+            'codice' => (string) $ordine->id,
             'pagamento_wallet' => $pagamentoWallet,
+            'mostra_prezzi_duali' => $ordine->stato === ordine::STATO_NON_PAGATO,
             'spedizioni' => $ordine->spedizioni
                 ->map(fn (spedizione $s) => self::spedizioneRiga($s))
                 ->values()
@@ -76,17 +78,16 @@ final class WalletMovimentiOrdinePopupPayload
 
         $prezzo = SpedizioneCampiPersistenza::prezzoNettoDaOrdine($s);
         $costo = $prezzo !== null
-            ? number_format((float) $prezzo, 2, ',', '.').' €'
+            ? \App\Support\ImportoEuro::format((float) $prezzo)
             : null;
 
         $tipologia = $s->tipoSpedizione?->tipo_spedizione;
         $tipologia = $tipologia !== null && trim((string) $tipologia) !== '' ? trim((string) $tipologia) : null;
         $servizi = [];
         foreach ($s->serviziAggiuntiviRighe as $riga) {
-            $lbl = $riga->denominazione_servizio
-                ?? $riga->corriereServizioAggiuntivo?->testo_servizio;
-            if ($lbl !== null && trim((string) $lbl) !== '') {
-                $item = ['nome' => trim((string) $lbl)];
+            $lbl = ServizioAggiuntivoEtichetta::nomeTabella($riga);
+            if ($lbl !== '') {
+                $item = ['nome' => $lbl];
                 $val = self::valoreUtenteServizio($riga);
                 if ($val !== null) {
                     $item['valore'] = $val;
@@ -101,6 +102,12 @@ final class WalletMovimentiOrdinePopupPayload
 
         $statoUi = RimborsoEtichettaUi::statoEtichettaUi($s);
         $importoIvato = RimborsoEtichettaUi::importoIvato($s);
+        $importoIvatoWallet = null;
+        $mostraPrezziDuali = $s->ordine?->stato === ordine::STATO_NON_PAGATO;
+        if ($mostraPrezziDuali) {
+            $importoIvato = $s->prezzoClienteIvato();
+            $importoIvatoWallet = $s->prezzoClienteIvatoWallet();
+        }
 
         return [
             'id' => (int) $s->id,
@@ -112,7 +119,11 @@ final class WalletMovimentiOrdinePopupPayload
             'tracking_tabella' => trim((string) ($s->tracking ?? '')),
             'importo_ivato' => $importoIvato,
             'importo_ivato_fmt' => $importoIvato !== null
-                ? number_format($importoIvato, 2, ',', '.').' €'
+                ? \App\Support\ImportoEuro::format($importoIvato)
+                : null,
+            'importo_ivato_wallet' => $importoIvatoWallet,
+            'importo_ivato_wallet_fmt' => $importoIvatoWallet !== null
+                ? \App\Support\ImportoEuro::format($importoIvatoWallet)
                 : null,
             'corriere_nome' => $nomeCorriere !== '' ? $nomeCorriere : null,
             'mittente' => self::bloccoIndirizzoConcat($s, 'mittente'),
@@ -341,7 +352,7 @@ final class WalletMovimentiOrdinePopupPayload
         foreach (['valore_merce', 'valore_dichiarato', 'importo_dichiarato', 'valore'] as $k) {
             $raw = $attrs[$k] ?? null;
             if ($raw !== null && $raw !== '' && is_numeric($raw)) {
-                return number_format((float) $raw, 2, ',', '.').' €';
+                return \App\Support\ImportoEuro::format((float) $raw);
             }
         }
 

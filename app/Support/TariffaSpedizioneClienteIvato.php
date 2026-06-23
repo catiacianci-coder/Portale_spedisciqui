@@ -23,10 +23,7 @@ final class TariffaSpedizioneClienteIvato
             }
         }
 
-        $v = parametri_globali::query()
-            ->where('denominazione', self::DENOM_ALIQUOTA_IVA)
-            ->attivoOggi()
-            ->value('valore_percentuale');
+        $v = parametri_globali::recordAttivo(self::DENOM_ALIQUOTA_IVA)?->valore_percentuale;
 
         return $v !== null ? (float) $v : 22.0;
     }

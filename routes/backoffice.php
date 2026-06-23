@@ -12,7 +12,10 @@ use App\Http\Controllers\BackofficeOrdiniController;
 use App\Http\Controllers\BackofficeParametriGlobaliController;
 use App\Http\Controllers\BackofficeRimborsoController;
 use App\Http\Controllers\BackofficeSpedizioniController;
+use App\Http\Controllers\BackofficeStripeEstrattoController;
 use App\Http\Controllers\BackofficeTicketController;
+use App\Http\Controllers\BackofficeTrasferimentoWalletController;
+use App\Http\Controllers\BackofficeUtentiController;
 use App\Http\Controllers\BackofficeUtilitiesController;
 use App\Http\Controllers\BackofficeWalletController;
 use App\Http\Controllers\SpedizioneEtichettaController;
@@ -24,6 +27,17 @@ Route::middleware(['auth', 'verified', 'backoffice'])->prefix('backoffice')->gro
     Route::get('/', [BackofficeDashboardController::class, 'index'])->name('backoffice.index');
     Route::redirect('/pagamenti', '/backoffice/ordini')->name('backoffice.pagamenti');
 
+    Route::get('/utenti', [BackofficeUtentiController::class, 'index'])->name('backoffice.utenti.index');
+    Route::post('/utenti/{user}/abilitazione-postagem', [BackofficeUtentiController::class, 'toggleHabilitacaoPostagem'])
+        ->name('backoffice.utenti.habilitacao_postagem.toggle');
+    Route::post('/utenti/{user}/liccardi', [BackofficeUtentiController::class, 'toggleLiccardi'])
+        ->name('backoffice.utenti.liccardi.toggle');
+    Route::post('/utenti/{user}/anagrafica', [BackofficeUtentiController::class, 'updateAnagrafica'])
+        ->name('backoffice.utenti.anagrafica.update');
+    Route::post('/utenti/{user}/mittenti/{mittenza}/sede-liccardi', [BackofficeUtentiController::class, 'toggleSedeLiccardiMittenza'])
+        ->name('backoffice.utenti.mittenze.sede_liccardi.toggle');
+    Route::get('/utenti/{user}/{section}', [BackofficeUtentiController::class, 'section'])->name('backoffice.utenti.section');
+
     Route::get('/ordini', [BackofficeOrdiniController::class, 'index'])->name('backoffice.ordini.index');
     Route::post('/ordini/{ordine}/segna-pagato', [BackofficeOrdiniController::class, 'segnaPagato'])->name('backoffice.ordini.segna_pagato');
     Route::post('/ordini/{ordine}/anular', [BackofficeOrdiniController::class, 'anular'])->name('backoffice.ordini.anular');
@@ -32,14 +46,31 @@ Route::middleware(['auth', 'verified', 'backoffice'])->prefix('backoffice')->gro
     Route::get('/spedizioni', [BackofficeSpedizioniController::class, 'index'])->name('backoffice.spedizioni.index');
     Route::get('/spedizioni/{spedizione}/etichetta', [SpedizioneEtichettaController::class, 'showBackoffice'])
         ->name('backoffice.spedizioni.etichetta');
+    Route::get('/spedizioni/{spedizione}/dettaglio', [BackofficeSpedizioniController::class, 'dettaglio'])
+        ->name('backoffice.spedizioni.dettaglio');
+    Route::get('/spedizioni/{spedizione}/opcoes', [BackofficeSpedizioniController::class, 'opcoes'])
+        ->name('backoffice.spedizioni.opcoes');
+    Route::put('/spedizioni/{spedizione}', [BackofficeSpedizioniController::class, 'update'])
+        ->name('backoffice.spedizioni.update');
+    Route::post('/spedizioni/{spedizione}/manual', [BackofficeSpedizioniController::class, 'manual'])
+        ->name('backoffice.spedizioni.manual');
+    Route::post('/spedizioni/{spedizione}/retry', [BackofficeSpedizioniController::class, 'retry'])
+        ->name('backoffice.spedizioni.retry');
     Route::get('/spedizioni/{spedizione}/tracking', [SpedizioneTrackingController::class, 'showBackoffice'])
         ->name('backoffice.spedizioni.tracking');
+
+    Route::get('/stripe-estratto', [BackofficeStripeEstrattoController::class, 'index'])->name('backoffice.stripe_estratto.index');
 
     Route::get('/rimborsi', [BackofficeRimborsoController::class, 'index'])->name('backoffice.rimborsi.index');
     Route::get('/rimborsi/pendenti', [BackofficeRimborsoController::class, 'pendentes'])->name('backoffice.rimborsi.pendentes');
     Route::get('/rimborsi/rimborsati', [BackofficeRimborsoController::class, 'rimborsati'])->name('backoffice.rimborsi.rimborsati');
     Route::get('/rimborsi/per-ordine', [BackofficeRimborsoController::class, 'perOrdine'])->name('backoffice.rimborsi.per_ordine');
     Route::post('/rimborsi/{rimborso}/paga', [BackofficeRimborsoController::class, 'paga'])->name('backoffice.rimborsi.paga');
+    Route::get('/rimborsi/trasferimento-wallet', [BackofficeTrasferimentoWalletController::class, 'index'])->name('backoffice.rimborsi.trasferimento_wallet');
+    Route::post('/rimborsi/{rimborso}/trasferimento-wallet/richiesta', [BackofficeTrasferimentoWalletController::class, 'registraRichiesta'])->name('backoffice.rimborsi.trasferimento_wallet.richiesta');
+    Route::post('/rimborsi/{rimborso}/trasferimento-wallet/carta', [BackofficeTrasferimentoWalletController::class, 'trasferisciCarta'])->name('backoffice.rimborsi.trasferimento_wallet.carta');
+    Route::post('/rimborsi/{rimborso}/trasferimento-wallet/bonifico', [BackofficeTrasferimentoWalletController::class, 'trasferisciBonifico'])->name('backoffice.rimborsi.trasferimento_wallet.bonifico');
+    Route::post('/rimborsi/{rimborso}/trasferimento-wallet/completato', [BackofficeTrasferimentoWalletController::class, 'segnaCompletato'])->name('backoffice.rimborsi.trasferimento_wallet.completato');
 
     Route::get('/ricariche', [BackofficeWalletController::class, 'ricariche'])->name('backoffice.ricariche.index');
     Route::post('/ricariche/{id}/accredita', [BackofficeWalletController::class, 'accreditaRicarica'])->name('backoffice.ricariche.accredita');
@@ -50,7 +81,10 @@ Route::middleware(['auth', 'verified', 'backoffice'])->prefix('backoffice')->gro
 
     Route::get('/corrieri', [BackofficeCorrieriController::class, 'index'])->name('backoffice.corrieri.index');
     Route::get('/corrieri/{corriere}/edit', [BackofficeCorrieriController::class, 'edit'])->name('backoffice.corrieri.edit');
-    Route::post('/corrieri/{corriere}', [BackofficeCorrieriController::class, 'update'])->name('backoffice.corrieri.update');
+    Route::post('/corrieri/{corriere}/carosello', [BackofficeCorrieriController::class, 'toggleCarosello'])->name('backoffice.corrieri.carosello.toggle');
+    Route::post('/corrieri/{corriere}/attivo', [BackofficeCorrieriController::class, 'toggleAttivo'])->name('backoffice.corrieri.attivo.toggle');
+    Route::post('/corrieri/campo/{campo}', [BackofficeCorrieriController::class, 'updateCampo'])->name('backoffice.corrieri.update_campo');
+    Route::post('/corrieri/{corriere}', [BackofficeCorrieriController::class, 'updateCorriere'])->name('backoffice.corrieri.update');
 
     Route::get('/parametri-globali', [BackofficeParametriGlobaliController::class, 'edit'])->name('backoffice.parametri_globali.edit');
     Route::post('/parametri-globali', [BackofficeParametriGlobaliController::class, 'update'])->name('backoffice.parametri_globali.update');
@@ -62,6 +96,14 @@ Route::middleware(['auth', 'verified', 'backoffice'])->prefix('backoffice')->gro
     Route::get('/errori/{log_errore_applicativo}', [BackofficeErroriController::class, 'show'])->name('backoffice.errori.show');
 
     Route::get('/utilities', [BackofficeUtilitiesController::class, 'index'])->name('backoffice.utilities.index');
+    Route::post('/utilities/parametri-globali', [BackofficeUtilitiesController::class, 'storeParametro'])
+        ->name('backoffice.utilities.parametri_globali.store');
+    Route::post('/utilities/parametri-globali/{parametriGlobali}', [BackofficeUtilitiesController::class, 'updateParametro'])
+        ->name('backoffice.utilities.parametri_globali.update');
+    Route::post('/utilities/parametri-globali/{parametriGlobali}/duplica', [BackofficeUtilitiesController::class, 'duplicaParametro'])
+        ->name('backoffice.utilities.parametri_globali.duplica');
+    Route::post('/utilities/ricarichi/{ricarico}', [BackofficeUtilitiesController::class, 'updateRicarico'])
+        ->name('backoffice.utilities.ricarichi.update');
     Route::prefix('utilities/msg-tracciamento')->name('backoffice.utilities.msg_tracciamento.')->group(function (): void {
         Route::get('/', [BackofficeMsgTracciamentoController::class, 'index'])->name('index');
         Route::get('/create', [BackofficeMsgTracciamentoController::class, 'create'])->name('create');

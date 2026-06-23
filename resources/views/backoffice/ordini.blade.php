@@ -6,12 +6,12 @@
         if ($o->isPagato()) {
             $v = $o->pag_effettivo_or ?? $o->total_pagamento ?? $o->total_pagamento_wallet;
 
-            return $v !== null ? $fmt($v).' €' : '—';
+            return $v !== null ? \App\Support\ImportoEuro::format($v) : '—';
         }
 
         $v = $o->total_pagamento ?? $o->total_pagamento_wallet;
 
-        return $v !== null && (float) $v > 0 ? $fmt($v).' €' : '—';
+        return $v !== null && (float) $v > 0 ? \App\Support\ImportoEuro::format($v) : '—';
     };
     $statoBadgeClass = static function ($o): string {
         return match ($o->stato) {
@@ -107,11 +107,11 @@
                             @endphp
                             <tr @class(['sq-bo-ordini-row--annullato' => $o->isAnnullato()])>
                                 <td class="sq-td sq-fw-700">
-                                    <span>{{ $o->codice }}</span>
-                                    <a href="{{ route('backoffice.spedizioni.index', ['cerca' => 1, 'numero_ordine' => $o->codice]) }}"
+                                    <span>{{ $o->id }}</span>
+                                    <a href="{{ route('backoffice.spedizioni.index', ['cerca' => 1, 'numero_ordine' => $o->id]) }}"
                                        class="sq-bo-ordini-link-spedizioni"
                                        title="Vedi spedizioni di questo ordine"
-                                       aria-label="Apri spedizioni filtrate per ordine {{ $o->codice }}">
+                                       aria-label="Apri spedizioni filtrate per ordine {{ $o->id }}">
                                         <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
                                     </a>
                                 </td>
@@ -143,7 +143,7 @@
                                         class="sq-bo-ordini-btn-paga js-open-pagar-ordine-modal"
                                         data-action="{{ route('backoffice.ordini.segna_pagato', $o) }}"
                                         data-ordine-id="{{ $o->id }}"
-                                        data-codice="{{ $o->codice }}"
+                                        data-codice="{{ $o->id }}"
                                         data-total="{{ number_format($totalNumero, 2, '.', '') }}"
                                         @disabled(! $podeAcoes)
                                     >Paga</button>

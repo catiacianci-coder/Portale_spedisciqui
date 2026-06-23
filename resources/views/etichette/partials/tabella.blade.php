@@ -1,19 +1,52 @@
 @php
     use App\Support\EtichettaSpedizioneAccess;
     use App\Support\EtichetteListing;
+    use App\Support\FiltriTabella;
+    use App\Support\ServizioAggiuntivoEtichetta;
     use App\Support\SpedizioneEtichettaStato;
+
+    $sortColumn = $sortColumn ?? 'ordine';
+    $sortDir = $sortDir ?? FiltriTabella::SORT_DIR_DESC;
+    $ordineSortParams = FiltriTabella::parametriOrdinamentoToggle(
+        $queryParams ?? [],
+        'ordine',
+        $sortColumn,
+        $sortDir,
+    );
 @endphp
 <div class="sq-listing-table-scroll">
     <table class="sq-listing-table sq-etichette-table">
         <thead>
             <tr>
-                <th>Codice</th>
-                <th>Ordine</th>
-                <th class="sq-nowrap">Data pagamento</th>
+                <th class="sq-th-sortable">
+                    <a href="{{ route('etichette.index', $ordineSortParams) }}"
+                       class="sq-th-sort-link @if($sortColumn === 'ordine') is-active is-{{ $sortDir }} @endif"
+                       title="Ordina per numero ordine">
+                        <span class="sq-th-sort-label">Ordine</span>
+                        @if($sortColumn === 'ordine' && $sortDir === FiltriTabella::SORT_DIR_DESC)
+                            <i class="fa-solid fa-sort-down sq-th-sort-icon" aria-hidden="true"></i>
+                        @elseif($sortColumn === 'ordine' && $sortDir === FiltriTabella::SORT_DIR_ASC)
+                            <i class="fa-solid fa-sort-up sq-th-sort-icon" aria-hidden="true"></i>
+                        @else
+                            <i class="fa-solid fa-arrows-up-down sq-th-sort-icon" aria-hidden="true"></i>
+                        @endif
+                        <span class="sq-sr-only">
+                            @if($sortColumn === 'ordine' && $sortDir === FiltriTabella::SORT_DIR_DESC)
+                                ordinato decrescente
+                            @elseif($sortColumn === 'ordine' && $sortDir === FiltriTabella::SORT_DIR_ASC)
+                                ordinato crescente
+                            @else
+                                clicca per ordinare
+                            @endif
+                        </span>
+                    </a>
+                </th>
+                <th>LdV/Codice</th>
+                <th class="sq-nowrap">Ritiro</th>
+                <th>Corriere</th>
+                <th>Servizi Agg.</th>
                 <th>Destinatario</th>
-                <th>Servizio</th>
                 <th>Status</th>
-                <th>Etichetta</th>
                 <th class="th-acoes">Azioni</th>
             </tr>
         </thead>
@@ -22,11 +55,11 @@
                 @php
                     $ord = $s->ordine;
                     $dettaglio = EtichetteListing::dettaglioPayload($s);
-                    $destNome = EtichetteListing::destinatarioTabella($s);
-                    $destAddrRighe = EtichetteListing::destinatarioIndirizzoRigheTabella($s);
                     $servico = EtichetteListing::nomeServizio($s);
                     $dataPagamento = $ord?->data_pagamento?->format('d/m/Y H:i');
+                    $dataRitiro = $s->data_ritiro?->format('d/m/Y');
                     $tracking = trim((string) ($s->tracking ?? ''));
+                    $codiceInterno = trim((string) ($s->codice_interno ?? ''));
                     $statoLabel = (string) ($s->spedizioneStato?->denominazione_stato ?? '—');
                     $ldvCancellata = EtichettaSpedizioneAccess::etichettaCancellata($s);
                     $ldvStampabile = (bool) ($dettaglio['etichetta_disponibile'] ?? false);
@@ -34,30 +67,41 @@
                     $podeCorrigir = (bool) ($dettaglio['pode_corrigir'] ?? false);
                     $motivoCorrecao = (string) ($dettaglio['motivo_correcao'] ?? '');
                     $compensata = (bool) $s->compensata;
+                    $serviziLabels = [];
+                    foreach ($s->serviziAggiuntiviRighe as $rigaServizio) {
+                        $lbl = ServizioAggiuntivoEtichetta::abbrevEImportoEuro($rigaServizio);
+                        if ($lbl !== '') {
+                            $serviziLabels[] = $lbl;
+                        }
+                    }
                 @endphp
                 <tr @class(['sq-etichette-row--compensata' => $compensata])>
-                    <td class="codice-cell">{{ $s->codice_interno ?: '—' }}</td>
-                    <td><strong>{{ $ord?->codice ?? '—' }}</strong></td>
-                    <td class="sq-nowrap">{{ $dataPagamento ?? '—' }}</td>
-                    <td class="sq-etichette-dest-cell">
-                        <span class="sq-etichette-dest-nome">{{ $destNome }}</span>
-                        @foreach ($destAddrRighe as $destRiga)
-                            <span class="sq-etichette-dest-indirizzo">{{ $destRiga }}</span>
-                        @endforeach
+                    <td>{{ $ord?->id ?? '—' }}</td>
+                    <td class="sq-etichette-ldv-codice-cell">
+                        <div class="sq-etichette-ldv-stack">
+                            <span class="sq-etichette-ldv-tracking">{{ $tracking !== '' ? $tracking : '—' }}</span>
+                            @if ($codiceInterno !== '')
+                                <span class="sq-etichette-ldv-codice">{{ $codiceInterno }}</span>
+                            @endif
+                            @if ($dataPagamento)
+                                <span class="sq-etichette-ldv-pagamento">{{ $dataPagamento }}</span>
+                            @endif
+                        </div>
                     </td>
+                    <td class="sq-nowrap">{{ $dataRitiro ?? '—' }}</td>
                     <td>{{ $servico !== '' ? $servico : '—' }}</td>
-                    <td>
-                        <span class="sq-etichetta-stato">{{ $statoLabel }}</span>
-                    </td>
-                    <td class="sq-etichette-tracking-cell">
-                        @if ($tracking !== '')
-                            {{ $tracking }}
+                    <td class="sq-etichette-servizi-cell">
+                        @if ($serviziLabels !== [])
+                            <span class="sq-text-14">{!! implode('<br>', array_map('e', $serviziLabels)) !!}</span>
                         @else
                             <span class="sq-text-muted">—</span>
                         @endif
-                        @if ($ldvCancellata)
-                            <span class="sq-badge sq-badge--muted sq-etichette-badge-cancellata">Cancellata</span>
-                        @endif
+                    </td>
+                    <td class="sq-etichette-dest-cell sq-ordine-remessa-person">
+                        @include('ordini.partials.spedizione-destinatario-tabella', ['spedizione' => $s])
+                    </td>
+                    <td>
+                        <span class="sq-etichetta-stato">{{ $statoLabel }}</span>
                     </td>
                     <td class="td-acoes">
                         <div class="acoes sq-etichette-acoes">

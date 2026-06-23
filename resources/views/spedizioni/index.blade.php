@@ -26,7 +26,7 @@
             <div>
                 <label for="numero_ordine" class="sq-filtri-label">Numero ordine</label>
                 <input id="numero_ordine" name="numero_ordine" type="text" value="{{ $filtroNumeroOrdine }}"
-                       class="sq-filtri-email-input" placeholder="es. O12">
+                       class="sq-filtri-email-input" placeholder="es. 27">
             </div>
             <div>
                 <label for="codice" class="sq-filtri-label">Codice spedizione</label>

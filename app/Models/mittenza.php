@@ -24,6 +24,7 @@ class mittenza extends Model
         'email',
         'is_preferito',
         'is_fatturazione',
+        'sede_liccardi',
         'varie1',
         'varie2',
         'varie3',
@@ -35,6 +36,7 @@ class mittenza extends Model
         return [
             'is_preferito' => 'boolean',
             'is_fatturazione' => 'boolean',
+            'sede_liccardi' => 'boolean',
         ];
     }
 

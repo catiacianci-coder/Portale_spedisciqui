@@ -27,10 +27,10 @@ final class ParametriApi
 
     public const SENDCLOUD_TIMEOUT = 'sendcloud_timeout';
 
-    // Spedisci.online — tenant Quick
-    public const SPEDISCI_ONLINE_QUICK_API_KEY = 'spedisci_online_quick_api_key';
+    // Spedisci.online — tenant Eamultiexpr (hub logistico principale)
+    public const SPEDISCI_ONLINE_EAMULTI_API_KEY = 'spedisci_online_eamulti_api_key';
 
-    public const SPEDISCI_ONLINE_QUICK_API_BASE = 'spedisci_online_quick_api_base';
+    public const SPEDISCI_ONLINE_EAMULTI_API_BASE = 'spedisci_online_eamulti_api_base';
 
     // Spedisci.online — tenant Liccardi
     public const SPEDISCI_ONLINE_LICCARDI_API_KEY = 'spedisci_online_liccardi_api_key';
@@ -51,6 +51,15 @@ final class ParametriApi
     public const LICCARDI_TMS_WEBHOOK_HEADER = 'liccardi_tms_webhook_header';
 
     public const LICCARDI_TMS_WEBHOOK_TOKEN = 'liccardi_tms_webhook_token';
+
+    // Revolut Business (bonifici in uscita)
+    public const REVOLUT_ACCESS_TOKEN = 'revolut_access_token';
+
+    public const REVOLUT_API_BASE = 'revolut_api_base';
+
+    public const REVOLUT_ACCOUNT_ID = 'revolut_account_id';
+
+    public const REVOLUT_TIMEOUT = 'revolut_timeout';
 
     // Cloudflare Turnstile
     public const TURNSTILE_SITE_KEY = 'turnstile_site_key';
@@ -106,16 +115,16 @@ final class ParametriApi
                 'env_legacy' => 'SENDCLOUD_TIMEOUT',
                 'default' => '30',
             ],
-            self::SPEDISCI_ONLINE_QUICK_API_KEY => [
-                'gruppo' => 'Spedisci.online (Quick)',
-                'label' => 'Spedisci.online Quick — API key',
+            self::SPEDISCI_ONLINE_EAMULTI_API_KEY => [
+                'gruppo' => 'Spedisci.online (Eamultiexpr)',
+                'label' => 'Spedisci.online Eamultiexpr — API key (Bearer token)',
                 'env_legacy' => 'SPEDISCI_ONLINE_API_KEY',
             ],
-            self::SPEDISCI_ONLINE_QUICK_API_BASE => [
-                'gruppo' => 'Spedisci.online (Quick)',
-                'label' => 'Spedisci.online Quick — URL base API',
+            self::SPEDISCI_ONLINE_EAMULTI_API_BASE => [
+                'gruppo' => 'Spedisci.online (Eamultiexpr)',
+                'label' => 'Spedisci.online Eamultiexpr — URL base API',
                 'env_legacy' => 'SPEDISCI_ONLINE_API_BASE',
-                'default' => 'https://quicksrl.spedisci.online/api/v2',
+                'default' => 'https://eamultiexpr.spedisci.online/api/v2',
             ],
             self::SPEDISCI_ONLINE_LICCARDI_API_KEY => [
                 'gruppo' => 'Spedisci.online (Liccardi)',
@@ -166,6 +175,28 @@ final class ParametriApi
                 'gruppo' => 'Liccardi TMS',
                 'label' => 'Liccardi TMS webhook — token segreto',
                 'env_legacy' => 'LICCARDI_TMS_WEBHOOK_TOKEN',
+            ],
+            self::REVOLUT_ACCESS_TOKEN => [
+                'gruppo' => 'Revolut Business',
+                'label' => 'Revolut — access token API (Bearer)',
+                'env_legacy' => 'REVOLUT_ACCESS_TOKEN',
+            ],
+            self::REVOLUT_API_BASE => [
+                'gruppo' => 'Revolut Business',
+                'label' => 'Revolut — URL base API Business',
+                'env_legacy' => 'REVOLUT_API_BASE',
+                'default' => 'https://b2b.revolut.com/api/1.0',
+            ],
+            self::REVOLUT_ACCOUNT_ID => [
+                'gruppo' => 'Revolut Business',
+                'label' => 'Revolut — ID conto EUR da cui inviare i bonifici',
+                'env_legacy' => 'REVOLUT_ACCOUNT_ID',
+            ],
+            self::REVOLUT_TIMEOUT => [
+                'gruppo' => 'Revolut Business',
+                'label' => 'Revolut — timeout richieste (secondi)',
+                'env_legacy' => 'REVOLUT_TIMEOUT',
+                'default' => '45',
             ],
             self::TURNSTILE_SITE_KEY => [
                 'gruppo' => 'Cloudflare Turnstile',

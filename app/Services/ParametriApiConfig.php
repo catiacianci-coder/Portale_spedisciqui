@@ -90,7 +90,7 @@ final class ParametriApiConfig
     {
         return match ($tenant) {
             'liccardi' => self::get(ParametriApi::SPEDISCI_ONLINE_LICCARDI_API_KEY),
-            default => self::get(ParametriApi::SPEDISCI_ONLINE_QUICK_API_KEY),
+            default => self::get(ParametriApi::SPEDISCI_ONLINE_EAMULTI_API_KEY),
         };
     }
 
@@ -98,7 +98,7 @@ final class ParametriApiConfig
     {
         $base = match ($tenant) {
             'liccardi' => self::get(ParametriApi::SPEDISCI_ONLINE_LICCARDI_API_BASE),
-            default => self::get(ParametriApi::SPEDISCI_ONLINE_QUICK_API_BASE),
+            default => self::get(ParametriApi::SPEDISCI_ONLINE_EAMULTI_API_BASE),
         };
         $base = rtrim($base, '/');
 
@@ -108,7 +108,7 @@ final class ParametriApiConfig
 
         return $tenant === 'liccardi'
             ? 'https://liccardi.spedisci.online/api/v2'
-            : 'https://quicksrl.spedisci.online/api/v2';
+            : 'https://eamultiexpr.spedisci.online/api/v2';
     }
 
     public static function spedisciOnlineTimeout(): int
@@ -156,5 +156,27 @@ final class ParametriApiConfig
     public static function turnstileSecretKey(): string
     {
         return self::get(ParametriApi::TURNSTILE_SECRET_KEY);
+    }
+
+    public static function revolutAccessToken(): string
+    {
+        return self::get(ParametriApi::REVOLUT_ACCESS_TOKEN);
+    }
+
+    public static function revolutApiBase(): string
+    {
+        $base = rtrim(self::get(ParametriApi::REVOLUT_API_BASE), '/');
+
+        return $base !== '' ? $base : 'https://b2b.revolut.com/api/1.0';
+    }
+
+    public static function revolutAccountId(): string
+    {
+        return self::get(ParametriApi::REVOLUT_ACCOUNT_ID);
+    }
+
+    public static function revolutTimeout(): int
+    {
+        return self::int(ParametriApi::REVOLUT_TIMEOUT, 45);
     }
 }

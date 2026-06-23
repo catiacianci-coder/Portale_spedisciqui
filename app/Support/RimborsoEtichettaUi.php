@@ -56,12 +56,7 @@ final class RimborsoEtichettaUi
 
     public static function nomeServizioVisualizzato(spedizione $spedizione): string
     {
-        $spedizione->loadMissing('corriereRecord');
-        $nome = trim((string) (
-            $spedizione->corriereRecord?->nome_visualizzato
-            ?? $spedizione->corriere
-            ?? ''
-        ));
+        $nome = SpedizioneServizioTabella::nomeVisualizzato($spedizione);
 
         return $nome !== '' ? $nome : '—';
     }

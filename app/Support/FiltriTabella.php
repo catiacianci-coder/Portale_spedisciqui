@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use App\Models\ordine;
+use App\Models\servizi_aggiuntivi;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -10,6 +12,10 @@ use Illuminate\Http\Request;
 final class FiltriTabella
 {
     public const PER_PAGE_OPTIONS = [10, 25, 50, 100];
+
+    public const SORT_DIR_ASC = 'asc';
+
+    public const SORT_DIR_DESC = 'desc';
 
     public static function perPage(Request $request, int $default = 10): int
     {
@@ -20,6 +26,7 @@ final class FiltriTabella
 
     /**
      * @param  list<string>  $extraAllowed  es. tutti, oggi, mese_scorso
+     * @param  bool  $customIncompletoSenzaErrore  Se true, periodo custom senza date non genera errore né filtro data
      * @return array{
      *     period: string,
      *     data_da: string,
@@ -33,6 +40,7 @@ final class FiltriTabella
         Request $request,
         string $defaultPeriod = '30',
         array $extraAllowed = [],
+        bool $customIncompletoSenzaErrore = false,
     ): array {
         $period = (string) $request->input('period', $defaultPeriod);
         $dataDa = (string) $request->input('data_da', '');
@@ -49,7 +57,9 @@ final class FiltriTabella
 
         if ($period === 'custom') {
             if ($dataDa === '' || $dataA === '') {
-                $errors[] = 'Per il periodo personalizzato servono entrambe le date (da/a).';
+                if (! $customIncompletoSenzaErrore) {
+                    $errors[] = 'Per il periodo personalizzato servono entrambe le date (da/a).';
+                }
             } else {
                 try {
                     $d1 = Carbon::createFromFormat('Y-m-d', $dataDa)->startOfDay();
@@ -146,8 +156,7 @@ final class FiltriTabella
     }
 
     /**
-     * Filtra per codice ordine (O{id}, ORS-{id} o id numerico).
-     * Su `ordinis` non esiste colonna `codice`: il codice è solo accessor.
+     * Filtra per id ordine (accetta anche input legacy O{id}).
      *
      * @param  string|null  $codiceColumn  Solo se la tabella ha una colonna codice persistita (legacy).
      */
@@ -228,6 +237,19 @@ final class FiltriTabella
         }
     }
 
+    public static function filtraStatoSpedizione(Builder|Relation $query, ?int $statoId, array $statiAmmessi): void
+    {
+        if ($statoId === null || $statoId <= 0) {
+            return;
+        }
+
+        if ($statiAmmessi !== [] && ! in_array($statoId, $statiAmmessi, true)) {
+            return;
+        }
+
+        $query->where('spedizione_stato_id', $statoId);
+    }
+
     public static function filtraEtichetteCliente(
         Builder|Relation $query,
         string $codiceEtichetta,
@@ -262,5 +284,109 @@ final class FiltriTabella
                     ->orWhereRaw("CONCAT(COALESCE(nome_d,''), ' ', COALESCE(sobrenome_d,'')) LIKE ?", [$needle]);
             });
         }
+    }
+
+    public static function filtraCorriereSpedizione(Builder|Relation $query, ?int $corriereId): void
+    {
+        if ($corriereId === null || $corriereId <= 0) {
+            return;
+        }
+
+        $query->where('id_codice_servizio', $corriereId);
+    }
+
+    public static function filtraServizioAggiuntivoEtichetta(Builder|Relation $query, ?int $servizioId): void
+    {
+        if ($servizioId === null || $servizioId <= 0) {
+            return;
+        }
+
+        $servizio = servizi_aggiuntivi::query()->find($servizioId);
+        if ($servizio === null) {
+            return;
+        }
+
+        $den = trim((string) $servizio->denominazione_servizio);
+        if ($den === '') {
+            return;
+        }
+
+        $needle = mb_strtolower($den);
+
+        $query->whereHas('serviziAggiuntiviRighe', function (Builder $q) use ($needle): void {
+            $q->where(function (Builder $w) use ($needle): void {
+                $w->whereRaw('LOWER(COALESCE(testo_servizio, \'\')) = ?', [$needle])
+                    ->orWhereRaw('LOWER(COALESCE(testo_servizio, \'\')) LIKE ?', [$needle.' %'])
+                    ->orWhereRaw('LOWER(COALESCE(testo_servizio, \'\')) LIKE ?', [$needle.'%'])
+                    ->orWhereHas('corriereServizioAggiuntivo', function (Builder $c) use ($needle): void {
+                        $c->where(function (Builder $cw) use ($needle): void {
+                            $cw->whereRaw('LOWER(COALESCE(testo_servizio, \'\')) = ?', [$needle])
+                                ->orWhereRaw('LOWER(COALESCE(testo_servizio, \'\')) LIKE ?', [$needle.' %'])
+                                ->orWhereRaw('LOWER(COALESCE(testo_servizio, \'\')) LIKE ?', [$needle.'%']);
+                        });
+                    });
+            });
+        });
+    }
+
+    /**
+     * @return array{column: string, dir: 'asc'|'desc'}
+     */
+    public static function ordinamentoEtichetteDaRequest(Request $request): array
+    {
+        $allowed = ['ordine'];
+        $column = (string) $request->input('sort', 'ordine');
+        if (! in_array($column, $allowed, true)) {
+            $column = 'ordine';
+        }
+
+        $dir = strtolower((string) $request->input('dir', self::SORT_DIR_DESC));
+        if (! in_array($dir, [self::SORT_DIR_ASC, self::SORT_DIR_DESC], true)) {
+            $dir = self::SORT_DIR_DESC;
+        }
+
+        return ['column' => $column, 'dir' => $dir];
+    }
+
+    public static function applicaOrdinamentoEtichetteCliente(Builder|Relation $query, string $column, string $dir): void
+    {
+        if ($column === 'ordine') {
+            $query->orderBy(
+                ordine::select('id')
+                    ->whereColumn('ordinis.id', 'spedizionis.ordine_id')
+                    ->limit(1),
+                $dir
+            );
+
+            if ($dir === self::SORT_DIR_ASC) {
+                $query->orderBy('spedizionis.id', self::SORT_DIR_ASC);
+            } else {
+                $query->orderByDesc('spedizionis.id');
+            }
+
+            return;
+        }
+
+        $query->orderByDesc('spedizionis.id');
+    }
+
+    /**
+     * @param  array<string, mixed>  $queryParams
+     * @return array<string, mixed>
+     */
+    public static function parametriOrdinamentoToggle(
+        array $queryParams,
+        string $column,
+        string $currentColumn,
+        string $currentDir,
+    ): array {
+        $nextDir = ($currentColumn === $column && $currentDir === self::SORT_DIR_DESC)
+            ? self::SORT_DIR_ASC
+            : self::SORT_DIR_DESC;
+
+        return array_merge($queryParams, [
+            'sort' => $column,
+            'dir' => $nextDir,
+        ]);
     }
 }

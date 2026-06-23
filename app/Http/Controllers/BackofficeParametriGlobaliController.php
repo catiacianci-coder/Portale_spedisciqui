@@ -22,9 +22,10 @@ class BackofficeParametriGlobaliController extends Controller
         ];
 
         $denoms = array_merge(array_values($chiaviImpresa), array_values($chiaviPagamenti), ParametriApi::denominazioni());
-        $byDenom = parametri_globali::query()
-            ->whereIn('denominazione', $denoms)
-            ->pluck('valore_testo', 'denominazione');
+        $byDenom = [];
+        foreach ($denoms as $denom) {
+            $byDenom[$denom] = parametri_globali::recordAttivo($denom)?->valore_testo;
+        }
 
         $valoriImpresa = [];
         foreach ($chiaviImpresa as $campo => $denom) {

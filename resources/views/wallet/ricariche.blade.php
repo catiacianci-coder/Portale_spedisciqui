@@ -62,7 +62,7 @@
                                 <tr>
                                     <td class="sq-td sq-fw-700">{{ $numeroOrdine($r) }}</td>
                                     <td class="sq-td sq-text-muted sq-nowrap">{{ $r->created_at?->timezone(config('app.timezone'))->format('d/m/Y H:i') ?? '—' }}</td>
-                                    <td class="sq-td sq-td--right sq-wallet-ricariche-importo">{{ $fmt($r->importo) }} €</td>
+                                    <td class="sq-td sq-td--right sq-wallet-ricariche-importo">{{ \App\Support\ImportoEuro::format($r->importo) }}</td>
                                     <td class="sq-td">{{ $r->metodoPagamento?->metodo_pagamento ?? '—' }}</td>
                                     <td class="sq-td">
                                         @if ($r->stato === 'accreditata')

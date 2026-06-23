@@ -17,23 +17,36 @@ class BackofficeTicketController extends Controller
     public function index(Request $request): View
     {
         $stati = TicketStato::query()->orderBy('sort_order')->get();
+        $tipoPremium = \App\Models\TicketTipoProblema::query()
+            ->where('codigo', \App\Models\TicketTipoProblema::CODIGO_RICHIESTE_PREMIUM)
+            ->first();
 
         $counts = [];
         foreach ($stati as $stato) {
             $counts[$stato->codigo] = Ticket::query()->where('ticket_stato_id', $stato->id)->count();
         }
 
+        $countPremium = $tipoPremium
+            ? Ticket::query()->where('ticket_tipo_problema_id', $tipoPremium->id)->count()
+            : 0;
+
         $codiciValidi = $stati->pluck('codigo')->all();
         $filter = $request->query('stato');
+        $filterTipo = $request->query('tipo');
         if ($filter !== null && $filter !== '' && ! in_array($filter, $codiciValidi, true)) {
             $filter = null;
         }
+        if ($filterTipo !== null && $filterTipo !== '' && $filterTipo !== 'richieste_premium') {
+            $filterTipo = null;
+        }
 
         $query = Ticket::query()
-            ->with(['user', 'stato'])
+            ->with(['user', 'stato', 'tipoProblema'])
             ->orderByDesc('created_at');
 
-        if ($filter !== null && $filter !== '') {
+        if ($filterTipo === 'richieste_premium' && $tipoPremium) {
+            $query->where('ticket_tipo_problema_id', $tipoPremium->id);
+        } elseif ($filter !== null && $filter !== '') {
             $query->whereHas('stato', fn ($q) => $q->where('codigo', $filter));
         }
 
@@ -43,7 +56,9 @@ class BackofficeTicketController extends Controller
         return view('backoffice.tickets.index', [
             'stati' => $stati,
             'counts' => $counts,
+            'countPremium' => $countPremium,
             'filter' => $filter,
+            'filterTipo' => $filterTipo,
             'perPage' => $perPage,
             'tickets' => $tickets,
         ]);

@@ -20,7 +20,7 @@
         <label for="{{ $wrapId }}_da" class="filtro-label">Da</label>
         <input id="{{ $wrapId }}_da" name="data_da" type="date" value="{{ $filtroDataDa }}">
     </div>
-    <span class="sq-etichette-filtro-custom-sep">fino a</span>
+    <span class="sq-etichette-filtro-custom-sep" aria-hidden="true">–</span>
     <div class="sq-etichette-filtro-custom-campo">
         <label for="{{ $wrapId }}_a" class="filtro-label">A</label>
         <input id="{{ $wrapId }}_a" name="data_a" type="date" value="{{ $filtroDataA }}">
@@ -32,7 +32,11 @@
         const wrapId = sel.getAttribute('data-wrap-target');
         const wrap = wrapId ? document.getElementById(wrapId) : null;
         if (!wrap) return;
-        const sync = () => wrap.classList.toggle('is-on', sel.value === 'custom');
+        const sync = () => {
+            const isCustom = sel.value === 'custom';
+            wrap.classList.toggle('is-on', isCustom);
+            sel.closest('.sq-etichette-filtri')?.classList.toggle('sq-etichette-filtri--periodo-custom', isCustom);
+        };
         sel.addEventListener('change', sync);
         sync();
     });

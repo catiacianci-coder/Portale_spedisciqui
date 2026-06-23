@@ -2,9 +2,6 @@
 @section('content')
 @php
     $ind = $indirizzi ?? [];
-    use App\Models\parametri_globali;
-    $ibanBonificoCheckout = parametri_globali::valoreTesto(parametri_globali::DENOM_IBAN_CC_R_B);
-    $haBonificoCheckout = collect($metodiJson ?? [])->contains(fn ($m) => ! empty($m['is_bonifico']));
 @endphp
 
 @if (! empty($ind['partenza']) || ! empty($ind['destinazione']))
@@ -84,12 +81,6 @@
         <div class="sq-alert sq-alert--error sq-mb-14">{{ $errors->first('checkout') }}</div>
     @endif
 
-    @if (! ($stripeConfigured ?? true) && collect($metodiJson ?? [])->contains(fn ($m) => ! empty($m['is_carta'])))
-        <div class="sq-alert sq-alert--info-warm sq-mb-14">
-            Pagamento con carta non disponibile finché non configuri le chiavi Stripe in .env.
-        </div>
-    @endif
-
     @if (session('ok'))
         <div class="sq-alert sq-alert--success sq-mb-14">{{ session('ok') }}</div>
     @endif
@@ -106,6 +97,7 @@
     @endif
 
     <div class="sq-checkout-grid checkout-grid">
+        <div class="sq-checkout-aside-stack">
         <aside class="sq-checkout-aside">
             <h2 class="sq-h2-aside">Servizi aggiuntivi previsti dal Corriere</h2>
             @php $groups = $serviziCheckoutGrouped ?? []; @endphp
@@ -130,7 +122,7 @@
                                     if ($hint !== '') {
                                         $hint .= ' + ';
                                     }
-                                    $hint .= number_format((float) $abs, 2, ',', '.').' €';
+                                    $hint .= \App\Support\ImportoEuro::format((float) $abs);
                                 }
                             } elseif ($mod === 'valore_merce') {
                                 $hint = 'Dipende dal valore merce';
@@ -178,11 +170,11 @@
                                     @if ($bandMin !== null || $bandMax !== null)
                                         <span class="sq-text-muted sq-text-14 sq-d-block sq-mb-6">
                                             @if ($bandMin !== null && $bandMax !== null)
-                                                Consentito da {{ number_format($bandMin, 2, ',', '.') }} € a {{ number_format($bandMax, 2, ',', '.') }} €
+                                                Consentito da {{ \App\Support\ImportoEuro::format($bandMin) }} a {{ \App\Support\ImportoEuro::format($bandMax) }}
                                             @elseif ($bandMin !== null)
-                                                Minimo {{ number_format($bandMin, 2, ',', '.') }} €
+                                                Minimo {{ \App\Support\ImportoEuro::format($bandMin) }}
                                             @else
-                                                Massimo {{ number_format($bandMax, 2, ',', '.') }} €
+                                                Massimo {{ \App\Support\ImportoEuro::format($bandMax) }}
                                             @endif
                                         </span>
                                     @endif
@@ -205,162 +197,26 @@
             @endif
         </aside>
 
+        @include('checkout.partials.ritiro-domicilio')
+        </div>
+
         <div class="sq-checkout-main-panel">
-            <h2 class="sq-h2-aside">Riepilogo e pagamento</h2>
+            <h2 class="sq-h2-aside">Riepilogo</h2>
             @if (! empty($isLiccardiTms) && ! empty($liccardiVolumeMessaggio))
                 <div class="sq-alert sq-alert--info sq-mb-12">
                     {{ $liccardiVolumeMessaggio }}
                     @if ($liccardiPrezzoVolume !== null)
                         <span class="sq-prev-liccardi-volume-prezzo">
-                            Prezzo con sconto volume: {{ number_format($liccardiPrezzoVolume, 2, ',', '.') }} €
+                            Prezzo con sconto volume: {{ \App\Support\ImportoEuro::format($liccardiPrezzoVolume) }}
                         </span>
                     @endif
                     <span class="sq-text-muted"> Lo sconto si applica confermando un ordine con almeno {{ \App\Support\LiccardiVolumeSconto::MIN_SPEDIZIONI }} spedizioni Liccardi nel carrello.</span>
                 </div>
             @endif
 
-            <div class="sq-table-wrap">
-                <table class="sq-table">
-                    <thead>
-                        <tr class="sq-thead-row sq-thead-row--neutral">
-                            <th class="sq-th sq-th--8">Metodo</th>
-                            <th class="sq-th sq-th--8 sq-th--right">Spedizione</th>
-                            <th class="sq-th sq-th--8 sq-th--right">Servizi</th>
-                            <th class="sq-th sq-th--8 sq-th--right">Imponibile</th>
-                            <th class="sq-th sq-th--8 sq-th--right">IVA</th>
-                            <th class="sq-th sq-th--8 sq-th--right">Totale</th>
-                            <th class="sq-th sq-th--8 sq-th--right" scope="col">Paga</th>
-                        </tr>
-                    </thead>
-                    <tbody id="checkout-metodi-body">
-                        @foreach ($metodiJson as $mj)
-                            @php $iconUrl = $mj['icon_url'] ?? null; @endphp
-                            <tr class="js-metodo-row"
-                                data-pct="{{ $mj['pct'] }}"
-                                data-abs="{{ $mj['abs'] }}"
-                                data-is-wallet="{{ ! empty($mj['is_wallet']) ? '1' : '0' }}">
-                                <td class="sq-td sq-td--8 sq-fw-700">{{ $mj['nome'] }}</td>
-                                <td class="js-td-trasporto sq-td sq-td--8 sq-td--right sq-nowrap">—</td>
-                                <td class="js-td-servizi sq-td sq-td--8 sq-td--right sq-nowrap">—</td>
-                                <td class="js-td-imponibile sq-td sq-td--8 sq-td--right sq-nowrap">—</td>
-                                <td class="js-td-iva sq-td sq-td--8 sq-td--right sq-nowrap">—</td>
-                                <td class="js-td-totale sq-td sq-td--8 sq-td--right sq-nowrap sq-fw-700">—</td>
-                                <td class="sq-td sq-td--8 sq-td--right">
-                                    @auth
-                                        @if (auth()->user()->hasVerifiedEmail())
-                                            <div class="sq-ordini-actions-icons">
-                                            @if (! empty($mj['is_wallet']))
-                                                <button
-                                                    type="button"
-                                                    class="sq-ordini-icon-action sq-ordini-icon-action--pay js-checkout-wallet-btn js-wallet-open-modal-checkout"
-                                                    title="Paga con {{ $mj['nome'] }}"
-                                                    aria-label="Paga con {{ $mj['nome'] }}"
-                                                    data-metodo-id="{{ (int) $mj['id'] }}"
-                                                    data-totale-label=""
-                                                >
-                                                    @if ($iconUrl)
-                                                        <img src="{{ $iconUrl }}" alt="" class="sq-pay-metodo-action-icon">
-                                                    @endif
-                                                </button>
-                                            @elseif (! empty($mj['is_bonifico']))
-                                                <button
-                                                    type="button"
-                                                    class="sq-ordini-icon-action sq-ordini-icon-action--pay js-bonifico-open-modal"
-                                                    title="Paga con {{ $mj['nome'] }}"
-                                                    aria-label="Paga con {{ $mj['nome'] }}"
-                                                    data-modal-id="sq-checkout-bonifico-modal"
-                                                    data-metodo-id="{{ (int) $mj['id'] }}"
-                                                    data-chiave-causale=""
-                                                    data-chiave-placeholder="Generato alla conferma"
-                                                >
-                                                    @if ($iconUrl)
-                                                        <img src="{{ $iconUrl }}" alt="" class="sq-pay-metodo-action-icon">
-                                                    @endif
-                                                </button>
-                                            @else
-                                                @php
-                                                    $cartaDisabilitata = ! empty($mj['is_carta']) && ! ($stripeConfigured ?? true);
-                                                @endphp
-                                                <form method="POST" action="{{ route('checkout.paga') }}" class="sq-form-inline sq-ordini-pay-form-inline js-checkout-paga-form">
-                                                    @csrf
-                                                    <input type="hidden" name="corriere_id" value="{{ $corriereId }}">
-                                                    <input type="hidden" name="servizi_json" class="js-checkout-servizi-hidden" value="[]">
-                                                    <input type="hidden" name="metodo_pagamento_id" value="{{ (int) $mj['id'] }}">
-                                                    <button type="submit"
-                                                        class="sq-ordini-icon-action sq-ordini-icon-action--pay"
-                                                        title="{{ $cartaDisabilitata ? 'Stripe non configurato' : ('Paga con '.$mj['nome']) }}"
-                                                        aria-label="Paga con {{ $mj['nome'] }}"
-                                                        @if ($cartaDisabilitata) disabled @endif>
-                                                        @if ($iconUrl)
-                                                            <img src="{{ $iconUrl }}" alt="" class="sq-pay-metodo-action-icon">
-                                                        @endif
-                                                    </button>
-                                                </form>
-                                            @endif
-                                            </div>
-                                        @else
-                                            <span class="sq-text-muted sq-text-14">Verifica email</span>
-                                        @endif
-                                    @else
-                                        <a href="{{ route('login') }}">Accedi</a>
-                                    @endauth
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-
-            @guest
-                <p class="sq-text-muted sq-text-14 sq-mb-0">Per pagare serve un account con email verificata.</p>
-            @endguest
-
-            <div class="sq-checkout-cart-banner">
-                <span class="sq-checkout-cart-banner-label">Voglio solo aggiungere al carrello</span>
-                <form method="POST" action="{{ route('carrello.aggiungi') }}" id="form-carrello-checkout" class="sq-form-cart-checkout">
-                    @csrf
-                    <input type="hidden" name="corriere_id" value="{{ $corriereId }}">
-                    <input type="hidden" name="servizi_json" id="checkout-servizi-json" value="[]">
-                    <button type="submit" title="Aggiungi al carrello" aria-label="Aggiungi al carrello" class="sq-checkout-cart-icon-btn">
-                        <i class="fa-solid fa-cart-shopping" aria-hidden="true"></i>
-                    </button>
-                </form>
-            </div>
+            @include('checkout.partials.riepilogo-azioni')
         </div>
     </div>
-
-    @auth
-        @if (auth()->user()->hasVerifiedEmail())
-            <div id="sq-checkout-wallet-modal" class="sq-modal" hidden data-checkout-wallet-modal>
-                <div class="sq-modal-backdrop js-checkout-wallet-modal-close" tabindex="-1" aria-hidden="true"></div>
-                <div class="sq-modal-panel" role="dialog" aria-modal="true" aria-labelledby="sq-checkout-wallet-modal-title">
-                    <h2 id="sq-checkout-wallet-modal-title" class="sq-modal-title">Pagamento con Wallet</h2>
-                    <p class="sq-modal-text sq-m-0 sq-mb-16" id="sq-checkout-wallet-modal-body"></p>
-                    <form method="POST" action="{{ route('checkout.paga') }}" class="sq-modal-actions">
-                        @csrf
-                        <input type="hidden" name="corriere_id" value="{{ $corriereId }}">
-                        <input type="hidden" name="servizi_json" id="checkout-servizi-json-wallet" value="[]">
-                        <input type="hidden" name="metodo_pagamento_id" id="sq-checkout-wallet-metodo-id" value="">
-                        <input type="hidden" name="conferma_wallet" value="1">
-                        <button type="button" class="sq-btn-primary sq-modal-btn js-checkout-wallet-modal-close">Annulla</button>
-                        <button type="submit" class="sq-btn-primary sq-modal-btn">Conferma</button>
-                    </form>
-                </div>
-            </div>
-        @endif
-    @endauth
-
-    @if ($haBonificoCheckout)
-        @include('partials.bonifico-pagamento-popup', [
-            'modalId' => 'sq-checkout-bonifico-modal',
-            'formId' => 'sq-checkout-bonifico-form',
-            'formAction' => route('checkout.paga'),
-            'iban' => $ibanBonificoCheckout,
-            'chiaveCausale' => '',
-            'chiavePlaceholder' => 'Generato alla conferma',
-            'formExtras' => '<input type="hidden" name="corriere_id" value="'.e((string) $corriereId).'"><input type="hidden" name="servizi_json" id="checkout-servizi-json-bonifico" value="[]">',
-        ])
-    @endif
 </div>
 
 <script>
@@ -370,6 +226,10 @@
     const ricaricoTariffaPct = @json($ricaricoTariffaPct ?? 0);
     const aliquotaIva = @json($aliquotaIva);
     const walletCommissionPct = @json($walletCommissionPct ?? 0);
+    const prezziConfigEl = document.getElementById('checkout-prezzi-config');
+    const standardCommissionPct = prezziConfigEl
+        ? (JSON.parse(prezziConfigEl.textContent || '{}').standardCommissionPct || 0)
+        : 0;
     const usaQuoteApiServizi = @json($usaQuoteApiServizi ?? false);
     const quoteServizioUrl = @json($quoteServizioUrl ?? '');
     const corriereCheckoutId = {{ (int) ($corriereId ?? 0) }};
@@ -378,6 +238,7 @@
     const quoteTimers = new WeakMap();
 
     const formatIt = (n) => new Intl.NumberFormat('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+    const formatEuroIt = (n) => '€ ' + formatIt(n);
 
     const escapeHtml = (s) => String(s)
         .replace(/&/g, '&amp;')
@@ -476,21 +337,21 @@
         }
         if (min !== null && merce < min) {
             if (max !== null) {
-                return 'Inserisci un valore compreso tra ' + formatIt(min) + ' € e ' + formatIt(max) + ' €.';
+                return 'Inserisci un valore compreso tra ' + formatEuroIt(min) + ' e ' + formatEuroIt(max) + '.';
             }
-            return 'Inserisci un valore di almeno ' + formatIt(min) + ' €.';
+            return 'Inserisci un valore di almeno ' + formatEuroIt(min) + '.';
         }
         if (max !== null && merce > max) {
             if (min !== null) {
-                return 'Inserisci un valore compreso tra ' + formatIt(min) + ' € e ' + formatIt(max) + ' €.';
+                return 'Inserisci un valore compreso tra ' + formatEuroIt(min) + ' e ' + formatEuroIt(max) + '.';
             }
-            return 'Inserisci un valore di massimo ' + formatIt(max) + ' €.';
+            return 'Inserisci un valore di massimo ' + formatEuroIt(max) + '.';
         }
         return null;
     };
 
     const formatPrezzoServizioDual = (cliente, _nostro, extra = '') => {
-        let text = formatIt(cliente) + ' €';
+        let text = '€ ' + formatIt(cliente);
         if (extra) {
             text += ' ' + extra;
         }
@@ -535,18 +396,18 @@
 
             if (c.tot_risposta !== null && c.tot_risposta !== undefined && c.tot_risposta !== '') {
                 html += '<p class="sq-servizio-api-trace-meta">tot risposta: '
-                    + escapeHtml(formatIt(parseNum(c.tot_risposta)))
-                    + ' €</p>';
+                    + escapeHtml(formatEuroIt(parseNum(c.tot_risposta)))
+                    + '</p>';
             }
             if (c.commissione_contrassegno !== null && c.commissione_contrassegno !== undefined && c.commissione_contrassegno !== '') {
                 html += '<p class="sq-servizio-api-trace-meta">commissioneContrassegno: '
-                    + escapeHtml(formatIt(parseNum(c.commissione_contrassegno)))
-                    + ' €</p>';
+                    + escapeHtml(formatEuroIt(parseNum(c.commissione_contrassegno)))
+                    + '</p>';
             }
             if (c.commissione_assicurazione !== null && c.commissione_assicurazione !== undefined && c.commissione_assicurazione !== '') {
                 html += '<p class="sq-servizio-api-trace-meta">commissioneAssicurazione: '
-                    + escapeHtml(formatIt(parseNum(c.commissione_assicurazione)))
-                    + ' €</p>';
+                    + escapeHtml(formatEuroIt(parseNum(c.commissione_assicurazione)))
+                    + '</p>';
             }
             if (c.errore) {
                 html += '<p class="sq-servizio-api-trace-meta sq-servizio-api-trace-meta--err">'
@@ -803,10 +664,10 @@
             const merce = inp && merceValoreInserito(inp) ? parseNum(inp.value) : null;
             let label = name;
             if (merce !== null) {
-                label += ' (' + formatIt(merce) + ' €)';
+                label += ' (' + formatEuroIt(merce) + ')';
             }
             if (prezzo !== null) {
-                label += ' — ' + formatIt(prezzo) + ' €';
+                label += ' — ' + '€ ' + formatIt(prezzo);
             }
             names.push(label);
         });
@@ -827,45 +688,19 @@
         aggiornaTuttiPrezziServizi();
         const extra = extraServiziTotali();
 
-        document.querySelectorAll('.checkout-page .js-metodo-row').forEach((row) => {
-            const isWallet = row.getAttribute('data-is-wallet') === '1';
-            const pct = parseNum(row.getAttribute('data-pct'));
-            const abs = parseNum(row.getAttribute('data-abs'));
+        const trasportoWallet = round2(baseTrasportoCliente * (1 + walletCommissionPct / 100));
+        const imponibileWallet = round2(trasportoWallet + extra.cliente);
+        const ivaWallet = round2(imponibileWallet * (aliquotaIva / 100));
+        const totaleWallet = round2(imponibileWallet + ivaWallet);
 
-            let trasportoCliente;
-            let imponibile;
+        const imponibileStandard = round2((baseTrasportoCliente + extra.cliente) * (1 + standardCommissionPct / 100));
+        const ivaStandard = round2(imponibileStandard * (aliquotaIva / 100));
+        const totaleStandard = round2(imponibileStandard + ivaStandard);
 
-            if (isWallet) {
-                trasportoCliente = round2(baseTrasportoCliente * (1 + walletCommissionPct / 100));
-                imponibile = round2(trasportoCliente + extra.cliente);
-            } else {
-                trasportoCliente = baseTrasportoCliente;
-                imponibile = round2((baseTrasportoCliente + extra.cliente) * (1 + pct / 100) + abs);
-            }
-
-            const iva = round2(imponibile * (aliquotaIva / 100));
-            const totale = round2(imponibile + iva);
-
-            const tTr = row.querySelector('.js-td-trasporto');
-            const tSe = row.querySelector('.js-td-servizi');
-            const tIm = row.querySelector('.js-td-imponibile');
-            const tIv = row.querySelector('.js-td-iva');
-            const tTo = row.querySelector('.js-td-totale');
-            if (tTr) {
-                tTr.textContent = formatIt(trasportoCliente) + ' €';
-            }
-            if (tSe) {
-                tSe.textContent = formatIt(extra.cliente > 0 ? extra.cliente : 0) + ' €';
-            }
-            if (tIm) tIm.textContent = formatIt(imponibile) + ' €';
-            if (tIv) tIv.textContent = formatIt(iva) + ' €';
-            if (tTo) tTo.textContent = formatIt(totale) + ' €';
-
-            const wBtn = row.querySelector('.js-checkout-wallet-btn');
-            if (wBtn && tTo) {
-                wBtn.setAttribute('data-totale-label', formatIt(totale));
-            }
-        });
+        const elWallet = document.getElementById('checkout-totale-wallet');
+        const elStandard = document.getElementById('checkout-totale-standard');
+        if (elWallet) elWallet.textContent = formatEuroIt(totaleWallet);
+        if (elStandard) elStandard.textContent = formatEuroIt(totaleStandard);
     };
 
     document.querySelectorAll('.checkout-page .js-servizio-extra').forEach((cb) => {
@@ -952,61 +787,16 @@
 
     const formCarrello = document.getElementById('form-carrello-checkout');
     const serviziJsonInput = document.getElementById('checkout-servizi-json');
+    const formOrdine = document.getElementById('form-paga-spedizione');
+    const serviziJsonOrdineInput = document.getElementById('checkout-servizi-json-ordine');
     if (formCarrello && serviziJsonInput) {
         formCarrello.addEventListener('submit', () => {
             serviziJsonInput.value = buildServiziSelezioneJson();
         });
     }
-
-    document.querySelectorAll('.js-checkout-paga-form').forEach((form) => {
-        form.addEventListener('submit', () => {
-            const inp = form.querySelector('.js-checkout-servizi-hidden');
-            if (inp) inp.value = buildServiziSelezioneJson();
-        });
-    });
-
-    const checkoutWalletModal = document.querySelector('[data-checkout-wallet-modal]');
-    const checkoutWalletBody = document.getElementById('sq-checkout-wallet-modal-body');
-    const checkoutWalletMetodoInput = document.getElementById('sq-checkout-wallet-metodo-id');
-    const checkoutWalletServiziInput = document.getElementById('checkout-servizi-json-wallet');
-
-    const closeCheckoutWalletModal = () => {
-        if (!checkoutWalletModal) return;
-        checkoutWalletModal.hidden = true;
-        checkoutWalletModal.setAttribute('aria-hidden', 'true');
-        document.body.classList.remove('sq-modal-open');
-    };
-
-    const openCheckoutWalletModal = (btn) => {
-        if (!checkoutWalletModal || !checkoutWalletBody || !checkoutWalletMetodoInput) return;
-        const id = btn.getAttribute('data-metodo-id');
-        const totale = btn.getAttribute('data-totale-label') || '—';
-        checkoutWalletMetodoInput.value = id || '';
-        checkoutWalletBody.textContent =
-            'Stai per pagare questa spedizione per un totale di ' + totale + ' € (IVA inclusa). Verrà creato l’ordine e addebitato il Wallet.';
-        if (checkoutWalletServiziInput) checkoutWalletServiziInput.value = buildServiziSelezioneJson();
-        checkoutWalletModal.hidden = false;
-        checkoutWalletModal.setAttribute('aria-hidden', 'false');
-        document.body.classList.add('sq-modal-open');
-    };
-
-    document.querySelectorAll('.js-wallet-open-modal-checkout').forEach((btn) => {
-        btn.addEventListener('click', () => openCheckoutWalletModal(btn));
-    });
-    if (checkoutWalletModal) {
-        checkoutWalletModal.querySelectorAll('.js-checkout-wallet-modal-close').forEach((el) => {
-            el.addEventListener('click', () => closeCheckoutWalletModal());
-        });
-    }
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && checkoutWalletModal && !checkoutWalletModal.hidden) closeCheckoutWalletModal();
-    });
-
-    const checkoutBonificoForm = document.getElementById('sq-checkout-bonifico-form');
-    const checkoutBonificoServiziInput = document.getElementById('checkout-servizi-json-bonifico');
-    if (checkoutBonificoForm && checkoutBonificoServiziInput) {
-        checkoutBonificoForm.addEventListener('submit', () => {
-            checkoutBonificoServiziInput.value = buildServiziSelezioneJson();
+    if (formOrdine && serviziJsonOrdineInput) {
+        formOrdine.addEventListener('submit', () => {
+            serviziJsonOrdineInput.value = buildServiziSelezioneJson();
         });
     }
 
@@ -1078,9 +868,55 @@
             syncPuntoToForms();
             validateServiziBeforeSubmit(e);
             if (e.defaultPrevented) return;
+            validateRitiroBeforeSubmit();
+            if (e.defaultPrevented) return;
             validatePuntoBeforeSubmit(e);
         });
     });
+
+    const ritiroCal = document.getElementById('checkout-ritiro-calendario');
+    const ritiroSceltaEl = document.getElementById('checkout-ritiro-scelta-data');
+    if (ritiroCal) {
+        const syncRitiroInputs = (date) => {
+            document.querySelectorAll('.checkout-page input[name="data_ritiro"]').forEach((inp) => {
+                inp.value = date;
+            });
+        };
+        const updateRitiroLabel = (btn) => {
+            if (!ritiroSceltaEl || !btn) return;
+            const label = btn.getAttribute('data-label-long') || '';
+            ritiroSceltaEl.textContent = label !== '' ? label : '—';
+        };
+        const selectRitiroDay = (btn) => {
+            ritiroCal.querySelectorAll('.sq-checkout-ritiro-giorno').forEach((b) => {
+                const on = b === btn;
+                b.classList.toggle('is-selected', on);
+                b.setAttribute('aria-pressed', on ? 'true' : 'false');
+            });
+            syncRitiroInputs(btn.getAttribute('data-date') || '');
+            updateRitiroLabel(btn);
+        };
+        ritiroCal.querySelectorAll('.sq-checkout-ritiro-giorno').forEach((btn) => {
+            btn.addEventListener('click', () => selectRitiroDay(btn));
+        });
+        const pre = ritiroCal.querySelector('.sq-checkout-ritiro-giorno.is-selected')
+            || ritiroCal.querySelector('.sq-checkout-ritiro-giorno');
+        if (pre) {
+            selectRitiroDay(pre);
+        }
+    }
+
+    const validateRitiroBeforeSubmit = () => {
+        if (!ritiroCal) return;
+        const inputs = document.querySelectorAll('.checkout-page input[name="data_ritiro"]');
+        const hasValue = Array.from(inputs).some((inp) => (inp.value || '').trim() !== '');
+        if (hasValue) return;
+        const pre = ritiroCal.querySelector('.sq-checkout-ritiro-giorno.is-selected')
+            || ritiroCal.querySelector('.sq-checkout-ritiro-giorno');
+        const date = pre?.getAttribute('data-date') || '';
+        if (date === '') return;
+        inputs.forEach((inp) => { inp.value = date; });
+    };
 
     renderServiziRiepilogo();
     recalc();

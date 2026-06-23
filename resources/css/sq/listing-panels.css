@@ -253,12 +253,14 @@
 }
 
 .sq-listing-table thead th {
-    color: var(--sq-brand-dark);
-    font-size: 11px;
+    color: var(--sq-table-head-text);
+    font-family: var(--sq-font-ui);
+    font-size: var(--sq-table-head-font-size);
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    font-weight: 700;
-    background: var(--sq-bg-soft-warm);
+    letter-spacing: var(--sq-table-head-letter-spacing);
+    font-weight: var(--sq-table-head-font-weight);
+    background: var(--sq-table-head-bg);
+    border-bottom: 1px solid var(--sq-table-head-border);
 }
 
 .sq-listing-table thead th.th-acoes {

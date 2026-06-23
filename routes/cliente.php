@@ -5,9 +5,11 @@ use App\Http\Controllers\CarrelloController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ClienteNotificazioneController;
 use App\Http\Controllers\EtichetteClienteController;
+use App\Http\Controllers\FinanziarioFattureController;
 use App\Http\Controllers\FinanziarioNonConformitaController;
 use App\Http\Controllers\MieiRimborsoController;
 use App\Http\Controllers\OrdiniController;
+use App\Http\Controllers\OrdinePagamentoCheckoutController;
 use App\Http\Controllers\PagamentoNcController;
 use App\Http\Controllers\ProfiloAnagraficaController;
 use App\Http\Controllers\ProfiloPasswordController;
@@ -17,6 +19,7 @@ use App\Http\Controllers\SpedizioneEtichettaController;
 use App\Http\Controllers\SpedizioneTrackingController;
 use App\Http\Controllers\StripeOrdineController;
 use App\Http\Controllers\StripeRimborsoController;
+use App\Http\Controllers\TariffeScontateController;
 use App\Http\Controllers\TicketClienteController;
 use App\Http\Controllers\UserDestinatarioController;
 use App\Http\Controllers\UserImballaggioController;
@@ -51,6 +54,8 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::post('destinatari/{destinatario}/duplica', [UserDestinatarioController::class, 'duplica'])
         ->name('destinatari.duplica');
 
+    Route::post('/tariffe-scontate', [TariffeScontateController::class, 'store'])->name('tariffe_scontate.store');
+
     Route::get('/profilo/anagrafica', [ProfiloAnagraficaController::class, 'edit'])->name('profilo.anagrafica');
     Route::post('/profilo/anagrafica', [ProfiloAnagraficaController::class, 'update'])->name('profilo.anagrafica.update');
 
@@ -66,12 +71,14 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('/ordini', [OrdiniController::class, 'index'])->name('ordini.index');
     Route::get('/ordini/{ordine}', [OrdiniController::class, 'show'])->name('ordini.show');
     Route::get('/ordini/{ordine}/pagamento', [OrdiniController::class, 'pagamentoShow'])->name('ordini.pagamento.show');
+    Route::get('/ordini/{ordine}/pagamento/wallet', [OrdinePagamentoCheckoutController::class, 'wallet'])->name('ordini.pagamento.wallet');
+    Route::get('/ordini/{ordine}/pagamento/carta', [OrdinePagamentoCheckoutController::class, 'carta'])->name('ordini.pagamento.carta');
+    Route::get('/ordini/{ordine}/pagamento/bonifico', [OrdinePagamentoCheckoutController::class, 'bonifico'])->name('ordini.pagamento.bonifico');
     Route::post('/ordini/{ordine}/pagamento', [OrdiniController::class, 'pagamento'])->name('ordini.pagamento');
+    Route::post('/ordini/{ordine}/pagamento-carta', [OrdiniController::class, 'pagamentoCarta'])->name('ordini.pagamento.carta.process');
     Route::get('/ordini/{ordine}/stripe/success', [StripeOrdineController::class, 'success'])->name('ordini.stripe.success');
     Route::get('/ordini/{ordine}/stripe/cancel', [StripeOrdineController::class, 'cancel'])->name('ordini.stripe.cancel');
     Route::post('/ordini/{ordine}/annulla', [OrdiniController::class, 'annulla'])->name('ordini.annulla');
-    Route::post('/ordini/{ordine}/spedizioni/elimina-marcate', [OrdiniController::class, 'eliminaSpedizioniMarcate'])
-        ->name('ordini.spedizioni.elimina-marcate');
     Route::post('/ordini/{ordine}/rimborso-stripe', [StripeRimborsoController::class, 'store'])->name('ordini.rimborso_stripe');
 
     Route::get('/etichette', [EtichetteClienteController::class, 'index'])->name('etichette.index');
@@ -107,6 +114,7 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('/wallet/ricariche', [WalletRicaricheController::class, 'index'])->name('wallet.ricariche');
     Route::delete('/wallet/ricariche/{ricarica}', [WalletRicaricheController::class, 'destroy'])->name('wallet.ricariche.destroy');
 
+    Route::get('/finanziario/fatture', [FinanziarioFattureController::class, 'index'])->name('finanziario.fatture.index');
     Route::get('/finanziario/non-conformita', [FinanziarioNonConformitaController::class, 'index'])->name('finanziario.nc.index');
     Route::get('/finanziario/non-conformita/{pratica}', [FinanziarioNonConformitaController::class, 'show'])->name('finanziario.nc.show');
     Route::get('/finanziario/non-conformita/{pratica}/pdf', [FinanziarioNonConformitaController::class, 'pdf'])->name('finanziario.nc.pdf');
@@ -118,6 +126,8 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
         Route::post('/invia-richiesta', [AssistenzaSolicitacaoController::class, 'store'])->name('solicitar.store');
         Route::get('/api/spedizioni-per-ordine', [AssistenzaSolicitacaoController::class, 'spedizioniPorPedido'])->name('api.spedizioni_ordine');
         Route::get('/api/spedizione-per-codice', [AssistenzaSolicitacaoController::class, 'spedizionePorCodigo'])->name('api.spedizione_codice');
+        Route::get('/api/spedizione-per-tracking', [AssistenzaSolicitacaoController::class, 'spedizionePorTracking'])->name('api.spedizione_tracking');
+        Route::get('/api/corrieri-cliente', [AssistenzaSolicitacaoController::class, 'corrieriCliente'])->name('api.corrieri_cliente');
         Route::get('/ticket/{ticket}', [TicketClienteController::class, 'show'])->name('ticket.show');
         Route::post('/ticket/{ticket}/messaggio', [TicketClienteController::class, 'storeMensagem'])->name('ticket.mensagem');
     });

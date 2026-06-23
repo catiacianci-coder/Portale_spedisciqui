@@ -2,8 +2,8 @@
 
 namespace App\Support;
 
-use App\Models\ordine;
 use App\Models\spedizione;
+use App\Models\stato_spedizione;
 use App\Services\SpedisciOnline\SpedisciOnlineEtichettaPdfService;
 
 /**
@@ -92,7 +92,7 @@ final class SpedisciOnlineIntegrazione
     }
 
     /**
-     * Etichetta annullata su Spedisci.online (API delete ok) o ordine annullato dopo emissione LDV.
+     * Etichetta annullata su Spedisci.online (API delete ok) o spedizione in attesa di rimborso / rimborsata.
      */
     public static function etichettaCancellata(spedizione $spedizione): bool
     {
@@ -105,9 +105,10 @@ final class SpedisciOnlineIntegrazione
             return false;
         }
 
-        $spedizione->loadMissing('ordine');
-
-        return $spedizione->ordine?->stato === ordine::STATO_ANNULLATO;
+        return in_array((int) $spedizione->spedizione_stato_id, [
+            stato_spedizione::ANNULLATA,
+            stato_spedizione::RIMBORSATA,
+        ], true);
     }
 
     public static function etichettaStampabile(spedizione $spedizione): bool

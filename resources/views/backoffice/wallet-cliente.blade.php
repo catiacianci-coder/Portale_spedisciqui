@@ -24,7 +24,7 @@
     @php
         $walletSaldoFmt = null;
         if ($selectedUser !== null) {
-            $walletSaldoFmt = number_format((float) ($selectedUser->walletSaldo?->saldo ?? 0), 2, ',', '.').' €';
+            $walletSaldoFmt = \App\Support\ImportoEuro::format((float) ($selectedUser->walletSaldo?->saldo ?? 0));
         }
     @endphp
 

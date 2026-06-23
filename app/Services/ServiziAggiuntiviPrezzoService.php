@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\corrieri_servizi_aggiuntivi;
+use App\Support\ImportoEuro;
 use Illuminate\Support\Collection;
 
 /**
@@ -39,7 +40,7 @@ final class ServiziAggiuntiviPrezzoService
 
         $fmt = static fn (?float $v): string => $v === null
             ? ''
-            : number_format($v, 2, ',', '.').' €';
+            : ImportoEuro::format($v);
 
         if ($min !== null && $valoreMerce < $min) {
             if ($max !== null) {
@@ -363,7 +364,7 @@ final class ServiziAggiuntiviPrezzoService
                 'costo_nostro' => round($nostro, 2),
                 'costo_cliente' => self::importoClienteIvaEsc($nostro, $pivot, 0.0),
                 'nota' => null,
-                'riferimento' => 'su importo '.number_format($refImporto, 2, ',', '.').' € (min. fascia)',
+                'riferimento' => 'su importo '.ImportoEuro::format($refImporto).' (min. fascia)',
                 'fascia' => $fascia,
             ];
         }
@@ -397,13 +398,13 @@ final class ServiziAggiuntiviPrezzoService
         }
 
         if ($min !== null && $max !== null) {
-            return number_format($min, 2, ',', '.').'–'.number_format($max, 2, ',', '.').' €';
+            return ImportoEuro::format($min).' e '.ImportoEuro::format($max);
         }
         if ($min !== null) {
-            return 'da '.number_format($min, 2, ',', '.').' €';
+            return 'da '.ImportoEuro::format($min);
         }
         if ($max !== null) {
-            return 'fino a '.number_format($max, 2, ',', '.').' €';
+            return 'fino a '.ImportoEuro::format($max);
         }
 
         return null;

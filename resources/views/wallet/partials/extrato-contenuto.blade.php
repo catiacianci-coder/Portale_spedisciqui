@@ -56,7 +56,7 @@
                 <tbody>
                     @foreach ($linhas as $linha)
                         @php
-                            $valorFmt = ($linha->isCredito ? '+ ' : '− ').number_format($linha->valor, 2, ',', '.').' €';
+                            $valorFmt = ($linha->isCredito ? '+ ' : '− ').\App\Support\ImportoEuro::format($linha->valor);
                             $u = $linha->usuario;
                         @endphp
                         <tr>

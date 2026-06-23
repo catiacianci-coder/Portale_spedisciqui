@@ -16,14 +16,16 @@ use App\Services\Checkout\CheckoutServizioAggiuntivoQuoteService;
 use App\Services\TariffaPrezzoBaseService;
 use App\Models\tipo_spedizone;
 use App\Services\ServiziAggiuntiviPrezzoService;
-use App\Support\CarrelloPrezziWallet;
 use App\Support\CarrelloUtente;
+use App\Support\PreventivoColonnePagamento;
 use App\Support\ChiaveCausaleOrdine;
 use App\Support\CorriereLogo;
 use App\Support\IndirizzoSpedizioneSnapshot;
 use App\Support\LiccardiVolumeSconto;
 use App\Support\PreventivoRigaSelezionabile;
 use App\Support\PuntoConsegnaSessione;
+use App\Support\RitiroCheckoutDomicilio;
+use App\Support\RitiroDateSelezionabili;
 use App\Support\SpedizioneCampiPersistenza;
 use App\Support\OrdineTotaliPagamento;
 use App\Support\TariffaSpedizioneDaRiga;
@@ -71,7 +73,7 @@ class CarrelloController extends Controller
     /** @param  array<string, mixed>  $item */
     private function arricchisciItem(array $item): array
     {
-        $trasporto = (float) ($item['trasporto_iva_esc'] ?? 0);
+        $baseTrasporto = round((float) ($item['trasporto_base_iva_esc'] ?? $item['trasporto_iva_esc'] ?? 0), 2);
         $servizi = $item['servizi_selezionati'] ?? [];
         if (! is_array($servizi)) {
             $servizi = [];
@@ -86,8 +88,7 @@ class CarrelloController extends Controller
         }
         $extra = $this->extraServiziClienteCarrello($baseListino, $ric, $servizi);
         $item['extra_servizi_iva_esc'] = $extra;
-        $item['netto_iva_esc'] = round($trasporto + $extra, 2);
-        $item = CarrelloPrezziWallet::sincronizzaDaTrasporto($item, $trasporto);
+        $item = PreventivoColonnePagamento::applicaPrezziTrasportoSuRiga($item, $baseTrasporto);
 
         $tipoNome = trim((string) ($item['tipo_spedizione_nome'] ?? ''));
         if ($tipoNome === '') {
@@ -296,14 +297,22 @@ class CarrelloController extends Controller
         $items = $carrelloArricchito['items'];
 
         $totaleNetto = 0.0;
+        $totaleWallet = 0.0;
         foreach ($items as $it) {
             $totaleNetto += (float) ($it['netto_iva_esc'] ?? 0);
+            $totaleWallet += (float) ($it['netto_wallet_iva_esc'] ?? $it['netto_iva_esc'] ?? 0);
         }
         $totaleNetto = round($totaleNetto, 2);
+        $totaleWallet = round($totaleWallet, 2);
+        $aliquotaIva = \App\Support\TariffaSpedizioneClienteIvato::aliquotaIva();
 
         return view('carrello', [
             'items' => $items,
             'totaleNetto' => $totaleNetto,
+            'totaleWallet' => $totaleWallet,
+            'totaleIvatoStandard' => \App\Support\TariffaSpedizioneClienteIvato::calcolaDaNetto($totaleNetto, $aliquotaIva, 0),
+            'totaleIvatoWallet' => \App\Support\TariffaSpedizioneClienteIvato::calcolaDaNetto($totaleWallet, $aliquotaIva, 0),
+            'aliquotaIva' => $aliquotaIva,
             'liccardiVolume' => $carrelloArricchito['liccardi_volume'],
         ]);
     }
@@ -414,8 +423,8 @@ class CarrelloController extends Controller
                 'corriere_nome' => trim((string) ($riga['corriere']['nome_visualizzato'] ?? '')) ?: (string) ($riga['corriere']['nome_corriere'] ?? ''),
                 'tipo_spedizione_nome' => $tipoSpedNome,
                 'logo_url' => CorriereLogo::pubblico($corriereId),
+                'trasporto_base_iva_esc' => $trasporto,
                 'trasporto_iva_esc' => $trasporto,
-                'prezzi_esposti' => $preventivo['prezzi_esposti'] ?? null,
                 'prezzo_base_trasporto_iva_esc' => $prezzoBase,
                 'id_tariffas' => $tariffaId,
                 'ricarico_tariffa_pct' => $ricaricoTariffa,
@@ -432,6 +441,7 @@ class CarrelloController extends Controller
                     'spessore_cm' => isset($inputArr['spessore']) ? RigaCarrelloOrdine::parseNumero($inputArr['spessore']) : null,
                 ],
                 'created_at' => now()->toIso8601String(),
+                'data_ritiro' => $this->dataRitiroPerCarrello($request, $corriereId),
             ],
         ];
     }
@@ -454,10 +464,14 @@ class CarrelloController extends Controller
             throw new \InvalidArgumentException('Il carrello non contiene righe valide.');
         }
 
-        $aliquotaIva = parametri_globali::query()
-            ->where('denominazione', 'Aliquota IVA')
-            ->attivoOggi()
-            ->value('valore_percentuale');
+        foreach ($items as $it) {
+            $err = $this->validaDataRitiroRigaCarrello($it, $request);
+            if ($err !== null) {
+                throw new \InvalidArgumentException($err);
+            }
+        }
+
+        $aliquotaIva = parametri_globali::recordAttivo('Aliquota IVA')?->valore_percentuale;
         $aliquotaIva = $aliquotaIva !== null ? (float) $aliquotaIva : 22.0;
 
         $totaliOrdine = OrdineTotaliPagamento::daRighe($items, $aliquotaIva);
@@ -522,6 +536,13 @@ class CarrelloController extends Controller
                     ),
                 );
 
+                $this->applicaDataRitiroSuSpedizione(
+                    $request,
+                    $spedizione,
+                    $crow,
+                    $this->dataRitiroDaRigaCarrello($it, $request),
+                );
+
                 $spedizione->refresh();
 
                 $ricaricoTariffaPct = (float) ($it['ricarico_tariffa_pct'] ?? 0);
@@ -565,23 +586,29 @@ class CarrelloController extends Controller
     private function persistOrdineFromItems(Request $request, array $rawItems, bool $clearCarrelloSession, ?string $redirectFragment = null): RedirectResponse
     {
         try {
-            $ordine = $this->persistOrdineCreationOnly($request, $rawItems);
-        } catch (\InvalidArgumentException) {
+            $this->persistOrdineCreationOnly($request, $rawItems);
+        } catch (\InvalidArgumentException $e) {
+            $message = trim($e->getMessage());
+            if ($message === '') {
+                $message = 'Il carrello non contiene righe valide.';
+            }
+
             return redirect()
                 ->route('carrello.index')
-                ->withErrors(['carrello' => 'Il carrello non contiene righe valide.']);
-        }
-
-        $r = redirect()
-            ->route('ordini.show', $ordine);
-
-        if ($redirectFragment !== null && $redirectFragment !== '') {
-            $r->withFragment($redirectFragment);
+                ->withErrors(['carrello' => $message]);
         }
 
         if ($clearCarrelloSession) {
             $request->session()->put('carrello', ['items' => []]);
             CarrelloUtente::salvaDaSessione($request);
+        }
+
+        $r = redirect()
+            ->route('ordini.index', ['aba' => 'non_pagati'])
+            ->with('ok', 'Ordine creato. In attesa di pagamento.');
+
+        if ($redirectFragment !== null && $redirectFragment !== '') {
+            $r->withFragment($redirectFragment);
         }
 
         return $r;
@@ -607,8 +634,17 @@ class CarrelloController extends Controller
             'punto_address_line' => ['nullable', 'string', 'max:255'],
             'punto_postal_code' => ['nullable', 'string', 'max:16'],
             'punto_city' => ['nullable', 'string', 'max:120'],
+            'data_ritiro' => ['nullable', 'date'],
         ]);
         $corriereId = (int) $validated['corriere_id'];
+
+        $errRitiro = $this->validaDataRitiroCheckout($request, $corriereId);
+        if ($errRitiro !== null) {
+            return redirect()
+                ->route('checkout.show', ['corriere' => $corriereId])
+                ->withInput()
+                ->withErrors(['checkout' => $errRitiro]);
+        }
 
         $errRedirect = $this->sincronizzaPuntoConsegnaPreventivo($request, $corriereId);
         if ($errRedirect !== null) {
@@ -632,8 +668,8 @@ class CarrelloController extends Controller
     }
 
     /**
-     * Solo creazione ordine dal checkout (senza pagamento). Il carrello non viene svuotato.
-     * Preferire dal checkout i pulsanti «Paga» che creano l’ordine e pagano in un solo passaggio.
+     * Creazione ordine dal checkout (senza pagamento). Il carrello non viene svuotato.
+     * Il pagamento avviene dalla pagina ordini non pagati.
      */
     public function creaOrdineSingoloDaCheckout(Request $request): RedirectResponse
     {
@@ -644,11 +680,8 @@ class CarrelloController extends Controller
         $ordine = $ordineOrRedirect;
 
         return redirect()
-            ->route('ordini.pagamento.show', $ordine)
-            ->with(
-                'ok',
-                'Ordine '.$ordine->codice.' creato. Completa il pagamento per confermare l’ordine.'
-            );
+            ->route('ordini.index', ['aba' => 'non_pagati'])
+            ->with('checkout_ordine_creato_id', (int) $ordine->id);
     }
 
     public function aggiungi(Request $request)
@@ -666,9 +699,18 @@ class CarrelloController extends Controller
             'punto_address_line' => ['nullable', 'string', 'max:255'],
             'punto_postal_code' => ['nullable', 'string', 'max:16'],
             'punto_city' => ['nullable', 'string', 'max:120'],
+            'data_ritiro' => ['nullable', 'date'],
         ]);
 
         $corriereId = (int) $validated['corriere_id'];
+        $errRitiro = $this->validaDataRitiroCheckout($request, $corriereId);
+        if ($errRitiro !== null) {
+            return redirect()
+                ->route('checkout.show', ['corriere' => $corriereId])
+                ->withInput()
+                ->withErrors(['checkout' => $errRitiro]);
+        }
+
         $errRedirect = $this->sincronizzaPuntoConsegnaPreventivo($request, $corriereId, 'carrello');
         if ($errRedirect !== null) {
             return $errRedirect;
@@ -691,7 +733,7 @@ class CarrelloController extends Controller
 
         return redirect()
             ->route('carrello.index')
-            ->with('ok', 'Spedizione aggiunta al carrello.');
+            ->with('ok', 'Spedizione aggiunta al carrello. I prezzi mostrati si riferiscono al pagamento con Wallet (a partire da).');
     }
 
     public function rimuovi(Request $request)
@@ -760,10 +802,7 @@ class CarrelloController extends Controller
         $totaleTrasportoSolo = round($totaleTrasportoSolo, 2);
         $totaleExtraServizi = round($totaleExtraServizi, 2);
 
-        $aliquotaIva = parametri_globali::query()
-            ->where('denominazione', 'Aliquota IVA')
-            ->attivoOggi()
-            ->value('valore_percentuale');
+        $aliquotaIva = parametri_globali::recordAttivo('Aliquota IVA')?->valore_percentuale;
         $aliquotaIva = $aliquotaIva !== null ? (float) $aliquotaIva : 22.0;
 
         $metodi = metodo_pagamento_ordine::query()
@@ -828,5 +867,99 @@ class CarrelloController extends Controller
         $request->session()->put('preventivo', $preventivo);
 
         return null;
+    }
+
+    private function dataRitiroPerCarrello(Request $request, int $corriereId): string
+    {
+        $corriere = corriere::query()->find($corriereId);
+        if (! RitiroCheckoutDomicilio::corriereRichiedeDataRitiro($corriere)) {
+            return '';
+        }
+
+        $data = trim((string) $request->input('data_ritiro', ''));
+        if ($data !== '' && RitiroDateSelezionabili::isValida($data, now())) {
+            return $data;
+        }
+
+        return RitiroDateSelezionabili::primoGiornoValido();
+    }
+
+    private function validaDataRitiroCheckout(Request $request, int $corriereId): ?string
+    {
+        $corriere = corriere::query()->find($corriereId);
+        if (! RitiroCheckoutDomicilio::corriereRichiedeDataRitiro($corriere)) {
+            return null;
+        }
+
+        $data = trim((string) $request->input('data_ritiro', ''));
+        if ($data === '') {
+            return null;
+        }
+
+        if (! RitiroDateSelezionabili::isValida($data, now())) {
+            return RitiroDateSelezionabili::messaggioErrore();
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $it
+     */
+    private function validaDataRitiroRigaCarrello(array $it, Request $request): ?string
+    {
+        $corriereId = (int) ($it['corriere_id'] ?? 0);
+        $corriere = $corriereId > 0 ? corriere::query()->find($corriereId) : null;
+        if (! RitiroCheckoutDomicilio::corriereRichiedeDataRitiro($corriere)) {
+            return null;
+        }
+
+        $data = $this->dataRitiroDaRigaCarrello($it, $request);
+        if ($data === '') {
+            return null;
+        }
+
+        if (! RitiroDateSelezionabili::isValida($data, now())) {
+            return RitiroDateSelezionabili::messaggioErrore();
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $it
+     */
+    private function dataRitiroDaRigaCarrello(array $it, Request $request): string
+    {
+        $data = trim((string) ($it['data_ritiro'] ?? ''));
+        if ($data === '') {
+            $data = trim((string) $request->input('data_ritiro', ''));
+        }
+
+        if ($data === '' && RitiroCheckoutDomicilio::corriereRichiedeDataRitiro($corriere)) {
+            return RitiroDateSelezionabili::primoGiornoValido();
+        }
+
+        return $data;
+    }
+
+    private function applicaDataRitiroSuSpedizione(
+        Request $request,
+        spedizione $spedizione,
+        ?corriere $corriere,
+        ?string $dataOverride = null,
+    ): void {
+        if (! RitiroCheckoutDomicilio::corriereRichiedeDataRitiro($corriere)) {
+            return;
+        }
+
+        $data = trim((string) ($dataOverride ?? $request->input('data_ritiro', '')));
+        if ($data === '' || ! RitiroDateSelezionabili::isValida($data, now())) {
+            $data = RitiroDateSelezionabili::primoGiornoValido();
+        }
+
+        $spedizione->forceFill([
+            'data_ritiro' => Carbon::parse($data)->startOfDay(),
+        ])->saveQuietly();
     }
 }

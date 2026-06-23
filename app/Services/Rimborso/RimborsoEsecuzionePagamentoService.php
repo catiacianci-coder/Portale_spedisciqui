@@ -21,6 +21,7 @@ final class RimborsoEsecuzionePagamentoService
 {
     public function __construct(
         private readonly RimborsoCreditoWalletService $wallet,
+        private readonly RimborsoVerificaEtichettaAnnullataService $verificaEtichetta,
     ) {}
 
     public function esegui(rimborso $rimborso, spedizione $spedizione, User $user): void
@@ -45,6 +46,8 @@ final class RimborsoEsecuzionePagamentoService
         if ($metodoWalletId === null) {
             throw new DomainException('Metodo rimborso wallet non configurato o disabilitato.');
         }
+
+        $this->verificaEtichetta->assertProntaPerPagamento($rimborso, $spedizione);
 
         $this->wallet->creditar($rimborso, $spedizione, $user);
 

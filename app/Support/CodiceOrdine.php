@@ -2,13 +2,14 @@
 
 namespace App\Support;
 
+/**
+ * Riferimento ordine: univoco = id numerico tabella ordinis (nessun prefisso).
+ */
 final class CodiceOrdine
 {
-    public const PREFIX = 'O';
-
     public static function format(int $id): string
     {
-        return self::PREFIX.$id;
+        return (string) $id;
     }
 
     public static function idDaRiferimento(string $raw): ?int
@@ -18,16 +19,17 @@ final class CodiceOrdine
             return null;
         }
 
-        if (preg_match('/^O(\d+)$/i', $raw, $m)) {
-            return (int) $m[1];
-        }
-
-        if (preg_match('/^ORS-(\d+)$/i', $raw, $m)) {
-            return (int) $m[1];
-        }
-
         if (ctype_digit($raw)) {
-            return (int) $raw;
+            $id = (int) $raw;
+
+            return $id > 0 ? $id : null;
+        }
+
+        // Compatibilità input legacy (es. O27 da bookmark o copia-incolla).
+        if (preg_match('/^O(\d+)$/i', $raw, $m)) {
+            $id = (int) $m[1];
+
+            return $id > 0 ? $id : null;
         }
 
         return null;

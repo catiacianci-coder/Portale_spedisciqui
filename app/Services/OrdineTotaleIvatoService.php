@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\metodo_pagamento_ordine;
 use App\Models\ordine;
 use App\Models\parametri_globali;
+use App\Support\OrdineTotaliPagamento;
 
 class OrdineTotaleIvatoService
 {
@@ -15,10 +16,7 @@ class OrdineTotaleIvatoService
             return (float) $raw;
         }
 
-        $v = parametri_globali::query()
-            ->where('denominazione', 'Aliquota IVA')
-            ->attivoOggi()
-            ->value('valore_percentuale');
+        $v = parametri_globali::recordAttivo('Aliquota IVA')?->valore_percentuale;
 
         return $v !== null ? (float) $v : 22.0;
     }
@@ -49,24 +47,7 @@ class OrdineTotaleIvatoService
      */
     public function totaliPerMetodo(ordine $ordine, int $metodoPagamentoOrdineId): array
     {
-        $metodo = metodo_pagamento_ordine::query()
-            ->where('abilitato', true)
-            ->findOrFail($metodoPagamentoOrdineId);
-
-        $netto = $this->nettoIvaEsc($ordine);
-        $aliquota = $this->aliquotaIvaPerOrdine($ordine);
-        $pct = (float) $metodo->commissioni;
-
-        $imponibile = round($netto * (1 + $pct / 100), 2);
-        $iva = round($imponibile * ($aliquota / 100), 2);
-        $totale = round($imponibile + $iva, 2);
-
-        return [
-            'imponibile' => $imponibile,
-            'iva' => $iva,
-            'totale' => $totale,
-            'commissioni_pct' => $pct,
-        ];
+        return OrdineTotaliPagamento::totaliPerMetodo($ordine, $metodoPagamentoOrdineId);
     }
 
     public function metodoIsWallet(int $metodoPagamentoOrdineId): bool
@@ -88,16 +69,5 @@ class OrdineTotaleIvatoService
         $m = metodo_pagamento_ordine::query()->find($metodoPagamentoOrdineId);
 
         return $m !== null && $m->isBonifico();
-    }
-
-    /** Sconto/commissione % wallet sugli ordini (da metodo_pagamento_ordinis). */
-    public function commissioniWalletOrdine(): float
-    {
-        $m = metodo_pagamento_ordine::query()
-            ->where('abilitato', true)
-            ->where('codice', 'wallet')
-            ->first();
-
-        return $m ? (float) $m->commissioni : -2.0;
     }
 }

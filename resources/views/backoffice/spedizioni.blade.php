@@ -26,6 +26,13 @@
         </div>
     @endif
 
+    @if (session('ok'))
+        <div class="sq-alert sq-alert--success sq-mb-16">{{ session('ok') }}</div>
+    @endif
+    @if (session('error'))
+        <div class="sq-alert sq-alert--error sq-mb-16">{{ session('error') }}</div>
+    @endif
+
     <form method="GET" action="{{ route('backoffice.spedizioni.index') }}" class="sq-filtri-form sq-bo-sped-form">
         <input type="hidden" name="cerca" value="1">
         <p class="sq-filtri-title">Ricerca veloce</p>
@@ -40,7 +47,7 @@
             </div>
             <div>
                 <label for="numero_ordine" class="sq-filtri-label">Numero ordine</label>
-                <input id="numero_ordine" name="numero_ordine" type="text" value="{{ $filtroNumeroOrdine }}" class="sq-filtri-email-input" placeholder="Numero o codice ordine">
+                <input id="numero_ordine" name="numero_ordine" type="text" value="{{ $filtroNumeroOrdine }}" class="sq-filtri-email-input" placeholder="ID ordine">
             </div>
             <div class="sq-filtri-actions">
                 <button type="submit" class="sq-filtri-submit">Cerca</button>
@@ -199,9 +206,9 @@
                 <tbody>
                     @forelse ($spedizioni as $s)
                     @php
-                        $isPagata = $s->ordine?->stato === \App\Models\ordine::STATO_PAGATO;
+                        $ordineSped = $s->ordine;
                         $serviziNomi = $s->serviziAggiuntiviRighe
-                            ->map(fn ($r) => $r->denominazione_servizio ?? $r->corriereServizioAggiuntivo?->testo_servizio)
+                            ->map(fn ($r) => \App\Support\ServizioAggiuntivoEtichetta::nomeTabella($r))
                             ->filter(fn ($v) => is_string($v) && trim($v) !== '')
                             ->unique()
                             ->values();
@@ -233,9 +240,9 @@
                         ], fn ($v) => $v !== '')));
                         $tipologia = $s->tipoSpedizione?->tipo_spedizione
                             ?? $tipiSpedizione->firstWhere('id', (int) ($s->tipo_id ?? 0))?->tipo_spedizione;
+                        $dettaglio = \App\Support\EtichetteListing::dettaglioPayloadBackoffice($s);
                         $etichettaCancellata = \App\Support\EtichettaSpedizioneAccess::etichettaCancellata($s);
-                        $etichettaStampabile = \App\Support\SpedisciOnlineIntegrazione::etichettaStampabile($s)
-                            || trim((string) $s->etiqueta_pdf_path) !== '';
+                        $ldvStampabile = (bool) ($dettaglio['etichetta_disponibile'] ?? false);
                         $mostraTracciaSendcloudBo = $s->corriereRecord
                             && \App\Support\PiattaformaCorriere::corriereUsaAcquistoSendcloud($s->corriereRecord)
                             && \App\Support\SendcloudIntegrazione::haTracciaApi($s);
@@ -245,7 +252,7 @@
                         <td class="sq-td sq-td--border-warm sq-text-muted">{{ $s->data_ritiro?->format('d/m/Y H:i') ?? '—' }}</td>
                         <td class="sq-td sq-td--border-warm">{{ $s->user?->email ?? '—' }}</td>
                         <td class="sq-td sq-td--border-warm">{{ $s->corriere ?? $s->corriereRecord?->nome_corriere ?? '—' }}</td>
-                        <td class="sq-td sq-td--border-warm">{{ $s->ordine?->codice ?? '—' }}</td>
+                        <td class="sq-td sq-td--border-warm">{{ $s->ordine_id ?? '—' }}</td>
                         <td class="sq-td sq-td--border-warm sq-text-14 sq-nowrap">
                             @if (filled($s->stripe_payment_intent_id))
                                 <code class="sq-code">{{ \Illuminate\Support\Str::limit($s->stripe_payment_intent_id, 24) }}</code>
@@ -269,13 +276,26 @@
                                 <span class="sq-badge sq-badge--muted" style="margin-top:4px;display:inline-block;">Etichetta cancellata</span>
                             @endif
                             <div class="sq-text-muted">TN:{{ $s->tracking ?: '-' }}</div>
-                            <div class="{{ $isPagata ? 'sq-text-muted' : 'sq-bo-sped-pay-no' }}">{{ $isPagata ? 'Pagato' : 'Non pagato' }}</div>
+                            @if ($ordineSped)
+                                <div class="{{ $ordineSped->classeCssStatoOrdineBo() }}">{{ $ordineSped->labelStatoOrdine() }}</div>
+                            @else
+                                <div class="sq-bo-ordini-stato sq-bo-ordini-stato--non-pagato">—</div>
+                            @endif
                         </td>
                         <td class="sq-td sq-td--border-warm sq-td--center">
                             <div class="sq-bo-sped-actions">
-                                @if ($etichettaStampabile)
+                                <button
+                                    type="button"
+                                    class="sq-btn-bo-ico js-etichetta-dettaglio-open"
+                                    title="Dettagli spedizione"
+                                    aria-label="Dettagli spedizione {{ $s->codice_interno }}"
+                                    data-dettaglio-url="{{ $dettaglio['dettaglio_url'] }}"
+                                >
+                                    <i class="fa-solid fa-circle-info"></i>
+                                </button>
+                                @if ($ldvStampabile && ! empty($dettaglio['etichetta_url']))
                                     <a
-                                        href="{{ route('backoffice.spedizioni.etichetta', $s) }}"
+                                        href="{{ $dettaglio['etichetta_url'] }}"
                                         class="sq-btn-bo-ico"
                                         target="_blank"
                                         rel="noopener noreferrer"
@@ -284,8 +304,12 @@
                                     >
                                         <i class="fa-solid fa-print"></i>
                                     </a>
-                                @elseif ($etichettaCancellata)
-                                    <span class="sq-btn-bo-ico is-disabled" title="Etichetta cancellata" aria-hidden="true">
+                                @else
+                                    <span
+                                        class="sq-btn-bo-ico is-disabled"
+                                        title="{{ $etichettaCancellata ? 'Etichetta cancellata' : 'Etichetta non disponibile' }}"
+                                        aria-hidden="true"
+                                    >
                                         <i class="fa-solid fa-print"></i>
                                     </span>
                                 @endif
@@ -294,7 +318,7 @@
                                     'trackingRoute' => 'backoffice.spedizioni.tracking',
                                     'btnClass' => 'sq-btn-bo-ico',
                                 ])
-                                <button type="button" class="sq-btn-bo-ico" title="Modifica" aria-label="Modifica spedizione">
+                                <button type="button" class="sq-btn-bo-ico is-disabled" title="Modifica (in arrivo)" aria-label="Modifica spedizione" disabled>
                                     <i class="fa-solid fa-pen"></i>
                                 </button>
                                 <button type="button" class="sq-btn-bo-ico sq-btn-bo-ico--danger" title="Elimina" aria-label="Elimina spedizione">
@@ -345,4 +369,5 @@
     })();
 </script>
 @include('partials.spedizione-tracking-popup')
+@include('etichette.partials.modal-dettaglio')
 @endsection

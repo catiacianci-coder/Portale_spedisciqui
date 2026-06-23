@@ -72,6 +72,41 @@ final class PreventivoColonnePagamento
         return round($prezzoBase * (1 + ($commissioniPct / 100)), 2);
     }
 
+    public static function commissioniPctMetodo(string $codice): float
+    {
+        $m = metodo_pagamento_ordine::query()
+            ->where('abilitato', true)
+            ->where('codice', $codice)
+            ->first();
+
+        return $m !== null ? (float) $m->commissioni : 0.0;
+    }
+
+    public static function prezzoTrasportoPerMetodo(float $prezzoBase, string $codice): float
+    {
+        return self::prezzoPerColonna(round(max(0, $prezzoBase), 2), self::commissioniPctMetodo($codice));
+    }
+
+    /**
+     * Allinea i prezzi trasporto riga carrello/ordine alle colonne preventivo (Bonifico / Wallet).
+     *
+     * @param  array<string, mixed>  $item
+     * @return array<string, mixed>
+     */
+    public static function applicaPrezziTrasportoSuRiga(array $item, float $baseTrasporto): array
+    {
+        $base = round(max(0, $baseTrasporto), 2);
+        $extra = round((float) ($item['extra_servizi_iva_esc'] ?? 0), 2);
+
+        $item['trasporto_base_iva_esc'] = $base;
+        $item['trasporto_iva_esc'] = self::prezzoTrasportoPerMetodo($base, MetodoPagamentoCodice::BONIFICO);
+        $item['trasporto_wallet_iva_esc'] = self::prezzoTrasportoPerMetodo($base, MetodoPagamentoCodice::WALLET);
+        $item['netto_iva_esc'] = round($item['trasporto_iva_esc'] + $extra, 2);
+        $item['netto_wallet_iva_esc'] = round($item['trasporto_wallet_iva_esc'] + $extra, 2);
+
+        return $item;
+    }
+
     /**
      * @param  array<int, array{id: int, nome: string, codice: string}>  $metodi
      * @return array<int, string>

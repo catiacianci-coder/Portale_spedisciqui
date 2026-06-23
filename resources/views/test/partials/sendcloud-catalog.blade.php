@@ -16,7 +16,7 @@
     Elenco da <code class="sq-code">POST {{ $apiBase }}/shipping-options</code>
     con i valori predefiniti del form (IT → IT, <code class="sq-code">calculate_quotes: true</code>).
     @if (($valoreAssicurazioneTest ?? 0) > 0)
-        Assicurazione test: <strong>{{ number_format((float) $valoreAssicurazioneTest, 2, ',', '.') }} €</strong>.
+        Assicurazione test: <strong>{{ \App\Support\ImportoEuro::format((float) $valoreAssicurazioneTest) }}</strong>.
     @endif
     @if ($catalogLoaded ?? false)
         HTTP <strong>{{ $catalogHttpStatus ?? '—' }}</strong>

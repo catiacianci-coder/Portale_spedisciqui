@@ -59,48 +59,33 @@ final class TrackingEventoVerifica
      */
     public static function eventiDaResponseLiccardi(array $responseBody): array
     {
-        foreach (['events', 'trackingEvents', 'eventi', 'tracking'] as $key) {
-            $list = $responseBody[$key] ?? null;
-            if (! is_array($list) || $list === []) {
+        return self::eventiDaResponseSpedisciOnline($responseBody);
+    }
+
+    /**
+     * Risposta GET /tracking/{ldv} su Spedisci.online (tenant eamulti / liccardi).
+     *
+     * @param  array<string, mixed>  $responseBody
+     * @return array<int, array{status: string, data: string}>
+     */
+    public static function eventiDaResponseSpedisciOnline(array $responseBody): array
+    {
+        $eventi = SpedisciOnlineTrackingParser::eventi($responseBody);
+        $out = [];
+
+        foreach ($eventi as $ev) {
+            $status = trim((string) ($ev['status'] ?? ''));
+            if ($status === '') {
                 continue;
             }
-
-            if (! array_is_list($list)) {
-                $list = [$list];
-            }
-
-            $out = [];
-            foreach ($list as $ev) {
-                if (! is_array($ev)) {
-                    continue;
-                }
-                $status = trim((string) (
-                    $ev['eventDescription']
-                    ?? $ev['description']
-                    ?? $ev['statusDescription']
-                    ?? $ev['status']
-                    ?? ''
-                ));
-                if ($status === '') {
-                    continue;
-                }
-                $out[] = [
-                    'status' => $status,
-                    'data' => (string) ($ev['eventDateTime'] ?? $ev['event_at'] ?? $ev['date'] ?? ''),
-                ];
-            }
-
-            if ($out !== []) {
-                return $out;
-            }
+            $luogo = trim((string) ($ev['luogo'] ?? ''));
+            $out[] = [
+                'status' => SpedisciOnlineTrackingParser::etichettaCliente($status, $luogo),
+                'data' => (string) ($ev['data'] ?? ''),
+            ];
         }
 
-        $stato = trim((string) ($responseBody['status'] ?? $responseBody['statusDescription'] ?? ''));
-        if ($stato === '') {
-            return [];
-        }
-
-        return [['status' => $stato, 'data' => (string) ($responseBody['eventDateTime'] ?? '')]];
+        return $out;
     }
 
     /**

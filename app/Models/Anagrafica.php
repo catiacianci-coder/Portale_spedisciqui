@@ -30,12 +30,16 @@ class Anagrafica extends Model
         'telefono',
         'pec',
         'codice_sdi',
+        'sede_liccardi',
+        'varie_1',
+        'varie_2',
     ];
 
     protected function casts(): array
     {
         return [
             'attivo' => 'boolean',
+            'sede_liccardi' => 'boolean',
         ];
     }
 

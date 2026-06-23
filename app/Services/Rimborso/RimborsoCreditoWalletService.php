@@ -7,14 +7,9 @@ use App\Models\spedizione;
 use App\Models\User;
 use App\Models\wallet_descrizione;
 use App\Models\wallet_movimento;
-use App\Services\WalletSaldoService;
 
 final class RimborsoCreditoWalletService
 {
-    public function __construct(
-        private readonly WalletSaldoService $walletSaldo,
-    ) {}
-
     public function creditar(rimborso $rimborso, spedizione $spedizione, User $user): void
     {
         $descr = wallet_descrizione::query()
@@ -27,16 +22,28 @@ final class RimborsoCreditoWalletService
         }
 
         $importo = round((float) $rimborso->valore, 2);
-        $mov = wallet_movimento::create([
+        $riferimento = (string) ($spedizione->codice_interno ?? $rimborso->token ?? '');
+
+        $giaAccreditato = wallet_movimento::query()
+            ->where('user_id', $user->id)
+            ->where('wallet_descrizione_id', $descr->id)
+            ->where('ordine_id', $rimborso->ordine_id)
+            ->where('riferimento', $riferimento)
+            ->where('importo', $importo)
+            ->exists();
+
+        if ($giaAccreditato) {
+            return;
+        }
+
+        wallet_movimento::create([
             'user_id' => $user->id,
             'tipo' => 'credito',
             'wallet_descrizione_id' => $descr->id,
             'importo' => $importo,
             'data_movimento' => now(),
-            'riferimento' => (string) ($spedizione->codice_interno ?? $rimborso->token ?? ''),
+            'riferimento' => $riferimento,
             'ordine_id' => $rimborso->ordine_id,
         ]);
-
-        $this->walletSaldo->applicaMovimento($mov);
     }
 }

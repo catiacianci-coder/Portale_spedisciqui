@@ -69,7 +69,6 @@ final class OrdineTotaliPagamento
             $righe = [];
         }
 
-        $aliquota = TariffaSpedizioneClienteIvato::aliquotaIva($ordine);
         $netto = 0.0;
         foreach ($righe as $riga) {
             if (! is_array($riga)) {
@@ -87,10 +86,6 @@ final class OrdineTotaliPagamento
             ? round((float) ($ordine->total_pagamento_wallet ?? 0), 2)
             : round((float) ($ordine->total_pagamento ?? 0), 2);
 
-        if ($totale <= 0 && $netto > 0) {
-            $totale = TariffaSpedizioneClienteIvato::calcolaDaNetto($netto, $aliquota, 0);
-        }
-
         $imponibile = $netto;
         $iva = round(max(0, $totale - $imponibile), 2);
 
@@ -102,7 +97,7 @@ final class OrdineTotaliPagamento
     }
 
     /**
-     * Totali per metodo pagamento: usa valori salvati su ordine quando disponibili.
+     * Totali ivato per metodo pagamento: importo da ordine salvato (nessun ricalcolo).
      *
      * @return array{imponibile: float, iva: float, totale: float, commissioni_pct: float}
      */
@@ -112,31 +107,14 @@ final class OrdineTotaliPagamento
             ->where('abilitato', true)
             ->findOrFail($metodoPagamentoOrdineId);
 
-        $totaleSvc = app(OrdineTotaleIvatoService::class);
+        $wallet = app(OrdineTotaleIvatoService::class)->metodoIsWallet($metodoPagamentoOrdineId);
+        $b = self::breakdownSalvato($ordine, $wallet);
 
-        if ($totaleSvc->metodoIsWallet($metodoPagamentoOrdineId)
-            && (float) ($ordine->total_pagamento_wallet ?? 0) > 0) {
-            $b = self::breakdownSalvato($ordine, true);
-
-            return [
-                'imponibile' => $b['imponibile'],
-                'iva' => $b['iva'],
-                'totale' => $b['totale'],
-                'commissioni_pct' => (float) $metodo->commissioni,
-            ];
-        }
-
-        if ((float) ($ordine->total_pagamento ?? 0) > 0 && (float) $metodo->commissioni === 0.0) {
-            $b = self::breakdownSalvato($ordine, false);
-
-            return [
-                'imponibile' => $b['imponibile'],
-                'iva' => $b['iva'],
-                'totale' => $b['totale'],
-                'commissioni_pct' => (float) $metodo->commissioni,
-            ];
-        }
-
-        return $totaleSvc->totaliPerMetodo($ordine, $metodoPagamentoOrdineId);
+        return [
+            'imponibile' => $b['imponibile'],
+            'iva' => $b['iva'],
+            'totale' => $b['totale'],
+            'commissioni_pct' => (float) $metodo->commissioni,
+        ];
     }
 }

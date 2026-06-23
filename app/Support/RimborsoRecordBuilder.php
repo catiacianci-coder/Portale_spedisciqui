@@ -24,9 +24,13 @@ final class RimborsoRecordBuilder
         $dataRichiesta = now();
         $dataPrevista = RimborsoCalendario::dataPrevistaDiasUteis($dataRichiesta, $giorni);
 
-        $ivato = $spedizione->prezzoClienteIvato();
+        if ($spedizione->ordine?->stato !== ordine::STATO_PAGATO) {
+            throw new DomainException('Solo le spedizioni di ordini pagati possono essere rimborsate.');
+        }
+
+        $ivato = SpedizioneCampiPersistenza::pagEffettivoSp($spedizione);
         if ($ivato === null || $ivato <= 0) {
-            throw new DomainException('Impossibile calcolare l’importo del rimborso per questa spedizione.');
+            throw new DomainException('Importo pagato non disponibile (pag_effettivo_sp mancante sulla tariffa spedizione).');
         }
 
         $stripePi = self::paymentIntentDaSpedizione($spedizione);

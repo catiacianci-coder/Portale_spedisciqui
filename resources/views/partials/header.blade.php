@@ -16,19 +16,24 @@
             </a>
         @endguest
 
-        <a href="{{ route('politica.rimborso') }}" class="sq-header-link">Politica di rimborso</a>
-        <a href="{{ route('termini.legali') }}" class="sq-header-link">Termini e Condizioni</a>
-        <a href="{{ route('politica.privacy') }}" class="sq-header-link">Privacy Policy</a>
-        <a href="{{ route('faq.index') }}" class="sq-header-link">FAQ</a>
-        @auth
-            @if(auth()->user()->hasVerifiedEmail())
-                <a href="{{ route('assistenza.index') }}" class="sq-header-link">Assistenza</a>
-            @else
-                <a href="https://spedisciqui.zendesk.com/hc/it" class="sq-header-link" target="_blank" rel="noopener noreferrer">Centrale di Assistenza</a>
-            @endif
-        @else
-            <a href="https://spedisciqui.zendesk.com/hc/it" class="sq-header-link" target="_blank" rel="noopener noreferrer">Centrale di Assistenza</a>
-        @endauth
+        <details class="sq-header-nav-menu">
+            <summary>Info</summary>
+            <div class="sq-header-nav-menu-body">
+                <a href="{{ route('politica.rimborso') }}" class="sq-header-link">Politica di rimborso</a>
+                <a href="{{ route('termini.legali') }}" class="sq-header-link">Termini e Condizioni</a>
+                <a href="{{ route('politica.privacy') }}" class="sq-header-link">Privacy Policy</a>
+                <a href="{{ route('faq.index') }}" class="sq-header-link">FAQ</a>
+                @auth
+                    @if(auth()->user()->hasVerifiedEmail())
+                        <a href="{{ route('assistenza.index') }}" class="sq-header-link">Assistenza</a>
+                    @else
+                        <a href="https://spedisciqui.zendesk.com/hc/it" class="sq-header-link" target="_blank" rel="noopener noreferrer">Centrale di Assistenza</a>
+                    @endif
+                @else
+                    <a href="https://spedisciqui.zendesk.com/hc/it" class="sq-header-link" target="_blank" rel="noopener noreferrer">Centrale di Assistenza</a>
+                @endauth
+            </div>
+        </details>
     </div>
 
     {{-- Destra: nome + wallet, carrello, esci / entra --}}
@@ -38,7 +43,7 @@
                 <span class="sq-header-user-name" title="{{ e(auth()->user()->headerDisplayName()) }}">{{ e(auth()->user()->headerDisplayNameShort()) }}</span>
                 @if(auth()->user()->hasVerifiedEmail())
                     <a href="{{ route('wallet.ricarica') }}" class="sq-header-link sq-header-link--brand">
-                        Wallet ({{ number_format((float) (auth()->user()->walletSaldo?->saldo ?? 0), 2, ',', '.') }}&nbsp;€)
+                        Wallet ({{ \App\Support\ImportoEuro::format((float) (auth()->user()->walletSaldo?->saldo ?? 0)) }})
                     </a>
                 @endif
             </div>

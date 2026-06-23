@@ -15,6 +15,7 @@ class stato_spedizione extends Model
 
     public const GENERATA = 3;
 
+    /** In tabella stato_spedizionis id=4, denominazione «in attesa di rimborso». */
     public const ANNULLATA = 4;
 
     public const RIMBORSATA = 5;

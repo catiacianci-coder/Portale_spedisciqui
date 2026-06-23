@@ -66,8 +66,31 @@ final class LiccardiVolumeSconto
     }
 
     /**
+     * Trasporto base a prezzo pieno (prima dello sconto volume), IVA esclusa.
+     *
+     * @param  array<string, mixed>  $item
+     */
+    public static function trasportoPieno(array $item): float
+    {
+        if (isset($item['trasporto_base_iva_esc_originale']) && $item['trasporto_base_iva_esc_originale'] !== '') {
+            return round((float) $item['trasporto_base_iva_esc_originale'], 2);
+        }
+
+        if (isset($item['trasporto_iva_esc_originale']) && $item['trasporto_iva_esc_originale'] !== '') {
+            return round((float) $item['trasporto_iva_esc_originale'], 2);
+        }
+
+        $base = round((float) ($item['trasporto_base_iva_esc'] ?? $item['trasporto_iva_esc'] ?? 0), 2);
+        $scontoGia = (float) ($item['liccardi_volume_sconto_eur'] ?? 0);
+        if ($scontoGia > 0) {
+            return round($base + $scontoGia, 2);
+        }
+
+        return $base;
+    }
+
+    /**
      * Applica lo sconto sulle righe Liccardi se il carrello/ordine ne contiene ≥ MIN_SPEDIZIONI.
-     * Presuppone che ogni riga abbia già `trasporto_iva_esc`, `extra_servizi_iva_esc` e `netto_iva_esc`.
      *
      * @param  array<int, array<string, mixed>>  $items
      * @return array{
@@ -77,52 +100,29 @@ final class LiccardiVolumeSconto
      *     sconto_totale: float
      * }
      */
-  /**
-     * Trasporto a prezzo pieno (prima dello sconto volume), anche se la riga è già scontata.
-     *
-     * @param  array<string, mixed>  $item
-     */
-    public static function trasportoPieno(array $item): float
-    {
-        if (isset($item['trasporto_iva_esc_originale']) && $item['trasporto_iva_esc_originale'] !== '') {
-            return round((float) $item['trasporto_iva_esc_originale'], 2);
-        }
-
-        $trasporto = round((float) ($item['trasporto_iva_esc'] ?? 0), 2);
-        $scontoGia = (float) ($item['liccardi_volume_sconto_eur'] ?? 0);
-        if ($scontoGia > 0) {
-            return round($trasporto + $scontoGia, 2);
-        }
-
-        return $trasporto;
-    }
-
     public static function applicaAlCarrello(array $items): array
     {
         foreach ($items as $i => $item) {
+            $basePieno = self::trasportoPieno($item);
+
             if (! self::isRigaLiccardi($item)) {
                 unset(
                     $items[$i]['liccardi_volume_sconto_eur'],
+                    $items[$i]['trasporto_base_iva_esc_originale'],
                     $items[$i]['trasporto_iva_esc_originale'],
                     $items[$i]['trasporto_wallet_iva_esc_originale'],
                 );
-                $items[$i] = CarrelloPrezziWallet::sincronizzaDaTrasporto(
-                    $items[$i],
-                    (float) ($items[$i]['trasporto_iva_esc'] ?? 0),
-                );
+                $items[$i] = PreventivoColonnePagamento::applicaPrezziTrasportoSuRiga($items[$i], $basePieno);
                 continue;
             }
 
-            $pieno = self::trasportoPieno($item);
-            $extra = (float) ($item['extra_servizi_iva_esc'] ?? 0);
-            $trasportoWalletPieno = CarrelloPrezziWallet::trasportoWalletDaStandard($pieno);
-            $items[$i]['trasporto_iva_esc_originale'] = $pieno;
-            $items[$i]['trasporto_wallet_iva_esc_originale'] = $trasportoWalletPieno;
-            $items[$i]['trasporto_iva_esc'] = $pieno;
-            $items[$i]['trasporto_wallet_iva_esc'] = $trasportoWalletPieno;
-            $items[$i]['netto_iva_esc'] = round($pieno + $extra, 2);
-            $items[$i]['netto_wallet_iva_esc'] = round($trasportoWalletPieno + $extra, 2);
-            unset($items[$i]['liccardi_volume_sconto_eur']);
+            unset(
+                $items[$i]['liccardi_volume_sconto_eur'],
+                $items[$i]['trasporto_base_iva_esc_originale'],
+                $items[$i]['trasporto_iva_esc_originale'],
+                $items[$i]['trasporto_wallet_iva_esc_originale'],
+            );
+            $items[$i] = PreventivoColonnePagamento::applicaPrezziTrasportoSuRiga($items[$i], $basePieno);
         }
 
         $righeLiccardi = self::contaRigheLiccardi($items);
@@ -143,18 +143,13 @@ final class LiccardiVolumeSconto
                 continue;
             }
 
-            $trasporto = (float) ($item['trasporto_iva_esc'] ?? 0);
-            $trasportoWallet = (float) ($item['trasporto_wallet_iva_esc'] ?? CarrelloPrezziWallet::trasportoWalletDaStandard($trasporto));
-            $extra = (float) ($item['extra_servizi_iva_esc'] ?? 0);
-            $sconto = self::importoScontoSuTrasporto($trasporto);
-            $trasportoScontato = self::trasportoScontato($trasporto);
-            $trasportoWalletScontato = self::trasportoScontato($trasportoWallet);
+            $basePieno = self::trasportoPieno($item);
+            $sconto = self::importoScontoSuTrasporto($basePieno);
+            $baseScontato = self::trasportoScontato($basePieno);
 
             $items[$i]['liccardi_volume_sconto_eur'] = $sconto;
-            $items[$i]['trasporto_iva_esc'] = $trasportoScontato;
-            $items[$i]['trasporto_wallet_iva_esc'] = $trasportoWalletScontato;
-            $items[$i]['netto_iva_esc'] = round($trasportoScontato + $extra, 2);
-            $items[$i]['netto_wallet_iva_esc'] = round($trasportoWalletScontato + $extra, 2);
+            $items[$i]['trasporto_base_iva_esc_originale'] = $basePieno;
+            $items[$i] = PreventivoColonnePagamento::applicaPrezziTrasportoSuRiga($items[$i], $baseScontato);
 
             $scontoTotale += $sconto;
         }
@@ -170,6 +165,6 @@ final class LiccardiVolumeSconto
     public static function messaggioPreventivo(): string
     {
         return 'Ordinando almeno '.self::MIN_SPEDIZIONI.' spedizioni Liccardi nello stesso ordine (ritiro), '
-            .'risparmi '.number_format(self::EURO_PER_SPEDIZIONE, 2, ',', '.').' € su ogni spedizione.';
+            .'risparmi '.\App\Support\ImportoEuro::format(self::EURO_PER_SPEDIZIONE).' su ogni spedizione.';
     }
 }

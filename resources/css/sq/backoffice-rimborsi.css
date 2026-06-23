@@ -38,7 +38,7 @@
 
 .sq-bo-reemb-hub-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
     gap: 22px;
     margin-top: 8px;
 }
@@ -194,11 +194,12 @@
 }
 
 .sq-bo-reemb-table th {
-    font-size: 0.72em;
+    font-size: var(--sq-table-head-font-size);
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: #64748b;
-    font-weight: 700;
+    letter-spacing: var(--sq-table-head-letter-spacing);
+    color: var(--sq-table-head-text);
+    font-weight: var(--sq-table-head-font-weight);
+    background: var(--sq-table-head-bg);
 }
 
 .sq-bo-reemb-table .sq-td-muted {
@@ -223,6 +224,17 @@
     font-weight: 600;
     font-size: 11px;
     margin-top: 2px;
+}
+
+.sq-bo-reemb-tag-manuale {
+    margin-top: 4px;
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    background: #dc2626;
 }
 
 .sq-bo-reemb-empty {
@@ -280,4 +292,32 @@
     background: var(--sq-brand);
     color: #fff;
     border-color: var(--sq-brand);
+}
+
+.sq-bo-reemb-row--evidenziato,
+tr.sq-bo-reemb-row--evidenziato {
+    background: #fef2f2;
+}
+
+.sq-bo-reemb-trasf-filtri {
+    margin-top: 4px;
+}
+
+.sq-bo-reemb-trasf-bonifico-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    max-width: 320px;
+}
+
+.sq-bo-reemb-trasf-iban {
+    min-width: 160px;
+    font-family: ui-monospace, monospace;
+    font-size: 12px;
+}
+
+.sq-bo-reemb-trasf-benef {
+    min-width: 120px;
+    font-size: 12px;
 }

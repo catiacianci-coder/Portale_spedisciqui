@@ -9,6 +9,7 @@ use App\Http\Controllers\PoliticaPrivacyController;
 use App\Http\Controllers\PoliticaRimborsoController;
 use App\Http\Controllers\PreventiviController;
 use App\Http\Controllers\SimulazioneController;
+use App\Http\Controllers\TariffeScontateController;
 use App\Http\Controllers\TerminiLegaliController;
 use App\Http\Controllers\VincoliSpedizioneController;
 use Illuminate\Support\Facades\Route;
@@ -44,6 +45,8 @@ Route::post('/checkout/quote-servizio', [CheckoutController::class, 'quoteServiz
 Route::get('/carrello', [CarrelloController::class, 'index'])->name('carrello.index');
 Route::post('/carrello/aggiungi', [CarrelloController::class, 'aggiungi'])->name('carrello.aggiungi');
 Route::post('/carrello/rimuovi', [CarrelloController::class, 'rimuovi'])->name('carrello.rimuovi');
+
+Route::get('/tariffe-scontate', [TariffeScontateController::class, 'index'])->name('tariffe_scontate.index');
 
 Route::get('/termini-legali', TerminiLegaliController::class)->name('termini.legali');
 Route::get('/politica-privacy', PoliticaPrivacyController::class)->name('politica.privacy');

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\corriere;
+use App\Models\servizi_aggiuntivi;
 use App\Models\spedizione;
 use App\Models\stato_spedizione;
 use App\Services\Etichetta\EtichettaRetryService;
@@ -20,11 +22,31 @@ class EtichetteClienteController extends Controller
     {
         $uid = (int) $request->user()->id;
         $perPage = FiltriTabella::perPage($request);
-        $periodo = FiltriTabella::periodoDaRequest($request, 'tutti', ['tutti']);
+        $periodo = FiltriTabella::periodoDaRequest($request, 'tutti', ['tutti'], true);
+        $ordinamento = FiltriTabella::ordinamentoEtichetteDaRequest($request);
 
         $codiceEtichetta = trim((string) $request->input('codice_etichetta', ''));
         $numeroOrdine = trim((string) $request->input('numero_ordine', ''));
         $destinatario = trim((string) $request->input('destinatario', ''));
+        $statiEtichette = stato_spedizione::query()
+            ->where('id', '!=', stato_spedizione::NON_PAGATA)
+            ->orderBy('id')
+            ->get(['id', 'denominazione_stato']);
+        $statiAmmessi = $statiEtichette->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $filtroStatusRaw = trim((string) $request->input('status', ''));
+        $filtroStatus = ($filtroStatusRaw !== '' && ctype_digit($filtroStatusRaw))
+            ? (int) $filtroStatusRaw
+            : null;
+
+        $corriereRaw = trim((string) $request->input('corriere_id', ''));
+        $filtroCorriere = ($corriereRaw !== '' && ctype_digit($corriereRaw))
+            ? (int) $corriereRaw
+            : null;
+
+        $servizioRaw = trim((string) $request->input('servizio_aggiuntivo_id', ''));
+        $filtroServizioAggiuntivo = ($servizioRaw !== '' && ctype_digit($servizioRaw))
+            ? (int) $servizioRaw
+            : null;
 
         if (strlen($destinatario) > 160) {
             $destinatario = substr($destinatario, 0, 160);
@@ -44,14 +66,22 @@ class EtichetteClienteController extends Controller
             ->where('user_id', $uid)
             ->where('spedizione_stato_id', '!=', stato_spedizione::NON_PAGATA)
             ->whereHas('ordine', fn ($q) => $q->conPagamentoRegistrato())
-            ->with($with)
-            ->orderByDesc('id');
+            ->with($with);
+
+        FiltriTabella::applicaOrdinamentoEtichetteCliente(
+            $query,
+            $ordinamento['column'],
+            $ordinamento['dir'],
+        );
 
         if ($periodo['errors'] === []) {
             FiltriTabella::applicaFiltroDataPagamentoOrdine($query, $periodo['from'], $periodo['to']);
         }
 
         FiltriTabella::filtraEtichetteCliente($query, $codiceEtichetta, $numeroOrdine, $destinatario);
+        FiltriTabella::filtraCorriereSpedizione($query, $filtroCorriere);
+        FiltriTabella::filtraStatoSpedizione($query, $filtroStatus, $statiAmmessi);
+        FiltriTabella::filtraServizioAggiuntivoEtichetta($query, $filtroServizioAggiuntivo);
 
         $spedizioni = $query->paginate($perPage)->withQueryString();
 
@@ -71,6 +101,23 @@ class EtichetteClienteController extends Controller
             ->values()
             ->take(80);
 
+        $corrieriFiltro = corriere::query()
+            ->whereIn('id', spedizione::query()
+                ->where('user_id', $uid)
+                ->where('spedizione_stato_id', '!=', stato_spedizione::NON_PAGATA)
+                ->whereNotNull('id_codice_servizio')
+                ->distinct()
+                ->select('id_codice_servizio'))
+            ->orderBy('nome_visualizzato')
+            ->orderBy('nome_corriere')
+            ->get(['id', 'nome_visualizzato', 'nome_corriere']);
+
+        $serviziAggiuntiviFiltro = servizi_aggiuntivi::query()
+            ->whereNotNull('abbrev')
+            ->where('abbrev', '!=', '')
+            ->orderBy('denominazione_servizio')
+            ->get(['id', 'denominazione_servizio', 'abbrev']);
+
         return view('etichette.index', [
             'spedizioni' => $spedizioni,
             'perPage' => $perPage,
@@ -80,8 +127,22 @@ class EtichetteClienteController extends Controller
             'filtroCodiceEtichetta' => $codiceEtichetta,
             'filtroNumeroOrdine' => $numeroOrdine,
             'filtroDestinatario' => $destinatario,
+            'filtroStatus' => $filtroStatus !== null ? (string) $filtroStatus : '',
+            'filtroCorriere' => $filtroCorriere !== null ? (string) $filtroCorriere : '',
+            'filtroServizioAggiuntivo' => $filtroServizioAggiuntivo !== null ? (string) $filtroServizioAggiuntivo : '',
+            'statiEtichette' => $statiEtichette,
+            'corrieriFiltro' => $corrieriFiltro,
+            'serviziAggiuntiviFiltro' => $serviziAggiuntiviFiltro,
             'filtroErrors' => $periodo['errors'],
-            'queryParams' => FiltriTabella::parametriQuery($request),
+            'sortColumn' => $ordinamento['column'],
+            'sortDir' => $ordinamento['dir'],
+            'queryParams' => array_merge(
+                FiltriTabella::parametriQuery($request),
+                [
+                    'sort' => $ordinamento['column'],
+                    'dir' => $ordinamento['dir'],
+                ],
+            ),
             'suggerimentiDestinatario' => $suggerimentiDestinatario,
         ]);
     }

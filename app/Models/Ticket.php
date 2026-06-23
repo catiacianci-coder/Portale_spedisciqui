@@ -98,23 +98,41 @@ class Ticket extends Model
         return $this->messaggi()->orderByDesc('id')->first();
     }
 
-    /** ID spedizioni citate (spedizione_id, campo_2, ID in campo_1) per il back office. */
+    /** ID spedizioni citate (spedizione_id, campo_2 entrega, ID in campo_1 multi). */
     public function referencedSpedizioneIds(): array
     {
         $ids = [];
         if ($this->spedizione_id) {
             $ids[] = (int) $this->spedizione_id;
         }
-        $c2 = trim((string) ($this->campo_2 ?? ''));
-        if ($c2 !== '' && ctype_digit($c2)) {
-            $ids[] = (int) $c2;
+
+        $codigo = $this->tipoProblema?->codigo;
+
+        if ($codigo === TicketTipoProblema::CODIGO_ENTREGA) {
+            $c2 = trim((string) ($this->campo_2 ?? ''));
+            if ($c2 !== '' && ctype_digit($c2)) {
+                $ids[] = (int) $c2;
+            }
+
+            return array_values(array_unique($ids));
         }
-        $c1 = trim((string) ($this->campo_1 ?? ''));
-        if ($c1 !== '') {
-            foreach (explode(',', $c1) as $part) {
-                $n = (int) trim($part);
-                if ($n > 0) {
-                    $ids[] = $n;
+
+        if (in_array($codigo, [
+            TicketTipoProblema::CODIGO_ETIQUETA_NAO_GERADA,
+            TicketTipoProblema::CODIGO_TRACKING,
+            TicketTipoProblema::CODIGO_RIPRENOTAZIONE_RITIRO,
+        ], true)) {
+            $c1 = trim((string) ($this->campo_1 ?? ''));
+            if ($c1 !== '') {
+                if (str_contains($c1, ',')) {
+                    foreach (explode(',', $c1) as $part) {
+                        $n = (int) trim($part);
+                        if ($n > 0) {
+                            $ids[] = $n;
+                        }
+                    }
+                } elseif (ctype_digit($c1)) {
+                    $ids[] = (int) $c1;
                 }
             }
         }
