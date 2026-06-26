@@ -48,12 +48,13 @@
                         <div class="sq-ordini-actions-icons">
                             @if ($mostraCestino)
                                 <form method="POST" action="{{ route('rimborso-etichette.solicitar') }}"
-                                      class="sq-rimborso-trash-form"
+                                      class="sq-rimborso-action-form"
                                       onsubmit="return confirm('Confermi la richiesta di rimborso per {{ e($s->codice_interno) }}?');">
                                     @csrf
                                     <input type="hidden" name="spedizione_id" value="{{ $s->id }}">
-                                    <button type="submit" class="sq-ordini-icon-action sq-ordini-icon-action--remove" title="Richiedi rimborso" aria-label="Richiedi rimborso">
-                                        <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                                    <button type="submit" class="sq-rimborso-richiedi-btn" title="Richiedi rimborso" aria-label="Richiedi rimborso per {{ e($s->codice_interno) }}">
+                                        <i class="fa-solid fa-hand-holding-dollar" aria-hidden="true"></i>
+                                        <span>Richiedi</span>
                                     </button>
                                 </form>
                             @endif

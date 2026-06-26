@@ -30,6 +30,6 @@ class ProfiloPasswordController extends Controller
 
         return redirect()
             ->route('profilo.password')
-            ->with('ok', 'Password aggiornata correttamente.');
+            ->with('password_saved', true);
     }
 }

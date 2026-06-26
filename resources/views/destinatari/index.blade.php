@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="sq-page-preventivi sq-mb-24">
+<div class="sq-page-preventivi sq-mb-24 sq-rubrica-destinatari-page">
     <h1 class="sq-h1-carrello sq-mb-12">Rubrica destinatari</h1>
     <p class="sq-text-muted sq-m-0 sq-mb-18">
-        Destinatari salvati: puoi richiamarli dalla pagina <strong>Indirizzi</strong> durante una spedizione, oppure salvarne uno nuovo spuntando l’opzione in fondo al modulo.
+        Destinatari salvati: puoi richiamarli dalla pagina <strong>Indirizzi</strong> durante una spedizione.
     </p>
 
     @if (session('ok'))
@@ -18,8 +18,8 @@
     @if ($destinatari->isEmpty())
         <p class="sq-text-muted">Nessun destinatario salvato.</p>
     @else
-        <div class="sq-table-wrap">
-            <table class="sq-table">
+        <div class="sq-table-wrap sq-rubrica-destinatari-table-wrap">
+            <table class="sq-table sq-rubrica-destinatari-table">
                 <thead>
                     <tr class="sq-thead-row sq-thead-row--neutral">
                         <th class="sq-th">Riferimento</th>
@@ -31,22 +31,22 @@
                 <tbody>
                     @foreach ($destinatari as $d)
                         <tr>
-                            <td class="sq-td">
+                            <td class="sq-td sq-rubrica-riferimento" data-label="Riferimento">
                                 <div class="sq-fw-700">{{ $d->denominazione_ragione_sociale ?: trim($d->nome.' '.$d->cognome) ?: '—' }}</div>
                                 @if ($d->denominazione_ragione_sociale && trim($d->nome.$d->cognome) !== '')
                                     <div class="sq-text-muted sq-text-13">{{ trim($d->nome.' '.$d->cognome) }}</div>
                                 @endif
                             </td>
-                            <td class="sq-td sq-td--muted">
+                            <td class="sq-td sq-td--muted" data-label="Indirizzo">
                                 {{ $d->indirizzo }} {{ $d->civico }}<br>
                                 {{ $d->cap }} {{ $d->citta }} ({{ $d->provincia }})
                             </td>
-                            <td class="sq-td sq-td--muted sq-text-13">
+                            <td class="sq-td sq-td--muted sq-text-13" data-label="Contatti">
                                 {{ $d->telefono }}<br>
                                 {{ $d->email }}
                             </td>
-                            <td class="sq-td sq-td--right">
-                                <div class="sq-ordini-actions-icons" style="flex-wrap:wrap;max-width:200px;margin-left:auto;">
+                            <td class="sq-td sq-td--right" data-label="Azioni">
+                                <div class="sq-ordini-actions-icons sq-rubrica-azioni">
                                     <a href="{{ route('destinatari.edit', $d) }}" class="sq-ordini-icon-action sq-ordini-icon-action--view" title="Modifica"><i class="fa-solid fa-pen" aria-hidden="true"></i></a>
                                     <form method="POST" action="{{ route('destinatari.duplica', $d) }}" class="sq-ordini-pay-form-inline">@csrf
                                         <button type="submit" class="sq-ordini-icon-action sq-ordini-icon-action--view" title="Duplica"><i class="fa-regular fa-copy" aria-hidden="true"></i></button>

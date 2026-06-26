@@ -2,6 +2,9 @@
     /** @var \Illuminate\Contracts\Pagination\LengthAwarePaginator|\Illuminate\Support\Collection $linhas */
     $linhas = $linhas ?? collect();
     $showUsuarioColumn = $showUsuarioColumn ?? false;
+    $showNotaInterna = $showNotaInterna ?? false;
+    $editNotaInterna = $editNotaInterna ?? false;
+    $queryParams = $queryParams ?? [];
     $hasActiveFilters = $hasActiveFilters ?? false;
     $walletSaldoFormatado = $walletSaldoFormatado ?? null;
     $selectedUser = $selectedUser ?? null;
@@ -48,8 +51,11 @@
                             <th class="sq-th">Utente</th>
                         @endif
                         <th class="sq-th">Data</th>
-                        <th class="sq-th">Tipo</th>
                         <th class="sq-th">Descrizione</th>
+                        <th class="sq-th">Dettaglio</th>
+                        @if ($showNotaInterna)
+                            <th class="sq-th">Nota interna</th>
+                        @endif
                         <th class="sq-th sq-th--right">Importo</th>
                     </tr>
                 </thead>
@@ -71,8 +77,37 @@
                                 </td>
                             @endif
                             <td class="sq-td sq-text-muted sq-nowrap">{{ $linha->sortAt->timezone(config('app.timezone'))->format('d/m/Y H:i') }}</td>
-                            <td class="sq-td">{{ $linha->tipo }}</td>
-                            <td class="sq-td sq-wallet-extrato-desc">{{ $linha->descricao }}</td>
+                            <td class="sq-td">{{ $linha->dettaglio }}</td>
+                            <td class="sq-td sq-wallet-extrato-riferimento">{{ $linha->ordineLdv }}</td>
+                            @if ($showNotaInterna)
+                                <td class="sq-td sq-wallet-extrato-nota-interna">
+                                    @if ($editNotaInterna)
+                                        <form
+                                            method="POST"
+                                            action="{{ route('backoffice.wallet.movimento.nota_interna', $linha->movimentoId) }}"
+                                            class="sq-wallet-nota-interna-form"
+                                        >
+                                            @csrf
+                                            @method('PATCH')
+                                            @foreach ($queryParams as $name => $value)
+                                                <input type="hidden" name="{{ $name }}" value="{{ $value }}">
+                                            @endforeach
+                                            <label class="sq-sr-only" for="nota-interna-{{ $linha->movimentoId }}">Nota interna</label>
+                                            <textarea
+                                                id="nota-interna-{{ $linha->movimentoId }}"
+                                                name="nota_interna"
+                                                maxlength="500"
+                                                rows="2"
+                                                placeholder="Nota visibile solo in backoffice…"
+                                                class="sq-wallet-nota-interna-form__input"
+                                            >{{ $linha->notaInterna ?? '' }}</textarea>
+                                            <button type="submit" class="sq-wallet-nota-interna-form__btn">Salva</button>
+                                        </form>
+                                    @else
+                                        {{ $linha->notaInterna ?? '—' }}
+                                    @endif
+                                </td>
+                            @endif
                             <td class="sq-td sq-td--right sq-wallet-extrato-valor {{ $linha->isCredito ? 'is-credito' : 'is-debito' }}">{{ $valorFmt }}</td>
                         </tr>
                     @endforeach

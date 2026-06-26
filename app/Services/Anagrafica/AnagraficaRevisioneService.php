@@ -11,6 +11,8 @@ use Illuminate\Validation\ValidationException;
 
 class AnagraficaRevisioneService
 {
+    public const MSG_NESSUNA_MODIFICA = 'I dati non hanno subito alcuna modifica.';
+
     /**
      * @return array<string, array<int, string>>
      */

@@ -3,16 +3,14 @@
  * Importato per ultimo in app.css.
  */
 
-/* --- Header: menu link legali su mobile --- */
+/* --- Header: link legali (desktop) + menu Info (mobile) --- */
 .sq-header-nav-menu {
     position: relative;
     display: block;
 }
 
-.sq-header-nav-menu > summary {
+.sq-header-nav-menu-trigger {
     display: none;
-    list-style: none;
-    cursor: pointer;
     align-items: center;
     justify-content: center;
     min-height: 40px;
@@ -24,10 +22,7 @@
     font-size: 14px;
     font-weight: 600;
     color: var(--sq-header-link);
-}
-
-.sq-header-nav-menu > summary::-webkit-details-marker {
-    display: none;
+    cursor: pointer;
 }
 
 .sq-header-nav-menu-body {
@@ -47,7 +42,7 @@
         align-items: center;
     }
 
-    .sq-header-nav-menu > summary {
+    .sq-header-nav-menu-trigger {
         display: inline-flex;
     }
 
@@ -68,7 +63,7 @@
         box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
     }
 
-    .sq-header-nav-menu[open] .sq-header-nav-menu-body {
+    .sq-header-nav-menu.is-open .sq-header-nav-menu-body {
         display: flex;
     }
 
@@ -213,8 +208,9 @@
     }
 
     .register-comune-suggest {
-        max-height: min(220px, 40vh);
+        max-height: min(200px, 45vh);
         overflow-y: auto;
+        overscroll-behavior: contain;
     }
 }
 
@@ -275,28 +271,61 @@
     .preventivo-card-inner.sq-prev-card-grid {
         display: flex;
         flex-direction: column;
-        align-items: stretch;
-        gap: 10px;
-        padding: 14px 14px 16px;
+        gap: 0;
+        padding: 12px 12px 14px;
+    }
+
+    .sq-content--frontend .preventivi-page.sq-page-preventivi {
+        padding: 12px 10px 24px !important;
     }
 
     .preventivo-card-inner.sq-prev-card-grid > * {
         width: 100%;
         min-width: 0;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 9px 0;
+        border-bottom: 1px solid var(--sq-border-light);
+    }
+
+    .preventivo-card-inner.sq-prev-card-grid > *:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
     }
 
     .sq-prev-card-grid > *::before {
-        display: block;
-        margin-bottom: 4px;
+        flex: 0 0 92px;
+        width: 92px;
+        max-width: 92px;
+        margin: 0;
+        padding-top: 2px;
         font-size: 10px;
         font-weight: 800;
         text-transform: uppercase;
-        letter-spacing: 0.04em;
+        letter-spacing: 0.02em;
+        line-height: 1.25;
         color: var(--sq-brand);
     }
 
+    .preventivo-card-inner.sq-prev-card-grid > * > *,
+    .preventivo-card-inner.sq-prev-card-grid > .sq-prev-tempi > .sq-prev-tempi-val {
+        flex: 1 1 0;
+        min-width: 0;
+        width: auto;
+    }
+
+    .preventivo-card-inner.sq-prev-card-grid > .sq-minw-0 {
+        display: block;
+        padding: 0 0 10px;
+        margin-bottom: 2px;
+        border-bottom: 1px solid var(--sq-border-light);
+    }
+
     .preventivo-card-inner.sq-prev-card-grid > .sq-minw-0::before {
-        content: 'Corriere';
+        display: none;
     }
 
     .preventivo-card-inner.sq-prev-card-grid > .sq-prev-punti-ritiro-cell:not(:empty)::before {
@@ -305,14 +334,12 @@
 
     .preventivo-card-inner.sq-prev-card-grid > .sq-prev-punti-ritiro-cell:empty {
         display: none;
+        padding: 0;
+        border: none;
     }
 
-    .preventivo-card-inner.sq-prev-card-grid > .sq-prev-mode-cell:first-of-type::before {
-        content: 'Ritiro';
-    }
-
-    .preventivo-card-inner.sq-prev-card-grid > .sq-prev-mode-cell:last-of-type::before {
-        content: 'Consegna';
+    .preventivo-card-inner.sq-prev-card-grid > .sq-prev-mode-cell::before {
+        content: attr(data-mobile-label);
     }
 
     .preventivo-card-inner.sq-prev-card-grid > .sq-prev-tempi::before {
@@ -320,47 +347,108 @@
     }
 
     .preventivo-card-inner.sq-prev-card-grid > .sq-prev-prezzo-cell::before {
-        content: 'Prezzo';
+        content: attr(data-mobile-label);
     }
 
     .preventivo-card-inner.sq-prev-card-grid > .sq-prev-actions-cell::before {
-        content: 'Seleziona';
-        width: 100%;
-        text-align: left;
+        display: none;
     }
 
     .sq-prev-corriere-col {
         flex-direction: row;
         align-items: center;
+        justify-content: flex-start;
         max-width: none;
         width: 100%;
-        gap: 12px;
+        gap: 10px;
+    }
+
+    .sq-prev-corriere-logo {
+        max-height: 40px;
+        max-width: 80px;
+        width: auto;
+        margin: 0;
+        flex-shrink: 0;
+    }
+
+    .sq-prev-corriere-ph {
+        width: 40px;
+        height: 40px;
+        margin: 0;
+        font-size: 15px;
+        flex-shrink: 0;
+    }
+
+    .sq-prev-corriere-name {
+        text-align: left;
+        font-size: 13px;
+        line-height: 1.3;
+    }
+
+    .sq-prev-mode-line {
+        display: flex;
+        align-items: flex-start;
+        gap: 6px;
+        font-size: 14px;
+        line-height: 1.35;
+    }
+
+    .sq-prev-mode-line > span {
+        word-break: break-word;
+    }
+
+    .sq-prev-sp-link-btn {
+        display: inline;
+        font-size: 13px;
+        line-height: 1.4;
+        word-break: break-word;
+        text-align: left;
+    }
+
+    .sq-prev-tempi,
+    .sq-prev-tempi-val {
+        font-size: 14px;
+        line-height: 1.35;
     }
 
     .sq-prev-prezzo-cell {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
+        align-items: center;
+    }
+
+    .sq-prev-prezzo-block {
+        width: 100%;
     }
 
     .sq-prev-prezzo-val {
-        font-size: 1.15rem;
+        font-size: 1rem;
+        font-weight: 700;
+        line-height: 1.2;
+        text-align: left;
     }
 
-    .sq-prev-actions-cell {
+    .sq-prev-prezzo-nostro {
+        font-size: 0.75rem;
+    }
+
+    .preventivo-card-inner.sq-prev-card-grid > .sq-prev-actions-cell {
         flex-direction: column;
         align-items: stretch;
         gap: 8px;
         margin-top: 4px;
-        padding-top: 10px;
+        padding-top: 12px;
+        border-bottom: none;
         border-top: 1px solid var(--sq-border-light);
+    }
+
+    .preventivo-card-inner.sq-prev-card-grid > .sq-prev-actions-cell > * {
+        width: 100%;
     }
 
     .sq-prev-actions-cell .sq-prev-btn-corriere,
     .sq-prev-actions-cell .btn-seleziona-corriere {
         width: 100%;
         height: auto;
-        min-height: 48px;
+        min-height: 44px;
         padding: 10px 16px;
         justify-content: center;
         border-radius: 10px;
@@ -369,8 +457,14 @@
     }
 
     .sq-prev-actions-cell .sq-prev-btn-corriere svg {
-        width: 28px;
-        height: 28px;
+        width: 26px;
+        height: 26px;
+    }
+
+    .sq-prev-card-shell .sq-prev-liccardi-volume-row,
+    .sq-prev-card-shell .sq-prev-servizi-row {
+        padding: 10px 12px 12px;
+        border-top: 1px solid var(--sq-border-light);
     }
 }
 
@@ -478,6 +572,446 @@
 
     .sq-checkout-prezzo-riga {
         flex-wrap: wrap;
+    }
+
+    .ordine-show-page .sq-ordine-remessas-table-wrap,
+    .ordine-pagamento-page .sq-ordine-remessas-table-wrap {
+        overflow-x: visible;
+    }
+
+    .ordine-show-page .sq-ordine-remessas-table,
+    .ordine-pagamento-page .sq-ordine-remessas-table {
+        min-width: 0;
+    }
+
+    .ordine-show-page .sq-ordine-remessas-table thead,
+    .ordine-pagamento-page .sq-ordine-remessas-table thead {
+        display: none;
+    }
+
+    .ordine-show-page .sq-ordine-remessas-table tbody tr,
+    .ordine-pagamento-page .sq-ordine-remessas-table tbody tr {
+        display: block;
+        padding: 12px 14px 14px;
+        border-bottom: 1px solid var(--sq-border-light);
+    }
+
+    .ordine-show-page .sq-ordine-remessas-table tbody tr.sq-sped-sendcloud-api-trace-row,
+    .ordine-pagamento-page .sq-ordine-remessas-table tbody tr.sq-sped-sendcloud-api-trace-row {
+        padding: 0;
+        border-bottom: none;
+    }
+
+    .ordine-show-page .sq-ordine-remessas-table tbody td,
+    .ordine-pagamento-page .sq-ordine-remessas-table tbody td {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        padding: 7px 0;
+        border: none;
+        white-space: normal;
+        text-align: left;
+    }
+
+    .ordine-show-page .sq-ordine-remessas-table tbody td::before,
+    .ordine-pagamento-page .sq-ordine-remessas-table tbody td::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 4px;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        line-height: 1.2;
+        color: var(--sq-brand);
+    }
+
+    .ordine-show-page .sq-ordine-remessas-table tbody td.sq-td--right,
+    .ordine-pagamento-page .sq-ordine-remessas-table tbody td.sq-td--right {
+        text-align: left;
+    }
+
+    .ordine-show-page .sq-ordine-remessas-table tbody .sq-ordine-remessa-codice,
+    .ordine-pagamento-page .sq-ordine-remessas-table tbody .sq-ordine-remessa-codice {
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    .ordine-show-page .sq-ordine-remessas-table tbody .sq-ordine-etq-tracking,
+    .ordine-pagamento-page .sq-ordine-remessas-table tbody .sq-ordine-etq-tracking {
+        max-width: none;
+        word-break: break-word;
+    }
+
+    .ordine-show-page .sq-ordine-remessas-table tbody .sq-ordine-etq-print-cell,
+    .ordine-pagamento-page .sq-ordine-remessas-table tbody .sq-ordine-etq-print-cell {
+        justify-content: flex-start;
+    }
+
+    .ordine-show-page .sq-ordine-remessas-table tbody tr.sq-sped-sendcloud-api-trace-row td,
+    .ordine-pagamento-page .sq-ordine-remessas-table tbody tr.sq-sped-sendcloud-api-trace-row td {
+        padding: 12px 14px;
+    }
+
+    .ordine-show-page .sq-ordine-remessas-table tbody tr.sq-sped-sendcloud-api-trace-row td::before,
+    .ordine-pagamento-page .sq-ordine-remessas-table tbody tr.sq-sped-sendcloud-api-trace-row td::before {
+        content: none;
+        display: none;
+    }
+
+    .ordine-show-page .sq-ordine-remessas-table tfoot tr,
+    .ordine-pagamento-page .sq-ordine-remessas-table tfoot tr {
+        display: block;
+        padding: 12px 14px;
+    }
+
+    .ordine-show-page .sq-ordine-remessas-table tfoot td,
+    .ordine-pagamento-page .sq-ordine-remessas-table tfoot td {
+        display: block;
+        width: 100%;
+        padding: 4px 0;
+        border: none;
+        text-align: right;
+    }
+
+    .ordine-show-page .sq-ordine-remessas-table tfoot td::before,
+    .ordine-pagamento-page .sq-ordine-remessas-table tfoot td::before {
+        display: none;
+    }
+
+    .ordini-index-page:not(.sq-bo-utilities-page) .sq-ordini-tab-section .sq-table-wrap {
+        overflow-x: visible;
+    }
+
+    .ordini-index-page:not(.sq-bo-utilities-page) .sq-ordini-table {
+        table-layout: auto;
+        min-width: 0;
+    }
+
+    .ordini-index-page:not(.sq-bo-utilities-page) .sq-ordini-table colgroup {
+        display: none;
+    }
+
+    .ordini-index-page:not(.sq-bo-utilities-page) .sq-ordini-table thead {
+        display: none;
+    }
+
+    .ordini-index-page:not(.sq-bo-utilities-page) .sq-ordini-table tbody tr {
+        display: block;
+        padding: 12px 14px 14px;
+        border-bottom: 1px solid var(--sq-border-light);
+        background: #fff !important;
+    }
+
+    .ordini-index-page:not(.sq-bo-utilities-page) .sq-ordini-table tbody td {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        padding: 7px 0;
+        border: none;
+        white-space: normal;
+        text-align: left;
+        vertical-align: top;
+    }
+
+    .ordini-index-page:not(.sq-bo-utilities-page) .sq-ordini-table tbody td::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 4px;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        line-height: 1.2;
+        color: var(--sq-brand);
+    }
+
+    .ordini-index-page:not(.sq-bo-utilities-page) .sq-ordini-table tbody td.sq-td--right {
+        text-align: left;
+    }
+
+    .ordini-index-page:not(.sq-bo-utilities-page) .sq-ordini-table tbody .sq-ordini-actions-icons {
+        justify-content: flex-start;
+    }
+
+    .ordini-index-page:not(.sq-bo-utilities-page) .sq-ordini-table tbody .sq-due-prezzi--compact {
+        align-items: flex-start;
+    }
+
+    /* I miei rimborsi — lista a card */
+    .sq-miei-rimborsi-page .sq-bo-reemb-table-wrap {
+        overflow-x: visible;
+    }
+
+    .sq-miei-rimborsi-page .sq-miei-rimborsi-table {
+        table-layout: auto;
+        min-width: 0;
+    }
+
+    .sq-miei-rimborsi-page .sq-miei-rimborsi-table thead {
+        display: none;
+    }
+
+    .sq-miei-rimborsi-page .sq-miei-rimborsi-table tbody tr {
+        display: block;
+        padding: 12px 14px 14px;
+        border-bottom: 1px solid var(--sq-border-light);
+        background: #fff !important;
+    }
+
+    .sq-miei-rimborsi-page .sq-miei-rimborsi-table tbody td {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        padding: 7px 0;
+        border: none;
+        white-space: normal;
+        text-align: left;
+        vertical-align: top;
+    }
+
+    .sq-miei-rimborsi-page .sq-miei-rimborsi-table tbody td::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 4px;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        line-height: 1.2;
+        color: var(--sq-brand);
+    }
+
+    .sq-miei-rimborsi-page .sq-miei-rimborsi-table tbody td[colspan] {
+        padding: 20px;
+        text-align: center;
+    }
+
+    .sq-miei-rimborsi-page .sq-miei-rimborsi-table tbody td[colspan]::before {
+        display: none;
+    }
+
+    .sq-miei-rimborsi-page .sq-filtri-row > div {
+        flex: 1 1 100%;
+        min-width: 0;
+    }
+
+    .sq-miei-rimborsi-page .sq-filtri-email-input,
+    .sq-miei-rimborsi-page .sq-filtri-row select {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Ricariche wallet — layout card come riepilogo ordine */
+    .sq-wallet-ricariche-page .sq-ordine-remessas-table-wrap,
+    .sq-wallet-ricarica-pagamento-show .sq-ordine-remessas-table-wrap {
+        overflow-x: visible;
+    }
+
+    .sq-wallet-ricariche-page .sq-ordine-remessas-table,
+    .sq-wallet-ricarica-pagamento-show .sq-ordine-remessas-table {
+        min-width: 0;
+    }
+
+    .sq-wallet-ricariche-page .sq-ordine-remessas-table thead,
+    .sq-wallet-ricarica-pagamento-show .sq-ordine-remessas-table thead {
+        display: none;
+    }
+
+    .sq-wallet-ricariche-page .sq-ordine-remessas-table tbody tr,
+    .sq-wallet-ricarica-pagamento-show .sq-ordine-remessas-table tbody tr {
+        display: block;
+        padding: 12px 14px 14px;
+        border-bottom: 1px solid var(--sq-border-light);
+        background: #fff !important;
+    }
+
+    .sq-wallet-ricariche-page .sq-ordine-remessas-table tbody td,
+    .sq-wallet-ricarica-pagamento-show .sq-ordine-remessas-table tbody td {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        padding: 7px 0;
+        border: none;
+        white-space: normal;
+        text-align: left;
+        vertical-align: top;
+    }
+
+    .sq-wallet-ricariche-page .sq-ordine-remessas-table tbody td::before,
+    .sq-wallet-ricarica-pagamento-show .sq-ordine-remessas-table tbody td::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 4px;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        line-height: 1.2;
+        color: var(--sq-brand);
+    }
+
+    .sq-wallet-ricariche-page .sq-ordine-remessas-table tbody td.sq-td--right,
+    .sq-wallet-ricarica-pagamento-show .sq-ordine-remessas-table tbody td.sq-td--right {
+        text-align: left;
+    }
+
+    .sq-wallet-ricariche-page .sq-ordine-remessas-table tbody .sq-ordini-actions-icons,
+    .sq-wallet-ricarica-pagamento-show .sq-ordine-remessas-table tbody .sq-ordini-actions-icons {
+        justify-content: flex-start;
+    }
+
+    .sq-wallet-ricariche-page .sq-ordine-remessas-table tfoot tr,
+    .sq-wallet-ricarica-pagamento-show .sq-ordine-remessas-table tfoot tr {
+        display: block;
+        padding: 12px 14px;
+    }
+
+    .sq-wallet-ricariche-page .sq-ordine-remessas-table tfoot td,
+    .sq-wallet-ricarica-pagamento-show .sq-ordine-remessas-table tfoot td {
+        display: block;
+        width: 100%;
+        padding: 4px 0;
+        border: none;
+        text-align: left;
+    }
+
+    .sq-wallet-ricariche-page .sq-ordine-remessas-table tfoot td::before,
+    .sq-wallet-ricarica-pagamento-show .sq-ordine-remessas-table tfoot td::before {
+        display: none;
+    }
+
+    .sq-wallet-ricariche-page .sq-wallet-extrato-filtri__row {
+        gap: 12px;
+    }
+
+    .sq-wallet-ricariche-page .sq-wallet-extrato-filtri__campo,
+    .sq-wallet-ricariche-page .sq-wallet-ricariche-filtri__campo--ordine,
+    .sq-wallet-ricariche-page .sq-wallet-ricariche-filtri__campo--importo,
+    .sq-wallet-ricariche-page .sq-wallet-ricariche-filtri__campo--stato {
+        flex: 1 1 100%;
+        max-width: none;
+        min-width: 0;
+    }
+
+    .sq-wallet-ricariche-page .sq-wallet-extrato-filtri__custom-datas {
+        flex-wrap: wrap;
+        flex: 1 1 100%;
+    }
+
+    .sq-wallet-ricariche-page .sq-wallet-extrato-filtri__custom-datas .sq-wallet-extrato-filtri__date {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .sq-wallet-ricariche-page .sq-wallet-extrato-filtri__tail {
+        flex: 1 1 100%;
+    }
+
+    /* Rubrica mittenti / destinatari — card mobile */
+    .sq-rubrica-mittenti-page,
+    .sq-rubrica-destinatari-page {
+        padding: 12px 10px 24px !important;
+    }
+
+    .sq-rubrica-mittenti-page .sq-btn-primary,
+    .sq-rubrica-destinatari-page .sq-btn-primary {
+        display: block;
+        width: 100%;
+        text-align: center;
+        box-sizing: border-box;
+    }
+
+    .sq-rubrica-mittenti-page .sq-rubrica-mittenti-table-wrap,
+    .sq-rubrica-destinatari-page .sq-rubrica-destinatari-table-wrap {
+        overflow-x: visible;
+    }
+
+    .sq-rubrica-mittenti-page .sq-rubrica-mittenti-table,
+    .sq-rubrica-destinatari-page .sq-rubrica-destinatari-table {
+        min-width: 0;
+        border-collapse: separate;
+        border-spacing: 0 12px;
+    }
+
+    .sq-rubrica-mittenti-page .sq-rubrica-mittenti-table thead,
+    .sq-rubrica-destinatari-page .sq-rubrica-destinatari-table thead {
+        display: none;
+    }
+
+    .sq-rubrica-mittenti-page .sq-rubrica-mittenti-table tbody,
+    .sq-rubrica-mittenti-page .sq-rubrica-mittenti-table tbody tr,
+    .sq-rubrica-destinatari-page .sq-rubrica-destinatari-table tbody,
+    .sq-rubrica-destinatari-page .sq-rubrica-destinatari-table tbody tr {
+        display: block;
+    }
+
+    .sq-rubrica-mittenti-page .sq-rubrica-mittenti-table tbody tr,
+    .sq-rubrica-destinatari-page .sq-rubrica-destinatari-table tbody tr {
+        padding: 12px 14px 14px;
+        border: var(--sq-shell-border-width) solid var(--sq-shell-border);
+        border-radius: 12px;
+        box-shadow: var(--sq-card-shadow);
+        background: #fff !important;
+    }
+
+    .sq-rubrica-mittenti-page .sq-rubrica-mittenti-table tbody td,
+    .sq-rubrica-destinatari-page .sq-rubrica-destinatari-table tbody td {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        padding: 8px 0;
+        border: none;
+        border-bottom: 1px solid var(--sq-border-light);
+        white-space: normal;
+        text-align: left;
+        vertical-align: top;
+        word-break: break-word;
+    }
+
+    .sq-rubrica-mittenti-page .sq-rubrica-mittenti-table tbody td:last-child,
+    .sq-rubrica-destinatari-page .sq-rubrica-destinatari-table tbody td:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .sq-rubrica-mittenti-page .sq-rubrica-mittenti-table tbody td::before,
+    .sq-rubrica-destinatari-page .sq-rubrica-destinatari-table tbody td::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 4px;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        line-height: 1.2;
+        color: var(--sq-brand);
+    }
+
+    .sq-rubrica-mittenti-page .sq-rubrica-mittenti-table tbody td.sq-rubrica-riferimento,
+    .sq-rubrica-destinatari-page .sq-rubrica-destinatari-table tbody td.sq-rubrica-riferimento {
+        padding-top: 0;
+    }
+
+    .sq-rubrica-mittenti-page .sq-rubrica-mittenti-table tbody td.sq-rubrica-riferimento::before,
+    .sq-rubrica-destinatari-page .sq-rubrica-destinatari-table tbody td.sq-rubrica-riferimento::before {
+        display: none;
+    }
+
+    .sq-rubrica-mittenti-page .sq-rubrica-mittenti-table tbody td.sq-td--right,
+    .sq-rubrica-destinatari-page .sq-rubrica-destinatari-table tbody td.sq-td--right {
+        text-align: left;
+    }
+
+    .sq-rubrica-mittenti-page .sq-rubrica-azioni,
+    .sq-rubrica-destinatari-page .sq-rubrica-azioni {
+        max-width: none !important;
+        margin-left: 0 !important;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 8px;
     }
 }
 

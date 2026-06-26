@@ -1,14 +1,13 @@
 @extends('layouts.app')
 @section('content')
 @php
-    $fmt = fn ($n) => number_format((float) $n, 2, ',', '.');
     $numeroOrdine = fn ($r) => $r->numero_ordine_wallet ?? ('ORW-'.$r->id);
 @endphp
 
-<div class="sq-bleed-layout sq-wallet-ricariche-page">
+<div class="sq-bleed-layout">
     <x-sq-page-banner title="Ricariche wallet" icon="fa-coins" class="sq-page-banner--full" />
 
-    <div class="sq-listing-page">
+    <div class="ordini-index-page sq-wallet-ricariche-page sq-listing-page">
         <div class="sq-wallet-extrato-toolbar">
             <a href="{{ route('wallet.ricarica') }}" class="sq-wallet-extrato-btn-ricarica">
                 <i class="fas fa-plus-circle" aria-hidden="true"></i>
@@ -39,82 +38,19 @@
             'perPageId' => 'filtro-ricariche-per-page-fo',
         ])
 
-        <div class="sq-wallet-extrato-card">
+        <div class="sq-ordini-tab-section" role="region" aria-label="Elenco ricariche">
             @if ($ricariche->total() === 0)
-                <div class="sq-wallet-extrato-empty">
+                <p class="sq-ordini-empty">
                     {{ ($hasActiveFilters ?? false) ? 'Nessuna ricarica con questi filtri.' : 'Nessuna ricarica registrata.' }}
-                </div>
+                </p>
             @else
-                <div class="sq-table-wrap sq-wallet-extrato-table-wrap">
-                    <table class="sq-table sq-wallet-extrato-table sq-wallet-ricariche-table">
-                        <thead>
-                            <tr class="sq-thead-row">
-                                <th class="sq-th">N. ordine</th>
-                                <th class="sq-th">Data</th>
-                                <th class="sq-th sq-th--right">Importo</th>
-                                <th class="sq-th">Metodo di pagamento</th>
-                                <th class="sq-th">Stato</th>
-                                <th class="sq-th sq-th--right">Azioni</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($ricariche as $r)
-                                <tr>
-                                    <td class="sq-td sq-fw-700">{{ $numeroOrdine($r) }}</td>
-                                    <td class="sq-td sq-text-muted sq-nowrap">{{ $r->created_at?->timezone(config('app.timezone'))->format('d/m/Y H:i') ?? '—' }}</td>
-                                    <td class="sq-td sq-td--right sq-wallet-ricariche-importo">{{ \App\Support\ImportoEuro::format($r->importo) }}</td>
-                                    <td class="sq-td">{{ $r->metodoPagamento?->metodo_pagamento ?? '—' }}</td>
-                                    <td class="sq-td">
-                                        @if ($r->stato === 'accreditata')
-                                            <span class="sq-wallet-ricariche-stato sq-wallet-ricariche-stato--pagato">Pagato</span>
-                                        @else
-                                            <span class="sq-wallet-ricariche-stato sq-wallet-ricariche-stato--non-pagato">Non pagato</span>
-                                        @endif
-                                    </td>
-                                    <td class="sq-td sq-td--right">
-                                        @if ($r->stato === 'in_attesa')
-                                            <div class="sq-ordini-actions-icons">
-                                                <button
-                                                    type="button"
-                                                    class="sq-ordini-icon-action sq-ordini-icon-action--pay"
-                                                    disabled
-                                                    title="Pagamento online in arrivo"
-                                                    aria-label="Pagamento online in arrivo"
-                                                >
-                                                    <i class="fa-solid fa-credit-card" aria-hidden="true"></i>
-                                                </button>
-                                                <form
-                                                    method="POST"
-                                                    action="{{ route('wallet.ricariche.destroy', $r) }}"
-                                                    class="sq-form-zero sq-wallet-ricarica-delete-form"
-                                                    onsubmit="return confirm('Annullare questa ricarica? L’operazione non è reversibile.');"
-                                                >
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button
-                                                        type="submit"
-                                                        class="sq-ordini-icon-action sq-ordini-icon-action--remove"
-                                                        title="Annulla ricarica"
-                                                        aria-label="Annulla ricarica"
-                                                    >
-                                                        <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        @else
-                                            <span class="sq-text-muted">—</span>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                @if ($ricariche->hasPages())
-                    <div class="sq-wallet-extrato-pag">
-                        {{ $ricariche->onEachSide(1)->links() }}
-                    </div>
-                @endif
+                @include('wallet.partials.ricariche-tabella', [
+                    'ricariche' => $ricariche,
+                    'numeroOrdine' => $numeroOrdine,
+                    'hasMetodiPagamentoRicarica' => $hasMetodiPagamentoRicarica ?? true,
+                ])
+
+                @include('partials.tabella-paginazione', ['paginator' => $ricariche])
             @endif
         </div>
     </div>

@@ -4,10 +4,6 @@
 <div class="sq-profilo-page sq-profilo-page--password">
     <h1 class="sq-h1-carrello sq-text-heading sq-mb-8">Cambia password</h1>
 
-    @if (session('ok'))
-        <div class="sq-alert sq-alert--success sq-mb-14">{{ session('ok') }}</div>
-    @endif
-
     <form method="POST" action="{{ route('profilo.password.update') }}" class="sq-profilo-password-form" autocomplete="off">
         @csrf
 
@@ -47,9 +43,37 @@
             </div>
 
             <div class="sq-profilo-password-actions">
+                <button type="reset" class="sq-btn-secondary sq-modal-btn sq-profilo-btn-sm" id="btn-annulla-password">Annulla</button>
+                <a href="{{ route('home') }}" class="sq-btn-secondary sq-modal-btn sq-profilo-btn-sm">Esci</a>
                 <button type="submit" class="sq-btn-primary sq-profilo-btn-sm">Salva password</button>
             </div>
         </div>
     </form>
 </div>
+
+@if (session('password_saved'))
+    <div id="sq-profilo-password-ok-modal" class="sq-modal sq-modal--profilo-password-ok" data-profilo-password-ok-modal>
+        <div class="sq-modal-backdrop js-profilo-password-ok-home" tabindex="-1" aria-hidden="true"></div>
+        <div class="sq-modal-panel" role="dialog" aria-modal="true" aria-labelledby="sq-profilo-password-ok-title">
+            <h2 id="sq-profilo-password-ok-title" class="sq-modal-title">Password aggiornata</h2>
+            <p class="sq-modal-text sq-m-0 sq-mb-16">La nuova password è stata salvata correttamente.</p>
+            <div class="sq-modal-actions">
+                <a href="{{ route('home') }}" class="sq-btn-primary sq-modal-btn">OK</a>
+            </div>
+        </div>
+    </div>
+    <script>
+    (() => {
+        const modal = document.querySelector('[data-profilo-password-ok-modal]');
+        if (!modal) return;
+        const homeUrl = @json(route('home'));
+        modal.hidden = false;
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('sq-modal-open');
+        modal.querySelectorAll('.js-profilo-password-ok-home').forEach((el) => {
+            el.addEventListener('click', () => { window.location.href = homeUrl; });
+        });
+    })();
+    </script>
+@endif
 @endsection

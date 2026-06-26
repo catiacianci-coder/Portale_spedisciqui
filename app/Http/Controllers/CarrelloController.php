@@ -931,6 +931,9 @@ class CarrelloController extends Controller
      */
     private function dataRitiroDaRigaCarrello(array $it, Request $request): string
     {
+        $corriereId = (int) ($it['corriere_id'] ?? 0);
+        $corriere = $corriereId > 0 ? corriere::query()->find($corriereId) : null;
+
         $data = trim((string) ($it['data_ritiro'] ?? ''));
         if ($data === '') {
             $data = trim((string) $request->input('data_ritiro', ''));

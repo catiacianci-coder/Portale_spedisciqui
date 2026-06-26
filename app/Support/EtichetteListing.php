@@ -59,7 +59,8 @@ final class EtichetteListing
         $ldvStampabile = ! $ldvCancellata && SpedizioneEtichettaStato::haEtichettaEsistente($s);
 
         $metodo = trim((string) ($ord?->metodoPagamentoOrdine?->descrizione ?? ''));
-        $podeCorrigir = SpedizioneEtichettaStato::podeCorrigir($s);
+        $podeCorrigir = SpedizioneEtichettaStato::podeCorrigir($s)
+            && (bool) config('etichetta.correcao_cliente_abilitata', false);
         $pendente = SpedizioneEtichettaStato::etichettaPendente($s);
 
         return [

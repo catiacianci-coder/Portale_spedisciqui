@@ -15,9 +15,6 @@
     @if (session('ok'))
         <div class="sq-alert sq-alert--success sq-mb-14">{{ session('ok') }}</div>
     @endif
-    @if (session('info'))
-        <div class="sq-alert sq-alert--info-warm sq-mb-14">{{ session('info') }}</div>
-    @endif
     @if ($errors->has('profilo'))
         <div class="sq-alert sq-alert--error sq-mb-14">{{ $errors->first('profilo') }}</div>
     @endif
@@ -139,7 +136,6 @@
                                     <label for="profilo_provincia" class="sq-profilo-label">Prov. <span class="sq-profilo-req">*</span></label>
                                     <input type="text" name="provincia" id="profilo_provincia" class="sq-profilo-input sq-profilo-input--ro" required maxlength="2" placeholder="PV"
                                            value="{{ old('provincia', $a->provincia) }}" readonly tabindex="-1" title="Provincia impostata automaticamente da Città o CAP">
-                                    <span class="sq-profilo-hint sq-text-muted sq-text-12">Dall’elenco Città o CAP.</span>
                                     @error('provincia')<span class="sq-profilo-err">{{ $message }}</span>@enderror
                                 </div>
                             </div>
@@ -156,9 +152,6 @@
                                 </div>
                             </div>
                             @error('id_comune')<span class="sq-profilo-err sq-profilo-err-block">{{ $message }}</span>@enderror
-                            <p class="sq-profilo-suggest-hint sq-text-muted sq-text-14 sq-m-0 sq-mt-10">
-                                Scrivi in <strong>Città</strong> o in <strong>CAP</strong> e scegli una riga dall’elenco per allineare CAP, comune e provincia.
-                            </p>
                         </div>
                     </div>
                 </div>
@@ -170,6 +163,8 @@
                 <button type="button" class="sq-profilo-azione-btn sq-profilo-btn-sm" id="btn-annulla-profilo" disabled>Annulla</button>
             </div>
         </form>
+
+        @include('partials.anagrafica-unchanged-modal')
     @endif
 </div>
 
@@ -447,6 +442,10 @@
             alert('Seleziona CAP o città dall’elenco suggerito in modo che CAP, città e provincia coincidano con un comune valido.');
             return;
         }
+        if (window.sqAnagraficaSnapshotsEqual?.(snapshotAll(), baseSnapshot)) {
+            window.sqAnagraficaUnchangedModal?.open(() => exitEdit());
+            return;
+        }
         if (confirm(MSG_CONFERMA)) {
             form.dataset.confirmed = '1';
             /* Dopo “Sì” l’utente ha confermato: subito UI come post-salvataggio (pannelli lettura + solo Modifica attiva). I valori del form restano per il POST. */
@@ -465,6 +464,10 @@
 
     @if ($errors->any())
         enterEdit();
+    @endif
+
+    @if (session('anagrafica_unchanged'))
+        window.sqAnagraficaUnchangedModal?.open();
     @endif
 
     syncActionButtons();

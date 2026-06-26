@@ -1,0 +1,119 @@
+.sq-bo-metodi-pagamento-page {
+    padding-bottom: 40px;
+}
+
+.sq-bo-metodi-pagamento-lead {
+    margin: 0 0 16px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #64748b;
+    font-family: var(--sq-font-ui);
+}
+
+.sq-bo-metodi-pagamento-tabs {
+    margin-bottom: 18px;
+}
+
+.sq-bo-metodi-pagamento-table-wrap {
+    margin-top: 4px;
+}
+
+.sq-bo-metodi-pagamento-col-codice {
+    width: 96px;
+}
+
+.sq-bo-metodi-pagamento-col-stato {
+    width: 120px;
+}
+
+.sq-bo-metodi-pagamento-col-comm {
+    width: 120px;
+}
+
+.sq-bo-metodi-pagamento-col-azioni {
+    width: 88px;
+    text-align: right;
+}
+
+.sq-bo-metodi-pagamento-codice {
+    font-size: 12px;
+    color: #475569;
+    background: #f1f5f9;
+    padding: 3px 7px;
+    border-radius: 6px;
+}
+
+.sq-bo-metodi-pagamento-input,
+.sq-bo-metodi-pagamento-textarea {
+    width: 100%;
+    min-width: 0;
+    padding: 8px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+}
+
+.sq-bo-metodi-pagamento-input--comm {
+    max-width: 108px;
+}
+
+.sq-bo-metodi-pagamento-textarea {
+    min-height: 52px;
+    resize: vertical;
+}
+
+.sq-bo-metodi-pagamento-pill {
+    display: inline-block;
+    margin-bottom: 6px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.sq-bo-metodi-pagamento-pill--ok {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.sq-bo-metodi-pagamento-toggle-form {
+    display: block;
+}
+
+.sq-bo-metodi-pagamento-link-btn {
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--sq-accent, #0a5969);
+    font-size: 12px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.sq-bo-metodi-pagamento-save-btn {
+    padding: 7px 14px;
+    border: none;
+    border-radius: 8px;
+    background: var(--sq-accent, #0a5969);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.sq-bo-metodi-pagamento-save-btn:hover {
+    filter: brightness(1.06);
+}
+
+@media (max-width: 900px) {
+    .sq-bo-metodi-pagamento-col-comm,
+    .sq-bo-metodi-pagamento-col-azioni {
+        width: auto;
+    }
+}

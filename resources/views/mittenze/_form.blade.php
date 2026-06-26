@@ -97,7 +97,7 @@
                 </div>
                 <div class="sq-profilo-addr-row">
                     <div class="sq-profilo-field sq-profilo-mb-0">
-                        <label for="mitt_indirizzo" class="sq-profilo-label">Strada <span class="sq-profilo-req">*</span></label>
+                        <label for="mitt_indirizzo" class="sq-profilo-label">Via/Piazza <span class="sq-profilo-req">*</span></label>
                         <input type="text" name="indirizzo" id="mitt_indirizzo" class="sq-profilo-input" required maxlength="255" value="{{ old('indirizzo', $m?->indirizzo ?? '') }}">
                     </div>
                     <div class="sq-profilo-field sq-profilo-mb-0">
@@ -106,21 +106,6 @@
                     </div>
                 </div>
                 @error('id_comune')<span class="sq-profilo-err sq-profilo-err-block">{{ $message }}</span>@enderror
-                <p class="sq-profilo-suggest-hint sq-text-muted sq-text-14 sq-m-0 sq-mt-10">Seleziona CAP o città dall’elenco suggerito.</p>
-            </div>
-        </div>
-
-        <div class="sq-profilo-card sq-profilo-card--stacked">
-            <div class="sq-profilo-card-head">
-                <h2 class="sq-profilo-card-title">Campi vari (opzionali)</h2>
-            </div>
-            <div class="sq-profilo-card-stack">
-                @foreach (['varie1' => 'Varie 1', 'varie2' => 'Varie 2', 'varie3' => 'Varie 3', 'varie4' => 'Varie 4'] as $field => $label)
-                    <div class="sq-profilo-field">
-                        <label for="mitt_{{ $field }}" class="sq-profilo-label">{{ $label }}</label>
-                        <input type="text" name="{{ $field }}" id="mitt_{{ $field }}" class="sq-profilo-input" maxlength="255" value="{{ old($field, $m?->{$field} ?? '') }}">
-                    </div>
-                @endforeach
             </div>
         </div>
 

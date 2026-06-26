@@ -269,14 +269,14 @@
                                             ])
                                         @endif
                                     </div>
-                                    <div class="sq-prev-mode-cell">
+                                    <div class="sq-prev-mode-cell" data-mobile-label="Ritiro">
                                         @include('preventivi.partials.mode-colonna', ['mode' => $pickupMode])
                                     </div>
-                                    <div class="sq-prev-mode-cell">
+                                    <div class="sq-prev-mode-cell" data-mobile-label="Consegna">
                                         @include('preventivi.partials.mode-colonna', ['mode' => $consegnaMode])
                                     </div>
                                     <div class="sq-prev-tempi">
-                                        {!! $tempi !!}
+                                        <span class="sq-prev-tempi-val">{!! $tempi !!}</span>
                                     </div>
                                     @foreach ($colonnePagamento as $colIdx => $col)
                                         @php
@@ -284,8 +284,11 @@
                                                 $prezzoTrasporto,
                                                 (float) ($col['commissioni_pct'] ?? 0),
                                             );
+                                            $mobileLabelPrezzo = (float) ($col['commissioni_pct'] ?? 0) < 0
+                                                ? 'Con wallet'
+                                                : 'Carte/Bonifico';
                                         @endphp
-                                        <div class="sq-prev-prezzo-cell">
+                                        <div class="sq-prev-prezzo-cell" data-mobile-label="{{ $mobileLabelPrezzo }}">
                                             {!! $renderPrezzoValore($prezzoCol) !!}
                                         </div>
                                     @endforeach

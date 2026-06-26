@@ -1024,6 +1024,41 @@ button.sq-liccardi-btn--delete {
     z-index: 1200;
 }
 
+.register-container .sq-profilo-suggest {
+    max-height: 200px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+.register-container .sq-profilo-suggest-item {
+    width: 100%;
+    margin: 0;
+    padding: 8px 12px;
+    border: 0;
+    border-bottom: 1px solid #eee;
+    border-radius: 0;
+    background: #fff;
+    color: var(--sq-text-main);
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.35;
+    text-align: left;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.register-container .sq-profilo-suggest-item:last-child {
+    border-bottom: 0;
+}
+
+.register-container .sq-profilo-suggest-item:hover,
+.register-container .sq-profilo-suggest-item:focus {
+    background: var(--sq-bg-soft-warm);
+    color: var(--sq-text-main);
+}
+
 .register-container h2 {
     text-align: center;
     color: #333;
@@ -1063,8 +1098,8 @@ button.sq-liccardi-btn--delete {
     word-break: break-word;
 }
 
-/* Solo i pulsanti principali del form (es. Continua): non i toggle password né Verifica CF */
-.register-container button:not(.sq-password-toggle):not(.btn-verify) {
+/* Solo i pulsanti principali del form (es. Continua): non toggle password, Verifica CF, né voci suggest */
+.register-container button:not(.sq-password-toggle):not(.btn-verify):not(.sq-profilo-suggest-item) {
     width: 100%;
     padding: 12px;
     background-color: var(--sq-brand);
@@ -1078,7 +1113,7 @@ button.sq-liccardi-btn--delete {
     transition: background 0.3s;
 }
 
-.register-container button:not(.sq-password-toggle):not(.btn-verify):hover {
+.register-container button:not(.sq-password-toggle):not(.btn-verify):not(.sq-profilo-suggest-item):hover {
     background-color: var(--sq-brand-hover);
 }
 
@@ -1256,6 +1291,14 @@ button.sq-liccardi-btn--delete {
     margin-top: 18px;
     padding-top: 16px;
     border-top: 1px solid var(--sq-border, #d8dce3);
+}
+
+.sq-profilo-password-card .sq-profilo-password-actions .sq-btn-secondary {
+    text-decoration: none;
+}
+
+.sq-modal--profilo-password-ok .sq-modal-panel {
+    max-width: 360px;
 }
 
 /* Profilo anagrafica */
@@ -2093,6 +2136,43 @@ button.sq-liccardi-btn--delete {
 .ordine-pagamento-page .sq-ordine-remessas-card-head strong {
     color: var(--sq-petrol, #0a5969);
     font-weight: 800;
+}
+
+/* Ricariche wallet — tabella come riepilogo ordine */
+.sq-wallet-ricariche-page .sq-ordine-remessas-table,
+.sq-wallet-ricarica-pagamento-show .sq-ordine-remessas-table {
+    min-width: 860px;
+}
+
+.sq-wallet-ricariche-page .sq-ordini-tab-section .sq-ordine-remessas-card {
+    margin-bottom: 0;
+}
+
+.sq-wallet-ricariche-table tbody tr.sq-wallet-ricariche-row--annullata td {
+    background: var(--sq-error-bg);
+    color: var(--sq-error-text);
+}
+
+.sq-wallet-ricariche-table tbody tr.sq-wallet-ricariche-row--annullata .sq-wallet-ricariche-stato {
+    color: inherit;
+}
+
+.sq-wallet-ricariche-stato {
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.sq-wallet-ricariche-stato--pagato {
+    color: #2e7d32;
+}
+
+.sq-wallet-ricariche-stato--non-pagato {
+    color: #b45309;
+}
+
+.sq-wallet-ricariche-stato--annullata {
+    color: #6b7280;
 }
 
 .sq-pay-metodo-card-form {

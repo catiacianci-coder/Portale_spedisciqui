@@ -85,9 +85,8 @@ class UserDestinatarioController extends Controller
      */
     private function validatedDestinatario(Request $request): array
     {
-        $tipo = (string) ($request->user()->tipo_utente ?? 'privato');
-
         $rules = [
+            'destinatario_anagrafica' => ['required', 'in:privato,azienda'],
             'nome' => ['required', 'string', 'max:255'],
             'cognome' => ['required', 'string', 'max:255'],
             'telefono' => ['required', 'string', 'max:30'],
@@ -98,15 +97,12 @@ class UserDestinatarioController extends Controller
             'indirizzo' => ['required', 'string', 'max:255'],
             'civico' => ['required', 'string', 'max:10'],
             'id_comune' => ['required', 'integer', 'exists:comuni,id'],
+            'denominazione_ragione_sociale' => ['nullable', 'string', 'max:255'],
             'varie1' => ['nullable', 'string', 'max:255'],
             'varie2' => ['nullable', 'string', 'max:255'],
             'varie3' => ['nullable', 'string', 'max:255'],
             'varie4' => ['nullable', 'string', 'max:255'],
         ];
-
-        if ($tipo !== 'privato') {
-            $rules['denominazione_ragione_sociale'] = ['required', 'string', 'max:255'];
-        }
 
         $validated = $request->validate($rules);
 
@@ -129,14 +125,23 @@ class UserDestinatarioController extends Controller
             'citta' => trim($validated['citta']),
             'provincia' => strtoupper(substr(trim($validated['provincia']), 0, 2)),
             'id_comune' => (int) $validated['id_comune'],
-            'varie1' => isset($validated['varie1']) ? trim((string) $validated['varie1']) : null,
-            'varie2' => isset($validated['varie2']) ? trim((string) $validated['varie2']) : null,
-            'varie3' => isset($validated['varie3']) ? trim((string) $validated['varie3']) : null,
-            'varie4' => isset($validated['varie4']) ? trim((string) $validated['varie4']) : null,
         ];
 
-        if ($tipo !== 'privato') {
-            $out['denominazione_ragione_sociale'] = trim($validated['denominazione_ragione_sociale']);
+        foreach (['varie1', 'varie2', 'varie3', 'varie4'] as $campoVarie) {
+            if ($request->has($campoVarie)) {
+                $out[$campoVarie] = trim((string) ($validated[$campoVarie] ?? '')) ?: null;
+            }
+        }
+
+        $isDestAzienda = ($validated['destinatario_anagrafica'] ?? 'privato') === 'azienda';
+        if ($isDestAzienda) {
+            $denom = trim((string) ($validated['denominazione_ragione_sociale'] ?? ''));
+            if ($denom === '') {
+                throw ValidationException::withMessages([
+                    'denominazione_ragione_sociale' => 'Indica il nome impresa per un destinatario azienda.',
+                ]);
+            }
+            $out['denominazione_ragione_sociale'] = $denom;
         } else {
             $out['denominazione_ragione_sociale'] = null;
         }

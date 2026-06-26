@@ -159,6 +159,10 @@ class EtichetteClienteController extends Controller
 
     public function correcao(Request $request, spedizione $spedizione, SpedizioneEtichettaCorrecaoService $svc): JsonResponse
     {
+        if (! config('etichetta.correcao_cliente_abilitata', false)) {
+            abort(403);
+        }
+
         $this->authorize('view', $spedizione);
 
         try {
@@ -173,6 +177,10 @@ class EtichetteClienteController extends Controller
 
     public function correcaoSalvar(Request $request, spedizione $spedizione, SpedizioneEtichettaCorrecaoService $svc): JsonResponse
     {
+        if (! config('etichetta.correcao_cliente_abilitata', false)) {
+            abort(403);
+        }
+
         $this->authorize('view', $spedizione);
 
         $validated = $request->validate([

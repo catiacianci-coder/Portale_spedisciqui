@@ -18,7 +18,7 @@
 <div class="sq-bleed-layout">
     <x-sq-page-banner title="I miei rimborsi" icon="fa-money-bill-transfer" class="sq-page-banner--full" />
 
-    <div class="home-spedizione-wrap sq-bo-reemb-page">
+    <div class="home-spedizione-wrap sq-bo-reemb-page sq-miei-rimborsi-page">
         <form method="GET" class="sq-filtri-form sq-mb-20">
             <p class="sq-filtri-title">Filtri</p>
             <div class="sq-filtri-row">
@@ -56,12 +56,12 @@
                     <tbody>
                         @forelse ($rimborsi as $r)
                             <tr id="rimborso-{{ $r->id }}">
-                                <td>{{ $r->codice_interno ?: '—' }}</td>
-                                <td>{{ $ordineLabel($r) }}</td>
-                                <td>{{ $r->data_richiesta?->format('d/m/Y') ?? '—' }}</td>
-                                <td>{{ $r->data_prevista?->format('d/m/Y') ?? '—' }}</td>
-                                <td>{{ \App\Support\ImportoEuro::format($r->valore) }}</td>
-                                <td>{{ $statoLabel($r) }}</td>
+                                <td data-label="Spedizione">{{ $r->codice_interno ?: '—' }}</td>
+                                <td data-label="Ordine">{{ $ordineLabel($r) }}</td>
+                                <td data-label="Richiesta">{{ $r->data_richiesta?->format('d/m/Y') ?? '—' }}</td>
+                                <td data-label="Prevista">{{ $r->data_prevista?->format('d/m/Y') ?? '—' }}</td>
+                                <td data-label="Importo">{{ \App\Support\ImportoEuro::format($r->valore) }}</td>
+                                <td data-label="Stato">{{ $statoLabel($r) }}</td>
                             </tr>
                         @empty
                             <tr><td colspan="6" class="sq-td-muted" style="padding:20px;text-align:center;">Nessun rimborso trovato.</td></tr>

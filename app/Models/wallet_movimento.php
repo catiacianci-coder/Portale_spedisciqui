@@ -18,6 +18,7 @@ class wallet_movimento extends Model
         'importo',
         'data_movimento',
         'riferimento',
+        'nota_interna',
         'ordine_id',
     ];
 

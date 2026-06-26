@@ -3,14 +3,17 @@
         
         {{-- Blocco 1: Social (Orizzontali) --}}
         <div class="footer-section footer-social">
-    <a href="#"><img src="{{ asset('images/facebook.png') }}" alt="Facebook" class="sq-footer-social-img"></a>
-    <a href="#"><img src="{{ asset('images/instagram.png') }}" alt="Instagram" class="sq-footer-social-img"></a>
-    <a href="#"><img src="{{ asset('images/linkedin.png') }}" alt="LinkedIn" class="sq-footer-social-img"></a>
-</div>
+            <a href="https://www.facebook.com/profile.php?id=61577430493642" target="_blank" rel="noopener noreferrer">
+                <img src="{{ asset('images/facebook.png') }}" alt="Facebook" class="sq-footer-social-img">
+            </a>
+            <a href="https://www.instagram.com/spedisciqui/" target="_blank" rel="noopener noreferrer">
+                <img src="{{ asset('images/instagram.png') }}" alt="Instagram" class="sq-footer-social-img">
+            </a>
+        </div>
 
         {{-- Blocco 2: Link Assistenza --}}
         <div class="footer-section footer-links">
-            <a href="https://spedisciqui.zendesk.com/hc/it">Assistenza</a>
+            <a href="{{ route('assistenza.index') }}">Assistenza</a>
             <a href="{{ route('politica.rimborso') }}">Politica di Rimborso</a>
             <a href="{{ route('faq.index') }}">FAQ</a>
         </div>

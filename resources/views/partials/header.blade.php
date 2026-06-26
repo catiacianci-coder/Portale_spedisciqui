@@ -16,24 +16,21 @@
             </a>
         @endguest
 
-        <details class="sq-header-nav-menu">
-            <summary>Info</summary>
-            <div class="sq-header-nav-menu-body">
+        <nav class="sq-header-nav-menu" aria-label="Informazioni legali">
+            <button type="button"
+                    class="sq-header-nav-menu-trigger"
+                    aria-expanded="false"
+                    aria-controls="sq-header-nav-menu-panel">
+                Info
+            </button>
+            <div id="sq-header-nav-menu-panel" class="sq-header-nav-menu-body">
                 <a href="{{ route('politica.rimborso') }}" class="sq-header-link">Politica di rimborso</a>
                 <a href="{{ route('termini.legali') }}" class="sq-header-link">Termini e Condizioni</a>
                 <a href="{{ route('politica.privacy') }}" class="sq-header-link">Privacy Policy</a>
                 <a href="{{ route('faq.index') }}" class="sq-header-link">FAQ</a>
-                @auth
-                    @if(auth()->user()->hasVerifiedEmail())
-                        <a href="{{ route('assistenza.index') }}" class="sq-header-link">Assistenza</a>
-                    @else
-                        <a href="https://spedisciqui.zendesk.com/hc/it" class="sq-header-link" target="_blank" rel="noopener noreferrer">Centrale di Assistenza</a>
-                    @endif
-                @else
-                    <a href="https://spedisciqui.zendesk.com/hc/it" class="sq-header-link" target="_blank" rel="noopener noreferrer">Centrale di Assistenza</a>
-                @endauth
+                <a href="{{ route('assistenza.index') }}" class="sq-header-link">Assistenza</a>
             </div>
-        </details>
+        </nav>
     </div>
 
     {{-- Destra: nome + wallet, carrello, esci / entra --}}

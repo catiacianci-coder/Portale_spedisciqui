@@ -184,9 +184,6 @@
                                            @if ($bandMax !== null) data-max-fascia="{{ $bandMax }}" @endif
                                            placeholder="es. 250,00">
                                     <span class="js-servizio-prezzo sq-servizio-prezzo" hidden aria-live="polite"></span>
-                                    @if (($usaQuoteApiServizi ?? false))
-                                        <div class="js-servizio-api-trace sq-servizio-api-trace" hidden></div>
-                                    @endif
                                 </div>
                             @else
                                 <span class="js-servizio-prezzo sq-servizio-prezzo" hidden aria-live="polite"></span>
@@ -239,12 +236,6 @@
 
     const formatIt = (n) => new Intl.NumberFormat('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
     const formatEuroIt = (n) => '€ ' + formatIt(n);
-
-    const escapeHtml = (s) => String(s)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
 
     const parseNum = (v) => {
         if (v === null || v === undefined) return 0;
@@ -358,72 +349,6 @@
         return text;
     };
 
-    const renderServizioApiTrace = (cb, data) => {
-        const el = cb.closest('.sq-checkout-servizio-li')?.querySelector('.js-servizio-api-trace');
-        if (!el) return;
-
-        const trace = data?.api_trace;
-        if (!trace || !Array.isArray(trace.chiamate) || trace.chiamate.length === 0) {
-            el.hidden = true;
-            el.innerHTML = '';
-            return;
-        }
-
-        let html = '<div class="sq-servizio-api-trace-head">API '
-            + escapeHtml(trace.piattaforma || '—')
-            + ' — invio e risposta</div>';
-
-        trace.chiamate.forEach((c) => {
-            const label = c.etichetta || 'Chiamata';
-            html += '<details class="sq-servizio-api-trace-call" open>'
-                + '<summary>' + escapeHtml(label) + '</summary>'
-                + '<div class="sq-servizio-api-trace-block">'
-                + '<div class="sq-servizio-api-trace-label">Inviamo · '
-                + escapeHtml(String(c.metodo || 'POST'))
-                + ' '
-                + escapeHtml(String(c.path || ''))
-                + '</div>'
-                + '<pre class="sq-pre-json">'
-                + escapeHtml(JSON.stringify(c.request ?? null, null, 2))
-                + '</pre></div>'
-                + '<div class="sq-servizio-api-trace-block">'
-                + '<div class="sq-servizio-api-trace-label">Riceviamo · HTTP '
-                + escapeHtml(String(c.http_status ?? '—'))
-                + '</div>'
-                + '<pre class="sq-pre-json">'
-                + escapeHtml(JSON.stringify(c.response ?? null, null, 2))
-                + '</pre></div>';
-
-            if (c.tot_risposta !== null && c.tot_risposta !== undefined && c.tot_risposta !== '') {
-                html += '<p class="sq-servizio-api-trace-meta">tot risposta: '
-                    + escapeHtml(formatEuroIt(parseNum(c.tot_risposta)))
-                    + '</p>';
-            }
-            if (c.commissione_contrassegno !== null && c.commissione_contrassegno !== undefined && c.commissione_contrassegno !== '') {
-                html += '<p class="sq-servizio-api-trace-meta">commissioneContrassegno: '
-                    + escapeHtml(formatEuroIt(parseNum(c.commissione_contrassegno)))
-                    + '</p>';
-            }
-            if (c.commissione_assicurazione !== null && c.commissione_assicurazione !== undefined && c.commissione_assicurazione !== '') {
-                html += '<p class="sq-servizio-api-trace-meta">commissioneAssicurazione: '
-                    + escapeHtml(formatEuroIt(parseNum(c.commissione_assicurazione)))
-                    + '</p>';
-            }
-            if (c.errore) {
-                html += '<p class="sq-servizio-api-trace-meta sq-servizio-api-trace-meta--err">'
-                    + escapeHtml(String(c.errore))
-                    + '</p>';
-            }
-
-            html += '</details>';
-        });
-
-        el.innerHTML = html;
-        el.hidden = false;
-    };
-
-    const clearServizioApiTrace = (cb) => renderServizioApiTrace(cb, null);
-
     const setServizioPrezzoUi = (cb, text, isError = false) => {
         const el = cb.closest('.sq-checkout-servizio-li')?.querySelector('.js-servizio-prezzo');
         if (!el) return;
@@ -443,7 +368,6 @@
         const errFascia = validaFasciaInput(inp, merce);
         if (errFascia) {
             setServizioPrezzoUi(cb, errFascia, true);
-            clearServizioApiTrace(cb);
             apiQuotes.delete(quoteCacheKey(0, merce));
             recalc();
             return;
@@ -458,13 +382,11 @@
         const row = resolveBand(bands, merce);
         if (!row || !row.id) {
             setServizioPrezzoUi(cb, 'Fascia non valida per questo importo.', true);
-            clearServizioApiTrace(cb);
             recalc();
             return;
         }
 
         setServizioPrezzoUi(cb, 'Quotazione in corso…', false);
-        clearServizioApiTrace(cb);
 
         try {
             const res = await fetch(quoteServizioUrl, {
@@ -484,7 +406,6 @@
             if (!data.ok) {
                 apiQuotes.delete(quoteCacheKey(row.id, merce));
                 setServizioPrezzoUi(cb, data.error || 'Quotazione non disponibile.', true);
-                renderServizioApiTrace(cb, data);
                 recalc();
                 return;
             }
@@ -505,11 +426,9 @@
                 ),
                 false,
             );
-            renderServizioApiTrace(cb, data);
             recalc();
         } catch (e) {
             setServizioPrezzoUi(cb, 'Errore di rete durante la quotazione.', true);
-            clearServizioApiTrace(cb);
             recalc();
         }
     };
@@ -519,7 +438,6 @@
         if (prev) clearTimeout(prev);
         if (!merceValoreInserito(inp)) {
             setServizioPrezzoUi(cb, null);
-            clearServizioApiTrace(cb);
             recalc();
             return;
         }
@@ -527,7 +445,6 @@
         const errFascia = validaFasciaInput(inp, merce);
         if (errFascia) {
             setServizioPrezzoUi(cb, errFascia, true);
-            clearServizioApiTrace(cb);
             apiQuotes.clear();
             recalc();
             return;
@@ -716,7 +633,6 @@
                         apiQuotes.clear();
                     }
                     setServizioPrezzoUi(cb, null);
-                    clearServizioApiTrace(cb);
                 }
             }
             renderServiziRiepilogo();
@@ -1002,7 +918,9 @@
         if (!point) return;
         activeIndex = index;
         list?.querySelectorAll('.sq-sc-dest-item').forEach((btn) => {
-            btn.classList.toggle('is-selected', Number(btn.dataset.index) === index);
+            const selected = Number(btn.dataset.index) === index;
+            btn.classList.toggle('is-selected', selected);
+            btn.setAttribute('aria-selected', selected ? 'true' : 'false');
         });
         const marker = markers.get(index);
         if (marker) {

@@ -27,6 +27,8 @@ class parametri_globali extends Model
 
     public const DENOM_GIORNI_RITIRO = 'giorni_ritiro';
 
+    public const DENOM_PASSWORD_PANNELLO_DB_BO = 'Password_Pannello_DB_BO';
+
     public const DENOM_AVVISO_HOMEPAGE = 'avviso_homepage';
 
     /** @var array<string, string> */

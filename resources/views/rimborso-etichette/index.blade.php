@@ -64,6 +64,37 @@
 .sq-rimborso-info { font-size: 0.95rem; line-height: 1.55; color: #444; }
 .sq-rimborso-info p { margin: 0 0 10px; }
 .sq-rimborso-info p:last-child { margin-bottom: 0; }
-.sq-rimborso-trash-form { display: inline; margin: 0; padding: 0; }
+.sq-rimborso-action-form { display: inline; margin: 0; padding: 0; }
+.sq-rimborso-richiedi-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 2px solid var(--sq-border-brand, #c75b2a);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--sq-brand, #c75b2a);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    padding: 8px 14px;
+    white-space: nowrap;
+    box-sizing: border-box;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.sq-rimborso-richiedi-btn:hover {
+    background: var(--sq-brand, #c75b2a);
+    color: #fff;
+    border-color: var(--sq-brand, #c75b2a);
+    box-shadow: 0 2px 8px rgba(199, 91, 42, 0.25);
+}
+.sq-rimborso-richiedi-btn:focus-visible {
+    outline: 2px solid var(--sq-brand, #c75b2a);
+    outline-offset: 2px;
+}
+.sq-rimborso-richiedi-btn i {
+    font-size: 18px;
+}
 </style>
 @endpush

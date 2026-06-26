@@ -17,8 +17,8 @@
     @if ($rows !== [])
         <div class="sq-sc-dest-layout">
             <div class="sq-sc-dest-list-wrap">
-                <div class="sq-sc-dest-list-head">{{ $puntoConsegnaLabel ?? 'Punti di consegna' }}</div>
-                <ul class="sq-sc-dest-list" id="checkout-dest-points-list" role="listbox" aria-label="Punti consegna">
+                <div class="sq-sc-dest-list-head" id="checkout-dest-list-label">{{ $puntoConsegnaLabel ?? 'Punti di consegna' }}</div>
+                <ul class="sq-sc-dest-list" id="checkout-dest-points-list" role="listbox" aria-labelledby="checkout-dest-list-label">
                     @foreach ($rows as $index => $point)
                         <li>
                             <button type="button"

@@ -235,12 +235,12 @@ class BackofficeUtentiController extends Controller
         if ($nuova === null) {
             return redirect()
                 ->route('backoffice.utenti.section', [$user, 'anagrafica'])
-                ->with('info', 'Nessuna modifica rispetto all’ultima anagrafica salvata.');
+                ->with('anagrafica_unchanged', true);
         }
 
         return redirect()
             ->route('backoffice.utenti.section', [$user, 'anagrafica'])
-            ->with('ok', 'Anagrafica aggiornata: registrata una nuova revisione per l’utente #'.$user->id.'.');
+            ->with('ok', 'Anagrafica aggiornata');
     }
 
     public function toggleSedeLiccardiMittenza(User $user, mittenza $mittenza): RedirectResponse

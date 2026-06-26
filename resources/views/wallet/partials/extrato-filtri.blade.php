@@ -46,7 +46,7 @@
             </div>
         </div>
         <div class="sq-wallet-extrato-filtri__campo sq-wallet-extrato-filtri__campo--tipo">
-            <label class="sq-wallet-extrato-filtri__label" for="{{ $tipoId }}">Tipo</label>
+            <label class="sq-wallet-extrato-filtri__label" for="{{ $tipoId }}">Descrizione</label>
             <select name="wallet_descrizione_id" id="{{ $tipoId }}" class="sq-wallet-extrato-filtri__select">
                 <option value="" @selected(($filtros['wallet_descrizione_id'] ?? '') === '')>Tutti</option>
                 @foreach ($tiposMovimento as $tipo)

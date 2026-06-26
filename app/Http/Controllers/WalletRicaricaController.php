@@ -67,14 +67,14 @@ class WalletRicaricaController extends Controller
                 ->with('ok', 'Ricarica simulata: sono stati accreditati '.ImportoEuro::format($euro, 0).' sul wallet (solo modalità sviluppo).');
         }
 
-        wallet_ricarica_richiesta::query()->create([
+        $richiesta = wallet_ricarica_richiesta::query()->create([
             'user_id' => $request->user()->id,
             'importo' => $euro,
             'stato' => 'in_attesa',
         ]);
 
         return redirect()
-            ->route('wallet.ricarica')
-            ->with('info', 'Richiesta di ricarica di '.ImportoEuro::format($euro, 0).' registrata in attesa di pagamento. L’importo non è ancora accreditato: quando il gateway sarà attivo confermeremo l’incasso; in ambiente di test il back-office può simulare l’accredito.');
+            ->route('wallet.ricariche.pagamento.show', $richiesta)
+            ->with('info', 'Scegli il metodo di pagamento per completare la ricarica di '.ImportoEuro::format($euro, 0).'.');
     }
 }

@@ -55,7 +55,7 @@
                         $importoIvatoWallet = $mostraPrezziDuali ? $s->prezzoClienteIvatoWallet() : null;
                     @endphp
                     <tr @class(['sq-ordine-remessa--annullata' => $annullata])>
-                        <td class="sq-td sq-nowrap">
+                        <td class="sq-td sq-nowrap" data-label="Data">
                             {{ $s->created_at?->format('d/m/Y H:i') ?? '—' }}
                             @if ($annullata)
                                 <div class="sq-ordine-remessa-badges">
@@ -63,10 +63,10 @@
                                 </div>
                             @endif
                         </td>
-                        <td class="sq-td sq-ordine-remessa-codice">{{ $s->codice_interno ?: '—' }}</td>
-                        <td class="sq-td sq-fw-700">{{ $ordine->id }}</td>
+                        <td class="sq-td sq-ordine-remessa-codice" data-label="Codice spedizione">{{ $s->codice_interno ?: '—' }}</td>
+                        <td class="sq-td sq-fw-700" data-label="Ordine">{{ $ordine->id }}</td>
                         @if ($mostraMittente)
-                            <td class="sq-td sq-ordine-remessa-person">
+                            <td class="sq-td sq-ordine-remessa-person" data-label="Mittente">
                                 <span class="sq-ordine-remessa-nome">{{ $nomeRem !== '' ? $nomeRem : '—' }}</span>
                                 @if ($addrRem !== '')
                                     <span class="sq-ordine-remessa-indirizzo">{{ $addrRem }}</span>
@@ -76,14 +76,14 @@
                                 @endif
                             </td>
                         @endif
-                        <td class="sq-td sq-ordine-remessa-person">
+                        <td class="sq-td sq-ordine-remessa-person" data-label="Destinatario">
                             @include('ordini.partials.spedizione-destinatario-tabella', ['spedizione' => $s])
                         </td>
-                        <td class="sq-td">{{ $servico !== '' ? $servico : '—' }}</td>
-                        <td class="sq-td sq-text-14">
+                        <td class="sq-td" data-label="Servizio">{{ $servico !== '' ? $servico : '—' }}</td>
+                        <td class="sq-td sq-text-14" data-label="Servizi aggiuntivi">
                             @include('ordini.partials.spedizione-servizi-aggiuntivi', ['spedizione' => $s])
                         </td>
-                        <td class="sq-td sq-td--right">
+                        <td class="sq-td sq-td--right" data-label="Importo (IVA inclusa)">
                             @if ($annullata)
                                 <span class="sq-text-muted">—</span>
                             @else

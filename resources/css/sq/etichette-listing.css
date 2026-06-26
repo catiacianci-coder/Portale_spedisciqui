@@ -1015,14 +1015,122 @@
     border-color: #2e7d32;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 899px) {
     .sq-etichette-filtri.sq-filtros-card {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+        overflow-x: visible;
+        padding: 12px;
     }
 
-    .sq-etichette-filtri.sq-filtros-card .sq-etichette-filtros-row {
-        min-width: 860px;
+    .sq-etichette-filtri.sq-filtros-card .sq-etichette-filtros-row,
+    .sq-etichette-filtri--periodo-custom.sq-filtros-card .sq-etichette-filtros-row {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        min-width: 0;
+        width: 100%;
+        gap: 10px 12px;
+    }
+
+    .sq-etichette-filtro-dest,
+    .sq-etichette-filtro-custom.campo.filtros-custom-datas.is-on,
+    .sq-etichette-filtri-tail {
+        grid-column: 1 / -1;
+    }
+
+    .sq-etichette-filtri-tail {
+        width: 100%;
+        max-width: none;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .sq-etichette-filtro-custom.campo.filtros-custom-datas.is-on {
+        flex-wrap: wrap;
+    }
+
+    .sq-etichette-page .sq-listing-table-scroll {
+        overflow-x: visible;
+    }
+
+    .sq-etichette-page .sq-listing-panel table.sq-listing-table.sq-etichette-table {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        border-collapse: collapse;
+    }
+
+    .sq-etichette-page .sq-listing-panel table.sq-listing-table.sq-etichette-table thead {
+        display: none !important;
+    }
+
+    .sq-etichette-page .sq-listing-panel table.sq-listing-table.sq-etichette-table tbody {
+        display: block !important;
+    }
+
+    .sq-etichette-page .sq-listing-panel table.sq-listing-table.sq-etichette-table tbody tr {
+        display: block !important;
+        padding: 12px 14px 14px;
+        border-bottom: 1px solid var(--sq-border-light);
+    }
+
+    .sq-etichette-page .sq-listing-panel table.sq-listing-table.sq-etichette-table tbody tr:nth-child(odd),
+    .sq-etichette-page .sq-listing-panel table.sq-listing-table.sq-etichette-table tbody tr:nth-child(even) {
+        background: #fff;
+    }
+
+    .sq-etichette-page .sq-listing-panel table.sq-listing-table.sq-etichette-table tbody tr:hover {
+        background: var(--sq-bg-soft, #f9fafb);
+    }
+
+    .sq-etichette-page .sq-listing-panel table.sq-listing-table.sq-etichette-table tbody td {
+        display: block !important;
+        width: 100%;
+        min-width: 0;
+        padding: 7px 0;
+        border: none !important;
+        white-space: normal;
+        text-align: left;
+        vertical-align: top;
+    }
+
+    .sq-etichette-page .sq-listing-panel table.sq-listing-table.sq-etichette-table tbody td::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 4px;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        line-height: 1.2;
+        color: var(--sq-brand);
+    }
+
+    .sq-etichette-page .sq-listing-panel table.sq-listing-table.sq-etichette-table tbody td:last-child {
+        border-bottom: none;
+    }
+
+    .sq-etichette-page .sq-listing-panel table.sq-listing-table.sq-etichette-table .td-acoes {
+        min-width: 0;
+        white-space: normal;
+        text-align: left;
+    }
+
+    .sq-etichette-page .sq-listing-panel table.sq-listing-table.sq-etichette-table .sq-etichette-acoes {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .sq-etichette-page .sq-listing-panel table.sq-listing-table.sq-etichette-table .sq-etichette-ldv-tracking,
+    .sq-etichette-page .sq-listing-panel table.sq-listing-table.sq-etichette-table .sq-etichette-ldv-codice {
+        word-break: break-word;
+    }
+}
+
+@media (max-width: 480px) {
+    .sq-etichette-filtri.sq-filtros-card .sq-etichette-filtros-row,
+    .sq-etichette-filtri--periodo-custom.sq-filtros-card .sq-etichette-filtros-row {
+        grid-template-columns: 1fr !important;
     }
 }
 

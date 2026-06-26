@@ -54,6 +54,33 @@ class StripeWebhookHandler
         /** @var \Stripe\PaymentIntent $intent */
         $intent = $event->data->object;
 
+        $ricaricaId = (int) ($intent->metadata['wallet_ricarica_id'] ?? 0);
+        $metodoRicaricaId = (int) ($intent->metadata['metodo_pagamento_wallet_ricarica_id'] ?? 0);
+
+        if ($ricaricaId > 0 && $metodoRicaricaId > 0) {
+            $ricarica = \App\Models\wallet_ricarica_richiesta::query()->find($ricaricaId);
+            if (! $ricarica) {
+                Log::warning('Stripe webhook payment_intent.succeeded: ricarica non trovata', ['wallet_ricarica_id' => $ricaricaId]);
+
+                return;
+            }
+
+            $result = app(\App\Services\Stripe\StripeRicaricaPaymentIntentService::class)->completaRicaricaPagata(
+                $ricarica,
+                $metodoRicaricaId,
+                (string) $intent->id,
+            );
+
+            if (! $result['ok'] && ! ($result['already'] ?? false)) {
+                Log::warning('Stripe webhook payment_intent.succeeded: accredito ricarica fallito', [
+                    'wallet_ricarica_id' => $ricaricaId,
+                    'message' => $result['message'] ?? null,
+                ]);
+            }
+
+            return;
+        }
+
         $ordineId = (int) ($intent->metadata['ordine_id'] ?? 0);
         $metodoId = (int) ($intent->metadata['metodo_pagamento_id'] ?? 0);
 

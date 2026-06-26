@@ -8,9 +8,6 @@
     @if (session('ok'))
         <div class="sq-alert sq-alert--success sq-mb-16">{{ session('ok') }}</div>
     @endif
-    @if (session('info'))
-        <div class="sq-alert sq-alert--info-warm sq-mb-16">{{ session('info') }}</div>
-    @endif
     @if ($errors->has('anagrafica'))
         <div class="sq-alert sq-alert--error sq-mb-16">{{ $errors->first('anagrafica') }}</div>
     @endif
@@ -237,6 +234,8 @@
                 </div>
             </div>
         @endif
+
+        @include('partials.anagrafica-unchanged-modal')
 
         @include('backoffice.utenti.partials.anagrafica-edit-script', [
             'isImpresa' => $isImpresa,

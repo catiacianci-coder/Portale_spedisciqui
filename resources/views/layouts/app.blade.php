@@ -106,6 +106,7 @@
                         'backoffice.wallet.cliente' => ['title' => 'Movimenti wallet', 'icon' => 'fa-receipt'],
                         'backoffice.nc.index' => ['title' => 'Non conformità', 'icon' => 'fa-file-circle-exclamation'],
                         'backoffice.corrieri.index' => ['title' => 'Corrieri', 'icon' => 'fa-truck-fast'],
+                        'backoffice.metodi_pagamento.index' => ['title' => 'Metodi di pagamento', 'icon' => 'fa-credit-card'],
                         'backoffice.corrieri.edit' => ['title' => 'Modifica corriere', 'icon' => 'fa-truck-fast'],
                         'backoffice.parametri_globali.edit' => ['title' => 'Parametri globali', 'icon' => 'fa-sliders'],
                         'backoffice.utilities.index' => ['title' => 'Utilities', 'icon' => 'fa-screwdriver-wrench'],

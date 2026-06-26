@@ -119,10 +119,10 @@
                             $dataAnnullamento = $o->annullato_in ?? ($aba === 'annullati' ? $o->updated_at : null);
                         @endphp
                         <tr>
-                            <td class="sq-td sq-fw-700">{{ $o->id }}</td>
-                            <td class="sq-td sq-td--muted sq-nowrap">{{ $o->created_at?->format('d/m/Y H:i') }}</td>
+                            <td class="sq-td sq-fw-700" data-label="N. ordine">{{ $o->id }}</td>
+                            <td class="sq-td sq-td--muted sq-nowrap" data-label="Data">{{ $o->created_at?->format('d/m/Y H:i') }}</td>
                             @if ($aba !== 'non_pagati')
-                                <td class="sq-td sq-td--muted sq-nowrap">
+                                <td class="sq-td sq-td--muted sq-nowrap" data-label="{{ $aba === 'annullati' ? 'Data annullamento' : 'Data pagamento' }}">
                                     @if ($aba === 'annullati')
                                         {{ $dataAnnullamento?->format('d/m/Y H:i') ?? '—' }}
                                     @elseif ($dataPagamento)
@@ -132,7 +132,7 @@
                                     @endif
                                 </td>
                             @endif
-                            <td class="sq-td sq-td--right sq-nowrap">
+                            <td class="sq-td sq-td--right sq-nowrap" data-label="Importo (IVA inclusa)">
                                 @if ($aba === 'non_pagati')
                                     @include('partials.due-prezzi-standard-wallet', [
                                         'prezzoStandard' => $costoOrdineStandard,
@@ -145,8 +145,8 @@
                                     <span class="sq-fw-700">{{ \App\Support\ImportoEuro::format($costoOrdine) }}</span>
                                 @endif
                             </td>
-                            <td class="sq-td">{{ $qtdSpedizioni }}</td>
-                            <td class="sq-td sq-td--right">
+                            <td class="sq-td" data-label="Spedizioni">{{ $qtdSpedizioni }}</td>
+                            <td class="sq-td sq-td--right" data-label="Azioni">
                                 <div class="sq-ordini-actions-icons">
                                     @if ($aba === 'pagati')
                                         <a

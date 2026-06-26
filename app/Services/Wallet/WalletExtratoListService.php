@@ -4,7 +4,7 @@ namespace App\Services\Wallet;
 
 use App\Models\User;
 use App\Models\wallet_movimento;
-use App\Support\WalletMovimentoExtratoPresenter;
+use App\Support\WalletMovimentoRiferimentoPresenter;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
@@ -15,7 +15,7 @@ class WalletExtratoListService
 {
     public function paginateForUser(User $user, WalletExtratoFilters $filters, Request $request): LengthAwarePaginator
     {
-        $linhas = $this->buildLinhas(collect([$user]), $filters, incluirDetalheNaDescricao: false);
+        $linhas = $this->buildLinhas(collect([$user]), $filters);
 
         return $this->paginateLinhas($linhas, $filters, $request);
     }
@@ -25,7 +25,7 @@ class WalletExtratoListService
      */
     public function paginateForUsers(Collection $users, WalletExtratoFilters $filters, Request $request): LengthAwarePaginator
     {
-        $linhas = $this->buildLinhas($users, $filters, incluirDetalheNaDescricao: true);
+        $linhas = $this->buildLinhas($users, $filters);
 
         return $this->paginateLinhas($linhas, $filters, $request);
     }
@@ -34,7 +34,7 @@ class WalletExtratoListService
      * @param  Collection<int, User>  $users
      * @return Collection<int, WalletExtratoLinha>
      */
-    private function buildLinhas(Collection $users, WalletExtratoFilters $filters, bool $incluirDetalheNaDescricao): Collection
+    private function buildLinhas(Collection $users, WalletExtratoFilters $filters): Collection
     {
         if ($users->isEmpty()) {
             return collect();
@@ -65,20 +65,23 @@ class WalletExtratoListService
             ->map(fn (wallet_movimento $movimento) => $this->linhaFromMovimento(
                 $movimento,
                 $usersById->get($movimento->user_id),
-                $incluirDetalheNaDescricao,
             ))
             ->values();
     }
 
-    private function linhaFromMovimento(wallet_movimento $m, ?User $usuario, bool $incluirDetalheNaDescricao): WalletExtratoLinha
+    private function linhaFromMovimento(wallet_movimento $m, ?User $usuario): WalletExtratoLinha
     {
+        $nota = trim((string) ($m->nota_interna ?? ''));
+
         return new WalletExtratoLinha(
+            movimentoId: (int) $m->id,
             sortAt: $m->data_movimento ?? $m->created_at ?? now(),
-            tipo: (string) ($m->descrizione?->descrizione ?? '—'),
-            descricao: WalletMovimentoExtratoPresenter::descricaoExtrato($m, $incluirDetalheNaDescricao),
+            dettaglio: (string) ($m->descrizione?->descrizione ?? '—'),
+            ordineLdv: WalletMovimentoRiferimentoPresenter::ordineLdv($m),
             valor: (float) $m->importo,
             isCredito: $m->tipo === 'credito',
             usuario: $usuario ?? $m->user,
+            notaInterna: $nota !== '' ? $nota : null,
         );
     }
 

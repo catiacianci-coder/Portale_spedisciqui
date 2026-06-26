@@ -168,11 +168,13 @@ class UserMittenzaController extends Controller
             'citta' => trim($validated['citta']),
             'provincia' => strtoupper(substr(trim($validated['provincia']), 0, 2)),
             'id_comune' => (int) $validated['id_comune'],
-            'varie1' => isset($validated['varie1']) ? trim((string) $validated['varie1']) : null,
-            'varie2' => isset($validated['varie2']) ? trim((string) $validated['varie2']) : null,
-            'varie3' => isset($validated['varie3']) ? trim((string) $validated['varie3']) : null,
-            'varie4' => isset($validated['varie4']) ? trim((string) $validated['varie4']) : null,
         ];
+
+        foreach (['varie1', 'varie2', 'varie3', 'varie4'] as $campoVarie) {
+            if ($request->has($campoVarie)) {
+                $out[$campoVarie] = trim((string) ($validated[$campoVarie] ?? '')) ?: null;
+            }
+        }
 
         $isMittAzienda = ($validated['mittente_anagrafica'] ?? 'privato') === 'azienda';
         if ($isMittAzienda) {

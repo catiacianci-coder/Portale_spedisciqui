@@ -272,6 +272,10 @@
             alert('Seleziona CAP o città dall’elenco suggerito in modo che CAP, città e provincia coincidano con un comune valido.');
             return;
         }
+        if (window.sqAnagraficaSnapshotsEqual?.(snapshotAll(), baseSnapshot)) {
+            window.sqAnagraficaUnchangedModal?.open(() => exitEdit());
+            return;
+        }
         if (confirm(MSG_CONFERMA)) {
             form.dataset.confirmed = '1';
             setPanels(false);
@@ -289,6 +293,10 @@
 
     @if ($errors->any())
         enterEdit();
+    @endif
+
+    @if (session('anagrafica_unchanged'))
+        window.sqAnagraficaUnchangedModal?.open();
     @endif
 
     syncActionButtons();

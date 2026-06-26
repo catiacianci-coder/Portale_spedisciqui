@@ -458,7 +458,7 @@ a.sq-header-notif-item:hover {
     width: 280px;
     background-color: var(--sq-bg-sidebar);
     color: var(--sq-sidebar-text);
-    padding: 0 25px 25px;
+    padding: 0 22px 18px;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
@@ -487,7 +487,7 @@ a.sq-header-notif-item:hover {
     min-height: 75px;
     padding: 0;
     text-align: left;
-    margin-bottom: 26px;
+    margin-bottom: 16px;
     display: flex;
     align-items: center;
     justify-content: flex-start;
@@ -501,20 +501,20 @@ a.sq-header-notif-item:hover {
 
 .sq-sidebar-nav {
     flex-grow: 1;
-    margin-top: 8px;
+    margin-top: 4px;
 }
 
 .sq-sidebar-section {
-    margin-bottom: 35px;
+    margin-bottom: 28px;
 }
 
 .sq-sidebar-section-title {
     color: var(--sq-sidebar-muted);
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     text-transform: uppercase;
     border-bottom: 1px solid var(--sq-sidebar-border);
-    padding-bottom: 5px;
-    margin-bottom: 15px;
+    padding-bottom: 4px;
+    margin-bottom: 10px;
     font-weight: bold;
     letter-spacing: 1px;
 }
@@ -526,7 +526,7 @@ a.sq-header-notif-item:hover {
 }
 
 .sq-sidebar-item {
-    padding: 10px 0;
+    padding: 6px 0;
 }
 
 .sq-sidebar-link {
@@ -534,8 +534,9 @@ a.sq-header-notif-item:hover {
     text-decoration: none;
     display: flex;
     align-items: center;
-    gap: 12px;
-    font-size: 17px;
+    gap: 10px;
+    font-size: 15px;
+    line-height: 1.3;
 }
 
 .sq-sidebar-ico {

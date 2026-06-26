@@ -456,6 +456,84 @@
     justify-content: center;
 }
 
+.sq-pagination {
+    width: 100%;
+}
+
+.sq-pagination-mobile {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.sq-pagination-desktop {
+    display: none;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.sq-pagination-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+    padding: 7px 14px;
+    border: 1px solid var(--sq-border);
+    border-radius: 8px;
+    background: var(--sq-bg-white);
+    color: var(--sq-text-heading);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+    box-sizing: border-box;
+}
+
+.sq-pagination-btn--icon {
+    min-width: 36px;
+    padding: 7px 10px;
+}
+
+.sq-pagination-btn:not(.is-disabled):not(.is-current):hover {
+    background: var(--sq-bg-soft);
+    color: var(--sq-brand-dark, var(--sq-brand));
+}
+
+.sq-pagination-btn.is-current {
+    background: var(--sq-brand);
+    border-color: var(--sq-brand);
+    color: #fff;
+    cursor: default;
+}
+
+.sq-pagination-btn.is-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.sq-pagination-ellipsis {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 4px;
+    color: var(--sq-text-muted);
+    font-size: 13px;
+}
+
+@media (min-width: 640px) {
+    .sq-pagination-mobile {
+        display: none;
+    }
+
+    .sq-pagination-desktop {
+        display: flex;
+    }
+}
+
 .sq-stato-tabella {
     display: inline-flex;
     align-items: center;
@@ -1353,6 +1431,78 @@ a.sq-btn-pay-sm--link {
     color: #fff;
 }
 
+.sq-wallet-extrato-btn-nuovo-movimento {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 10px;
+    background: var(--sq-accent, var(--sq-brand));
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.sq-wallet-extrato-btn-nuovo-movimento:hover {
+    filter: brightness(1.05);
+}
+
+.sq-wallet-movimento-desc-wrap[hidden] {
+    display: none !important;
+}
+
+.sq-wallet-movimento-nota-interna {
+    min-height: 72px;
+    resize: vertical;
+}
+
+.sq-wallet-extrato-riferimento,
+.sq-wallet-extrato-nota-interna {
+    max-width: 220px;
+    word-break: break-word;
+}
+
+.sq-wallet-nota-interna-form {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    min-width: 160px;
+}
+
+.sq-wallet-nota-interna-form__input {
+    width: 100%;
+    min-width: 140px;
+    padding: 8px 10px;
+    border: 1px solid var(--sq-border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    line-height: 1.35;
+    resize: vertical;
+    min-height: 52px;
+}
+
+.sq-wallet-nota-interna-form__btn {
+    align-self: flex-end;
+    padding: 5px 12px;
+    border: none;
+    border-radius: 6px;
+    background: var(--sq-accent, #0a5969);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.sq-wallet-nota-interna-form__btn:hover {
+    filter: brightness(1.08);
+}
+
 .sq-wallet-extrato-saldo {
     display: flex;
     flex-wrap: wrap;
@@ -1717,6 +1867,25 @@ a.sq-btn-pay-sm--link {
 
 .sq-wallet-ricariche-btn-paga:hover {
     filter: brightness(1.08);
+}
+
+.sq-wallet-ricariche-bo-paga-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.sq-wallet-ricariche-bo-paga-select {
+    min-width: 148px;
+    max-width: 220px;
+    padding: 7px 10px;
+    border: 1px solid var(--sq-border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    background: #fff;
 }
 
 .sq-wallet-ricariche-page--bo .sq-wallet-extrato-filtri__row {

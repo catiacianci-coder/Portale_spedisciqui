@@ -1,7 +1,12 @@
 @php
     $m = $destinatario;
-    $isImpresa = ($tipoUtente ?? 'privato') !== 'privato';
     $oldIdComune = old('id_comune', $idComuneCorrente !== null ? (string) $idComuneCorrente : '');
+    $destinatarioAnagraficaOld = old('destinatario_anagrafica');
+    if ($destinatarioAnagraficaOld === 'azienda' || $destinatarioAnagraficaOld === 'privato') {
+        $destinatarioAnagraficaDefault = $destinatarioAnagraficaOld;
+    } else {
+        $destinatarioAnagraficaDefault = trim((string) ($m?->denominazione_ragione_sociale ?? '')) !== '' ? 'azienda' : 'privato';
+    }
 @endphp
 
 <div class="sq-profilo-page sq-page-preventivi">
@@ -29,13 +34,28 @@
                 <h2 class="sq-profilo-card-title">Dati</h2>
             </div>
             <div class="sq-profilo-card-stack">
-                @if ($isImpresa)
-                    <div class="sq-profilo-field">
-                        <label for="denominazione_ragione_sociale" class="sq-profilo-label">Denominazione / ragione sociale <span class="sq-profilo-req">*</span></label>
-                        <input type="text" name="denominazione_ragione_sociale" id="denominazione_ragione_sociale" class="sq-profilo-input" required maxlength="255"
-                               value="{{ old('denominazione_ragione_sociale', $m->denominazione_ragione_sociale ?? '') }}">
+                <div class="sq-profilo-field sq-mitt-tipo-field">
+                    <span class="sq-profilo-label">Tipologia destinatario <span class="sq-profilo-req">*</span></span>
+                    <div class="sq-mitt-tipo-row" role="radiogroup" aria-label="Tipologia destinatario">
+                        <label class="sq-mitt-tipo-option">
+                            <input type="radio" name="destinatario_anagrafica" value="privato" class="sq-mitt-tipo-radio" {{ $destinatarioAnagraficaDefault === 'privato' ? 'checked' : '' }}>
+                            <span>Privato</span>
+                        </label>
+                        <label class="sq-mitt-tipo-option">
+                            <input type="radio" name="destinatario_anagrafica" value="azienda" class="sq-mitt-tipo-radio" {{ $destinatarioAnagraficaDefault === 'azienda' ? 'checked' : '' }}>
+                            <span>Azienda</span>
+                        </label>
                     </div>
-                @endif
+                </div>
+                <div class="sq-profilo-field sq-mitt-nome-impresa-wrap" id="dest_nome_impresa_wrap" @if ($destinatarioAnagraficaDefault !== 'azienda') hidden @endif>
+                    <label for="denominazione_ragione_sociale" class="sq-profilo-label">Nome impresa <span class="sq-profilo-req">*</span></label>
+                    <input type="text" name="denominazione_ragione_sociale" id="denominazione_ragione_sociale" class="sq-profilo-input" maxlength="255"
+                           placeholder="Ragione sociale o nome commerciale"
+                           value="{{ old('denominazione_ragione_sociale', $m->denominazione_ragione_sociale ?? '') }}"
+                           @if ($destinatarioAnagraficaDefault !== 'azienda') disabled @endif
+                           @if ($destinatarioAnagraficaDefault === 'azienda') required @endif>
+                    @error('denominazione_ragione_sociale')<span class="sq-profilo-err">{{ $message }}</span>@enderror
+                </div>
                 <div class="sq-profilo-field">
                     <label for="dest_nome" class="sq-profilo-label">Nome <span class="sq-profilo-req">*</span></label>
                     <input type="text" name="nome" id="dest_nome" class="sq-profilo-input" required maxlength="255" value="{{ old('nome', $m->nome ?? '') }}">
@@ -78,7 +98,7 @@
                 </div>
                 <div class="sq-profilo-addr-row">
                     <div class="sq-profilo-field sq-profilo-mb-0">
-                        <label for="dest_indirizzo" class="sq-profilo-label">Strada <span class="sq-profilo-req">*</span></label>
+                        <label for="dest_indirizzo" class="sq-profilo-label">Via/Piazza <span class="sq-profilo-req">*</span></label>
                         <input type="text" name="indirizzo" id="dest_indirizzo" class="sq-profilo-input" required maxlength="255" value="{{ old('indirizzo', $m->indirizzo ?? '') }}">
                     </div>
                     <div class="sq-profilo-field sq-profilo-mb-0">
@@ -87,7 +107,6 @@
                     </div>
                 </div>
                 @error('id_comune')<span class="sq-profilo-err sq-profilo-err-block">{{ $message }}</span>@enderror
-                <p class="sq-profilo-suggest-hint sq-text-muted sq-text-14 sq-m-0 sq-mt-10">Seleziona CAP o città dall’elenco suggerito.</p>
             </div>
         </div>
 
@@ -235,6 +254,35 @@
         }
     });
 
+    function wireDestinatarioTipo() {
+        const wrap = document.getElementById('dest_nome_impresa_wrap');
+        const denom = document.getElementById('denominazione_ragione_sociale');
+        const radios = document.querySelectorAll('input[name="destinatario_anagrafica"]');
+        if (!wrap || !denom || !radios.length) return;
+
+        function isAzienda() {
+            const c = document.querySelector('input[name="destinatario_anagrafica"]:checked');
+            return c && c.value === 'azienda';
+        }
+
+        function applyState(clearDenom) {
+            const az = isAzienda();
+            wrap.hidden = !az;
+            if (az) {
+                denom.disabled = false;
+                denom.setAttribute('required', 'required');
+            } else {
+                denom.removeAttribute('required');
+                denom.disabled = true;
+                if (clearDenom) denom.value = '';
+            }
+        }
+
+        radios.forEach((r) => r.addEventListener('change', () => applyState(true)));
+        applyState(false);
+    }
+
+    wireDestinatarioTipo();
     wireSuggestCap();
     wireSuggestCitta();
 

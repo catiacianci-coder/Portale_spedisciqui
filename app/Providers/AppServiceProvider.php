@@ -12,6 +12,7 @@ use App\Services\UserImballaggiDefault;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
@@ -33,6 +34,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Paginator::defaultView('vendor.pagination.sq');
+        Paginator::defaultSimpleView('vendor.pagination.sq');
+
         Gate::policy(ordine::class, OrdinePolicy::class);
         Gate::policy(spedizione::class, SpedizionePolicy::class);
 

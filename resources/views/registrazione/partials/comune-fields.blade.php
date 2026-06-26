@@ -123,9 +123,10 @@
 
                 list.innerHTML = '';
                 for (const it of items) {
-                    const row = document.createElement('button');
-                    row.type = 'button';
+                    const row = document.createElement('div');
                     row.className = 'sq-profilo-suggest-item';
+                    row.setAttribute('role', 'option');
+                    row.tabIndex = -1;
                     row.textContent = it.label || `${it.cap} — ${it.comune} (${it.provincia})`;
                     row.addEventListener('mousedown', (e) => {
                         e.preventDefault();
@@ -187,9 +188,10 @@
 
                 list.innerHTML = '';
                 for (const it of items) {
-                    const row = document.createElement('button');
-                    row.type = 'button';
+                    const row = document.createElement('div');
                     row.className = 'sq-profilo-suggest-item';
+                    row.setAttribute('role', 'option');
+                    row.tabIndex = -1;
                     row.textContent = it.label || `${it.cap} — ${it.comune} (${it.provincia})`;
                     row.addEventListener('mousedown', (e) => {
                         e.preventDefault();

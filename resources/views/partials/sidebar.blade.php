@@ -27,6 +27,13 @@
                 <li class="sq-sidebar-item" hidden aria-hidden="true"><a href="{{ route('resi.index') }}" class="sq-sidebar-link" tabindex="-1"><i class="fa-solid fa-rotate-left sq-sidebar-ico sq-sidebar-ico--brand"></i> Gestione resi</a></li>
                 <li class="sq-sidebar-item"><a href="{{ route('rimborso-etichette.index') }}" class="sq-sidebar-link @if(request()->routeIs('rimborso-etichette.*')) sq-sidebar-link--active @endif"><i class="fa-solid fa-hand-holding-dollar sq-sidebar-ico sq-sidebar-ico--brand"></i> Richiedi rimborso</a></li>
                 <li class="sq-sidebar-item"><a href="{{ route('wallet.ricarica') }}" class="sq-sidebar-link"><i class="fa-solid fa-coins sq-sidebar-ico sq-sidebar-ico--brand"></i> Ricarica wallet</a></li>
+                <li class="sq-sidebar-item">
+                    <a href="{{ route('assistenza.index') }}"
+                       class="sq-sidebar-link @if(request()->routeIs('assistenza.*')) sq-sidebar-link--active @endif">
+                        <i class="fa-solid fa-headset sq-sidebar-ico sq-sidebar-ico--brand"></i>
+                        Assistenza
+                    </a>
+                </li>
             </ul>
         </div>
 
@@ -38,19 +45,6 @@
                 <li class="sq-sidebar-item"><a href="{{ route('miei-rimborsi.index') }}" class="sq-sidebar-link @if(request()->routeIs('miei-rimborsi.*')) sq-sidebar-link--active @endif"><i class="fa-solid fa-money-bill-transfer sq-sidebar-ico sq-sidebar-ico--fin"></i> I miei rimborsi</a></li>
                 <li class="sq-sidebar-item"><a href="{{ route('wallet.ricariche') }}" class="sq-sidebar-link"><i class="fa-solid fa-coins sq-sidebar-ico sq-sidebar-ico--wallet"></i> Ricariche wallet</a></li>
                 <li class="sq-sidebar-item"><a href="{{ route('wallet.movimenti') }}" class="sq-sidebar-link"><i class="fa-solid fa-file-invoice-dollar sq-sidebar-ico sq-sidebar-ico--wallet"></i> Estratto wallet</a></li>
-            </ul>
-        </div>
-
-        <div class="sq-sidebar-section">
-            <p class="sq-sidebar-section-title">Assistenza</p>
-            <ul class="sq-sidebar-list">
-                <li class="sq-sidebar-item">
-                    <a href="{{ route('assistenza.index') }}"
-                       class="sq-sidebar-link @if(request()->routeIs('assistenza.*')) sq-sidebar-link--active @endif">
-                        <i class="fa-solid fa-headset sq-sidebar-ico sq-sidebar-ico--brand"></i>
-                        Assistenza
-                    </a>
-                </li>
             </ul>
         </div>
 

@@ -3,6 +3,12 @@
 return [
 
     /*
+    | Correzione etichetta lato cliente (matita / modal). Disabilitata finché i corrieri
+    | non hanno comportamenti uniformi su prenotazione e tracking.
+    */
+    'correcao_cliente_abilitata' => false,
+
+    /*
     | Fragmenti (case-insensitive, senza accenti) nell'ultimo evento tracking che
     | indicano che la lettera di vettura è già in circolazione / non più annullabile.
     */

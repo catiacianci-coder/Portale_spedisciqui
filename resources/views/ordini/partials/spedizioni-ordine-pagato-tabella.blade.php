@@ -3,8 +3,6 @@
     use App\Support\EtichettaSpedizioneAccess;
     use App\Support\EtichetteListing;
     use App\Support\OrdineRiepilogo;
-    use App\Support\PiattaformaCorriere;
-    use App\Support\SendcloudIntegrazione;
     use App\Support\SpedisciOnlineIntegrazione;
 
     $variant = (string) ($variant ?? 'pagato');
@@ -57,36 +55,36 @@
                         $statoLabel = (string) ($s->spedizioneStato?->denominazione_stato ?? '—');
                     @endphp
                     <tr @class(['sq-ordine-remessa--annullata' => $annullata || $isAnnullato])>
-                        <td class="sq-td sq-ordine-remessa-codice">{{ $s->codice_interno ?: '—' }}</td>
-                        <td class="sq-td sq-fw-700">{{ $ordine->id }}</td>
-                        <td class="sq-td sq-nowrap">{{ $dataPagamentoOrdine ?? '—' }}</td>
+                        <td class="sq-td sq-ordine-remessa-codice" data-label="Codice">{{ $s->codice_interno ?: '—' }}</td>
+                        <td class="sq-td sq-fw-700" data-label="Ordine">{{ $ordine->id }}</td>
+                        <td class="sq-td sq-nowrap" data-label="Data pagamento">{{ $dataPagamentoOrdine ?? '—' }}</td>
                         @if ($isAnnullato)
-                            <td class="sq-td sq-nowrap">{{ $dataCancellazioneRiga ?? '—' }}</td>
+                            <td class="sq-td sq-nowrap" data-label="Data cancellazione">{{ $dataCancellazioneRiga ?? '—' }}</td>
                         @endif
-                        <td class="sq-td sq-ordine-remessa-person">
+                        <td class="sq-td sq-ordine-remessa-person" data-label="Destinatario">
                             @include('ordini.partials.spedizione-destinatario-tabella', ['spedizione' => $s])
                         </td>
-                        <td class="sq-td">{{ $servico !== '' ? $servico : '—' }}</td>
-                        <td class="sq-td sq-text-14">
+                        <td class="sq-td" data-label="Servizio">{{ $servico !== '' ? $servico : '—' }}</td>
+                        <td class="sq-td sq-text-14" data-label="Servizi aggiuntivi">
                             @include('ordini.partials.spedizione-servizi-aggiuntivi', ['spedizione' => $s])
                         </td>
-                        <td class="sq-td sq-td--right">
+                        <td class="sq-td sq-td--right" data-label="Importo (IVA inclusa)">
                             <span class="sq-importo-ivato-val sq-fw-700 sq-nowrap">
                                 {{ OrdineRiepilogo::importoIvatoRigaTabella($importoIvato, $ordine, $mostraMetodoPagamento) }}
                             </span>
                         </td>
-                        <td class="sq-td">
+                        <td class="sq-td" data-label="Status">
                             <span class="sq-etichetta-stato">{{ $statoLabel }}</span>
                         </td>
                         @unless ($isAnnullato)
-                            <td class="sq-td sq-ordine-etq-tracking">
+                            <td class="sq-td sq-ordine-etq-tracking" data-label="Lettera di vettura">
                                 @if ($codiceLdV !== '')
                                     {{ $codiceLdV }}
                                 @else
                                     <span class="sq-text-muted">—</span>
                                 @endif
                             </td>
-                            <td class="sq-td sq-td--right">
+                            <td class="sq-td sq-td--right" data-label="Azioni">
                                 <div class="sq-ordine-etq-print-cell sq-ordini-actions-icons">
                                     @if ($ldvStampabile)
                                         <a
@@ -112,20 +110,6 @@
                             </td>
                         @endunless
                     </tr>
-                    @php
-                        $corriereSped = $s->corriereRecord;
-                        $mostraTracciaSendcloud = ! $isAnnullato
-                            && $corriereSped
-                            && PiattaformaCorriere::corriereUsaAcquistoSendcloud($corriereSped)
-                            && SendcloudIntegrazione::haTracciaApi($s);
-                    @endphp
-                    @if ($mostraTracciaSendcloud)
-                        <tr class="sq-sped-sendcloud-api-trace-row">
-                            <td colspan="{{ $colspanVazio }}" class="sq-td sq-td--trace">
-                                @include('partials.spedizione-sendcloud-api-trace', ['spedizione' => $s])
-                            </td>
-                        </tr>
-                    @endif
                 @empty
                     <tr>
                         <td colspan="{{ $colspanVazio }}" class="sq-td">Nessuna spedizione in questo ordine.</td>

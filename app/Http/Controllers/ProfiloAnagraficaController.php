@@ -44,11 +44,11 @@ class ProfiloAnagraficaController extends Controller
         if ($nuova === null) {
             return redirect()
                 ->route('profilo.anagrafica')
-                ->with('info', 'Nessuna modifica rispetto all’ultima anagrafica salvata.');
+                ->with('anagrafica_unchanged', true);
         }
 
         return redirect()
             ->route('profilo.anagrafica')
-            ->with('ok', 'Anagrafica aggiornata: è stata registrata una nuova revisione.');
+            ->with('ok', 'Anagrafica aggiornata');
     }
 }

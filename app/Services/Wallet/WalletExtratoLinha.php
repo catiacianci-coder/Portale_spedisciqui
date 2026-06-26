@@ -8,11 +8,13 @@ use Carbon\Carbon;
 final class WalletExtratoLinha
 {
     public function __construct(
+        public readonly int $movimentoId,
         public readonly Carbon $sortAt,
-        public readonly string $tipo,
-        public readonly string $descricao,
+        public readonly string $dettaglio,
+        public readonly string $ordineLdv,
         public readonly float $valor,
         public readonly bool $isCredito,
         public readonly ?User $usuario = null,
+        public readonly ?string $notaInterna = null,
     ) {}
 }

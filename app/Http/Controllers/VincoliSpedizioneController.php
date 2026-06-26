@@ -302,7 +302,7 @@ class VincoliSpedizioneController extends Controller
 
         $results = $query
             ->orderBy('comune')
-            ->limit(6)
+            ->limit(25)
             ->get()
             ->map(function (comune $c) {
                 return [

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\metodo_pagamento_wallet_ricarica;
 use App\Models\wallet_ricarica_richiesta;
 use App\Support\FiltriTabella;
 use App\Support\WalletRicaricaListaFilter;
@@ -55,6 +56,7 @@ class WalletRicaricheController extends Controller
             'hasActiveFilters' => $filtros->hasActiveFilters(),
             'customPeriodoSemDatas' => $filtros->customPeriodoSemDatas(),
             'queryParams' => FiltriTabella::parametriQuery($request),
+            'hasMetodiPagamentoRicarica' => metodo_pagamento_wallet_ricarica::query()->abilitatiCliente()->exists(),
         ]);
     }
 }

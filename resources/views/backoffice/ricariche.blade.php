@@ -66,7 +66,7 @@
                                 <td class="sq-td sq-text-muted sq-nowrap">{{ $r->created_at?->timezone(config('app.timezone'))->format('d/m/Y H:i') ?? '—' }}</td>
                                 <td class="sq-td">{{ $r->user?->email ?? '—' }}</td>
                                 <td class="sq-td sq-td--right sq-wallet-ricariche-importo">{{ \App\Support\ImportoEuro::format($r->importo) }}</td>
-                                <td class="sq-td">{{ $r->metodoPagamento?->metodo_pagamento ?? '—' }}</td>
+                                <td class="sq-td">{{ \App\Support\WalletRicaricaMetodoPagamento::labelCliente($r) }}</td>
                                 <td class="sq-td">
                                     @if ($r->stato === 'accreditata')
                                         <span class="sq-wallet-ricariche-stato sq-wallet-ricariche-stato--pagato">Pagato</span>
@@ -78,18 +78,36 @@
                                 </td>
                                 <td class="sq-td sq-td--right">
                                     @if ($r->stato === 'in_attesa')
-                                        <form
-                                            method="POST"
-                                            action="{{ route('backoffice.ricariche.accredita', $r->id) }}"
-                                            class="sq-form-zero"
-                                            onsubmit="return confirm('Confermi il pagamento e l\'accredito di {{ \App\Support\ImportoEuro::format($r->importo) }} sul wallet del cliente?');"
-                                        >
-                                            @csrf
-                                            @foreach ($queryParams as $name => $value)
-                                                <input type="hidden" name="{{ $name }}" value="{{ $value }}">
-                                            @endforeach
-                                            <button type="submit" class="sq-wallet-ricariche-btn-paga">Paga</button>
-                                        </form>
+                                        @if (($metodiPagamentoAccredito ?? collect())->isEmpty())
+                                            <span class="sq-text-muted sq-text-13">Nessun metodo attivo</span>
+                                        @else
+                                            <form
+                                                method="POST"
+                                                action="{{ route('backoffice.ricariche.accredita', $r->id) }}"
+                                                class="sq-form-zero sq-wallet-ricariche-bo-paga-form"
+                                                onsubmit="return confirm('Confermi il pagamento e l\'accredito di {{ \App\Support\ImportoEuro::format($r->importo) }} sul wallet del cliente?');"
+                                            >
+                                                @csrf
+                                                @foreach ($queryParams as $name => $value)
+                                                    <input type="hidden" name="{{ $name }}" value="{{ $value }}">
+                                                @endforeach
+                                                <div class="sq-wallet-ricariche-bo-paga-row">
+                                                    <label class="sq-sr-only" for="bo-ricarica-metodo-{{ $r->id }}">Metodo di pagamento</label>
+                                                    <select
+                                                        id="bo-ricarica-metodo-{{ $r->id }}"
+                                                        name="metodo_pagamento_id"
+                                                        class="sq-wallet-ricariche-bo-paga-select"
+                                                        required
+                                                    >
+                                                        <option value="" disabled selected>Metodo…</option>
+                                                        @foreach ($metodiPagamentoAccredito as $m)
+                                                            <option value="{{ $m->id }}">{{ $m->metodo_pagamento }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    <button type="submit" class="sq-wallet-ricariche-btn-paga">Paga</button>
+                                                </div>
+                                            </form>
+                                        @endif
                                     @else
                                         <span class="sq-text-muted">—</span>
                                     @endif

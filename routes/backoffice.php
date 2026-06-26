@@ -6,6 +6,7 @@ use App\Http\Controllers\BackofficeErroriController;
 use App\Http\Controllers\BackofficeFaqController;
 use App\Http\Controllers\BackofficeGestaoDocumentosController;
 use App\Http\Controllers\BackofficeHomepageAvvisoController;
+use App\Http\Controllers\BackofficeMetodiPagamentoController;
 use App\Http\Controllers\BackofficeMsgTracciamentoController;
 use App\Http\Controllers\BackofficeNonConformitaController;
 use App\Http\Controllers\BackofficeOrdiniController;
@@ -25,7 +26,13 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified', 'backoffice'])->prefix('backoffice')->group(function (): void {
     Route::get('/', [BackofficeDashboardController::class, 'index'])->name('backoffice.index');
+    Route::post('/unlock-db-panel', [BackofficeDashboardController::class, 'unlockDbPanel'])->name('backoffice.hub.unlock_db');
+    Route::post('/lock-db-panel', [BackofficeDashboardController::class, 'lockDbPanel'])->name('backoffice.hub.lock_db');
     Route::redirect('/pagamenti', '/backoffice/ordini')->name('backoffice.pagamenti');
+
+    Route::get('/metodi-pagamento', [BackofficeMetodiPagamentoController::class, 'index'])->name('backoffice.metodi_pagamento.index');
+    Route::put('/metodi-pagamento/{contesto}/{id}', [BackofficeMetodiPagamentoController::class, 'update'])->name('backoffice.metodi_pagamento.update');
+    Route::post('/metodi-pagamento/{contesto}/{id}/toggle', [BackofficeMetodiPagamentoController::class, 'toggleAbilitato'])->name('backoffice.metodi_pagamento.toggle');
 
     Route::get('/utenti', [BackofficeUtentiController::class, 'index'])->name('backoffice.utenti.index');
     Route::post('/utenti/{user}/abilitazione-postagem', [BackofficeUtentiController::class, 'toggleHabilitacaoPostagem'])
@@ -75,6 +82,10 @@ Route::middleware(['auth', 'verified', 'backoffice'])->prefix('backoffice')->gro
     Route::get('/ricariche', [BackofficeWalletController::class, 'ricariche'])->name('backoffice.ricariche.index');
     Route::post('/ricariche/{id}/accredita', [BackofficeWalletController::class, 'accreditaRicarica'])->name('backoffice.ricariche.accredita');
     Route::get('/wallet-cliente', [BackofficeWalletController::class, 'walletCliente'])->name('backoffice.wallet.cliente');
+    Route::post('/wallet-cliente/{user}/movimento', [BackofficeWalletController::class, 'storeMovimentoCliente'])
+        ->name('backoffice.wallet.movimento.store');
+    Route::patch('/wallet-cliente/movimenti/{movimento}/nota-interna', [BackofficeWalletController::class, 'updateNotaInternaMovimento'])
+        ->name('backoffice.wallet.movimento.nota_interna');
 
     Route::get('/non-conformita', [BackofficeNonConformitaController::class, 'index'])->name('backoffice.nc.index');
     Route::post('/non-conformita/import', [BackofficeNonConformitaController::class, 'importCsv'])->name('backoffice.nc.import');

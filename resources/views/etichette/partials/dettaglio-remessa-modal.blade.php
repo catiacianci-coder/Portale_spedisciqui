@@ -83,16 +83,6 @@
             Costo: {{ $d['importo_ivato_fmt'] }} ({{ $d['metodo_pagamento'] }})
         </span>
         <div class="sq-etichetta-det-footer-actions">
-            @if (! empty($d['pode_corrigir']) && ! empty($d['correcao_url']))
-                <button
-                    type="button"
-                    class="sq-link-btn js-etichetta-correcao-open"
-                    data-correcao-url="{{ $d['correcao_url'] }}"
-                    data-codice="{{ $s->codice_interno }}"
-                >
-                    Correggi etichetta
-                </button>
-            @endif
             <button type="button" class="sq-btn-secondary sq-modal-btn js-etichetta-dettaglio-close">Chiudi</button>
         </div>
     </div>

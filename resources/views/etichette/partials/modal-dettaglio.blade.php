@@ -23,6 +23,7 @@
     </div>
 </div>
 
+@if (config('etichetta.correcao_cliente_abilitata'))
 <div
     id="sq-etichetta-correcao-modal"
     class="sq-modal sq-modal--etichetta-correcao"
@@ -47,6 +48,7 @@
         </div>
     </div>
 </div>
+@endif
 
 <script>
 (() => {
@@ -77,11 +79,13 @@
         detPanel?.classList.toggle('sq-modal-panel--opcoes', mode === 'opcoes');
     };
 
+@if (config('etichetta.correcao_cliente_abilitata'))
     const corModal = document.querySelector('[data-etichetta-correcao-modal]');
     const corBody = document.getElementById('sq-etichetta-correcao-body');
     const corTitle = document.getElementById('sq-etichetta-correcao-title');
 
     let correcaoUrl = null;
+@endif
 
     const esc = (v) => {
         const d = document.createElement('div');
@@ -104,6 +108,7 @@
         document.body.classList.add('sq-modal-open');
     };
 
+@if (config('etichetta.correcao_cliente_abilitata'))
     const closeCor = () => {
         if (!corModal) return;
         corModal.hidden = true;
@@ -120,11 +125,14 @@
         corModal.setAttribute('aria-hidden', 'false');
         document.body.classList.add('sq-modal-open');
     };
+@endif
 
     const wireDettaglioActions = () => {
+@if (config('etichetta.correcao_cliente_abilitata'))
         detBody?.querySelectorAll('.js-etichetta-correcao-open').forEach((btn) => {
             btn.addEventListener('click', () => openCorrecaoFromBtn(btn));
         });
+@endif
         detBody?.querySelectorAll('.js-etichetta-dettaglio-close, .js-bo-fechar-modal').forEach((btn) => {
             btn.addEventListener('click', closeDet);
         });
@@ -162,6 +170,7 @@
             });
     };
 
+@if (config('etichetta.correcao_cliente_abilitata'))
     const openCorrecaoFromBtn = (btn) => {
         const url = btn.getAttribute('data-correcao-url');
         const codice = btn.getAttribute('data-codice') || '';
@@ -275,6 +284,8 @@
         });
     };
 
+@endif
+
     document.querySelectorAll('.js-etichetta-dettaglio-open').forEach((btn) => {
         btn.addEventListener('click', () => {
             const url = btn.getAttribute('data-dettaglio-url');
@@ -282,17 +293,24 @@
         });
     });
 
+@if (config('etichetta.correcao_cliente_abilitata'))
     document.querySelectorAll('.js-etichetta-correcao-open').forEach((btn) => {
         btn.addEventListener('click', () => openCorrecaoFromBtn(btn));
     });
 
-    detModal?.querySelectorAll('.js-etichetta-dettaglio-close').forEach((el) => el.addEventListener('click', closeDet));
     corModal?.querySelectorAll('.js-etichetta-correcao-close').forEach((el) => el.addEventListener('click', closeCor));
+@endif
+
+    detModal?.querySelectorAll('.js-etichetta-dettaglio-close').forEach((el) => el.addEventListener('click', closeDet));
 
     document.addEventListener('keydown', (e) => {
         if (e.key !== 'Escape') return;
+@if (config('etichetta.correcao_cliente_abilitata'))
         if (corModal && !corModal.hidden) closeCor();
         else if (detModal && !detModal.hidden) closeDet();
+@else
+        if (detModal && !detModal.hidden) closeDet();
+@endif
     });
 })();
 </script>

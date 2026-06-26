@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="sq-page-preventivi sq-mb-24">
+<div class="sq-page-preventivi sq-mb-24 sq-rubrica-mittenti-page">
     <h1 class="sq-h1-carrello sq-mb-12">Rubrica mittenti</h1>
     <p class="sq-text-muted sq-m-0 sq-mb-18">
         Il mittente <strong>preferito</strong> imposta il CAP di origine predefinito in “Nuova spedizione”.
@@ -25,8 +25,8 @@
     @if ($mittenti->isEmpty())
         <p class="sq-text-muted">Nessun mittente salvato.</p>
     @else
-        <div class="sq-table-wrap">
-            <table class="sq-table">
+        <div class="sq-table-wrap sq-rubrica-mittenti-table-wrap">
+            <table class="sq-table sq-rubrica-mittenti-table">
                 <thead>
                     <tr class="sq-thead-row sq-thead-row--neutral">
                         <th class="sq-th">Riferimento</th>
@@ -39,7 +39,7 @@
                 <tbody>
                     @foreach ($mittenti as $m)
                         <tr>
-                            <td class="sq-td">
+                            <td class="sq-td sq-rubrica-riferimento" data-label="Riferimento">
                                 <div class="sq-fw-700">{{ $m->denominazione_ragione_sociale ?: trim($m->nome.' '.$m->cognome) ?: '—' }}</div>
                                 @if ($m->denominazione_ragione_sociale && trim($m->nome.$m->cognome) !== '')
                                     <div class="sq-text-muted sq-text-13">{{ trim($m->nome.' '.$m->cognome) }}</div>
@@ -53,23 +53,23 @@
                                     @endif
                                 </div>
                             </td>
-                            <td class="sq-td sq-td--muted">
+                            <td class="sq-td sq-td--muted" data-label="Indirizzo">
                                 {{ $m->indirizzo }} {{ $m->civico }}<br>
                                 {{ $m->cap }} {{ $m->citta }} ({{ $m->provincia }})
                             </td>
-                            <td class="sq-td sq-td--muted sq-text-13">
+                            <td class="sq-td sq-td--muted sq-text-13" data-label="Contatti">
                                 {{ $m->telefono }}<br>
                                 {{ $m->email }}
                             </td>
-                            <td class="sq-td sq-td--muted sq-text-13">
+                            <td class="sq-td sq-td--muted sq-text-13" data-label="Note">
                                 @if ($m->varie1 || $m->varie2 || $m->varie3 || $m->varie4)
                                     {{ implode(' · ', array_filter([$m->varie1, $m->varie2, $m->varie3, $m->varie4])) }}
                                 @else
                                     —
                                 @endif
                             </td>
-                            <td class="sq-td sq-td--right">
-                                <div class="sq-ordini-actions-icons" style="flex-wrap:wrap;max-width:220px;margin-left:auto;">
+                            <td class="sq-td sq-td--right" data-label="Azioni">
+                                <div class="sq-ordini-actions-icons sq-rubrica-azioni">
                                     @if (! $m->is_fatturazione)
                                         <a href="{{ route('mittenze.edit', $m) }}" class="sq-ordini-icon-action sq-ordini-icon-action--view" title="Modifica"><i class="fa-solid fa-pen" aria-hidden="true"></i></a>
                                         <form method="POST" action="{{ route('mittenze.duplica', $m) }}" class="sq-ordini-pay-form-inline">@csrf

@@ -64,8 +64,6 @@
                     $ldvCancellata = EtichettaSpedizioneAccess::etichettaCancellata($s);
                     $ldvStampabile = (bool) ($dettaglio['etichetta_disponibile'] ?? false);
                     $pendente = (bool) ($dettaglio['etichetta_pendente'] ?? false);
-                    $podeCorrigir = (bool) ($dettaglio['pode_corrigir'] ?? false);
-                    $motivoCorrecao = (string) ($dettaglio['motivo_correcao'] ?? '');
                     $compensata = (bool) $s->compensata;
                     $serviziLabels = [];
                     foreach ($s->serviziAggiuntiviRighe as $rigaServizio) {
@@ -76,8 +74,8 @@
                     }
                 @endphp
                 <tr @class(['sq-etichette-row--compensata' => $compensata])>
-                    <td>{{ $ord?->id ?? '—' }}</td>
-                    <td class="sq-etichette-ldv-codice-cell">
+                    <td data-label="Ordine">{{ $ord?->id ?? '—' }}</td>
+                    <td class="sq-etichette-ldv-codice-cell" data-label="LdV/Codice">
                         <div class="sq-etichette-ldv-stack">
                             <span class="sq-etichette-ldv-tracking">{{ $tracking !== '' ? $tracking : '—' }}</span>
                             @if ($codiceInterno !== '')
@@ -88,22 +86,22 @@
                             @endif
                         </div>
                     </td>
-                    <td class="sq-nowrap">{{ $dataRitiro ?? '—' }}</td>
-                    <td>{{ $servico !== '' ? $servico : '—' }}</td>
-                    <td class="sq-etichette-servizi-cell">
+                    <td class="sq-nowrap" data-label="Ritiro">{{ $dataRitiro ?? '—' }}</td>
+                    <td data-label="Corriere">{{ $servico !== '' ? $servico : '—' }}</td>
+                    <td class="sq-etichette-servizi-cell" data-label="Servizi agg.">
                         @if ($serviziLabels !== [])
                             <span class="sq-text-14">{!! implode('<br>', array_map('e', $serviziLabels)) !!}</span>
                         @else
                             <span class="sq-text-muted">—</span>
                         @endif
                     </td>
-                    <td class="sq-etichette-dest-cell sq-ordine-remessa-person">
+                    <td class="sq-etichette-dest-cell sq-ordine-remessa-person" data-label="Destinatario">
                         @include('ordini.partials.spedizione-destinatario-tabella', ['spedizione' => $s])
                     </td>
-                    <td>
+                    <td data-label="Status">
                         <span class="sq-etichetta-stato">{{ $statoLabel }}</span>
                     </td>
-                    <td class="td-acoes">
+                    <td class="td-acoes" data-label="Azioni">
                         <div class="acoes sq-etichette-acoes">
                             <button
                                 type="button"
@@ -120,25 +118,6 @@
                                 'btnClass' => 'sq-btn-icone',
                                 'iconClass' => 'fa-solid fa-route',
                             ])
-                            @if ($podeCorrigir && ! empty($dettaglio['correcao_url']))
-                                <button
-                                    type="button"
-                                    class="sq-btn-icone sq-btn-icone--correcao js-etichetta-correcao-open"
-                                    title="Correggi dati etichetta"
-                                    aria-label="Correggi etichetta {{ $s->codice_interno }}"
-                                    data-correcao-url="{{ $dettaglio['correcao_url'] }}"
-                                    data-codice="{{ $s->codice_interno }}"
-                                >
-                                    <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
-                                </button>
-                            @else
-                                <span
-                                    class="sq-btn-icone is-disabled"
-                                    title="{{ $motivoCorrecao }}"
-                                >
-                                    <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
-                                </span>
-                            @endif
                             @if ($ldvStampabile && ! empty($dettaglio['etichetta_url']))
                                 <a
                                     href="{{ $dettaglio['etichetta_url'] }}"

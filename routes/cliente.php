@@ -26,6 +26,7 @@ use App\Http\Controllers\UserImballaggioController;
 use App\Http\Controllers\UserMittenzaController;
 use App\Http\Controllers\WalletMovimentiController;
 use App\Http\Controllers\WalletRicaricaController;
+use App\Http\Controllers\WalletRicaricaPagamentoController;
 use App\Http\Controllers\WalletRicaricheController;
 use Illuminate\Support\Facades\Route;
 
@@ -112,6 +113,11 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::post('/wallet/ricarica', [WalletRicaricaController::class, 'store'])->name('wallet.ricarica.store');
     Route::get('/wallet/movimenti', [WalletMovimentiController::class, 'index'])->name('wallet.movimenti');
     Route::get('/wallet/ricariche', [WalletRicaricheController::class, 'index'])->name('wallet.ricariche');
+    Route::get('/wallet/ricariche/{ricarica}/pagamento', [WalletRicaricaPagamentoController::class, 'show'])->name('wallet.ricariche.pagamento.show');
+    Route::get('/wallet/ricariche/{ricarica}/pagamento/carta', [WalletRicaricaPagamentoController::class, 'carta'])->name('wallet.ricariche.pagamento.carta');
+    Route::get('/wallet/ricariche/{ricarica}/pagamento/bonifico', [WalletRicaricaPagamentoController::class, 'bonifico'])->name('wallet.ricariche.pagamento.bonifico');
+    Route::post('/wallet/ricariche/{ricarica}/pagamento-carta', [WalletRicaricaPagamentoController::class, 'cartaProcess'])->name('wallet.ricariche.pagamento.carta.process');
+    Route::post('/wallet/ricariche/{ricarica}/pagamento-bonifico', [WalletRicaricaPagamentoController::class, 'bonificoStore'])->name('wallet.ricariche.pagamento.bonifico.store');
     Route::delete('/wallet/ricariche/{ricarica}', [WalletRicaricheController::class, 'destroy'])->name('wallet.ricariche.destroy');
 
     Route::get('/finanziario/fatture', [FinanziarioFattureController::class, 'index'])->name('finanziario.fatture.index');
